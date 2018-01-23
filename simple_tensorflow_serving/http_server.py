@@ -28,7 +28,7 @@ def main():
 
 if __name__ == "__main__":
 
-  export_dir = "../model/1/"
+  export_dir = "../examples/tensorflow_template_application_model/1/"
 
   with tf.Session(graph=tf.Graph()) as sess:
     meta_graph = tf.saved_model.loader.load(
