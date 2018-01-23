@@ -9,7 +9,7 @@ from flask import Flask, request
 
 # Define parameters
 flags = tf.app.flags
-flags.DEFINE_boolean("enable_colored_log", True, "Enable colored log")
+flags.DEFINE_boolean("enable_colored_log", False, "Enable colored log")
 flags.DEFINE_string("host", "0.0.0.0", "The host of the server")
 flags.DEFINE_integer("port", 8500, "The port of the server")
 flags.DEFINE_string("model_name", "default", "The name of the model")
@@ -25,19 +25,20 @@ pprint.PrettyPrinter().pprint(FLAGS.__flags)
 
 
 class TensorFlowService(object):
-  def __init__(self):
-    self.model = ""
+  def __init__(self, model_base_path, model_name, model_version):
+    model_path = "{}/{}/".format(model_base_path, model_version)
+    logging.debug("Load the TensorFlow model: {}, version: {}, path: {}".
+                  format(model_name, model_version, model_path))
 
     self.sess = tf.Session(graph=tf.Graph())
-    self.meta_graph = tf.saved_model.loader.load(self.sess, [
-        tf.saved_model.tag_constants.SERVING
-    ], FLAGS.model_base_path)
+    self.meta_graph = tf.saved_model.loader.load(
+        self.sess, [tf.saved_model.tag_constants.SERVING], model_path)
 
   def inference(self, input_data):
+    #request_input_data = {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}
+    logging.debug("Inference with the data: {}".format(input_data))
 
     item = self.meta_graph.signature_def.items()[0][1]
-
-    #request_input_data = {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}
 
     feed_dict_map = {}
     for input_item in item.inputs.items():
@@ -48,7 +49,6 @@ class TensorFlowService(object):
       # {input1_name: [[1.0], [2.0]], input2_name: [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}
       feed_dict_map[input_tensor_name] = input_data[input_op_name]
 
-    #output_names = [output1_name, output2_name]
     output_tensor_names = []
     output_op_names = []
 
@@ -65,15 +65,19 @@ class TensorFlowService(object):
     result = {}
     for i in range(len(output_op_names)):
       result[output_op_names[i]] = result_ndarrays[i]
-    pprint.PrettyPrinter().pprint(result)
+
+    logging.debug("Inference result: {}".format(result))
     return result
 
 
 def main():
 
-  app = Flask(__name__)
+  # Initialize TensorFlow session
+  tensorflowService = TensorFlowService(FLAGS.model_base_path,
+                                        FLAGS.model_name, FLAGS.model_version)
 
-  tensorflowService = TensorFlowService()
+  # Initialize flask application
+  app = Flask(__name__)
 
   @app.route("/", methods=["GET"])
   def index():
@@ -85,6 +89,8 @@ def main():
     result = tensorflowService.inference(data)
     return str(result)
 
+  logging.debug(
+      "Start the server in host: {}, port: {}".format(FLAGS.host, FLAGS.port))
   app.run(host=FLAGS.host, port=FLAGS.port)
 
 
