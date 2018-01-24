@@ -7,7 +7,7 @@ It is the HTTP client in Python to access [Simple TensorFlow Serving](https://gi
 
 ## Usage
 
-You can run the Python example very easily.
+You can run the example client very easily.
 
 ```shell
 ./tensorflow_client.py

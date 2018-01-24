@@ -60,9 +60,25 @@ result = requests.post(endpoint, json=payload)
 print(result.text)
 ```
 
-You can use the example client in [Java](./java_client/).
+Here is the example client in [Java](./java_client/).
 
 ```java
+
+```
+
+Here is the example client in [Go](./go_client/).
+
+```go
+dataByte := []byte(`{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}`)
+var dataInterface map[string]interface{}
+json.Unmarshal(dataByte, &dataInterface)
+dataJson, _ := json.Marshal(dataInterface)
+
+resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(dataJson))
+```
+
+
+```
 
 ```
 
