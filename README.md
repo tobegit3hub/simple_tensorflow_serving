@@ -182,10 +182,10 @@ Use your favorite HTTP clients like `Postman`.
 ## How It Works
 
 1. `simple_tensorflow_serving` starts the HTTP server with `flask` application.
-2. Load the TensorFlow models with `tf.saved_model.loader` Python APIs.
-3. Construct the feed_dict data from the JSON body of the request
-4. Use the TensorFlow Python API to `sess.run()` with feed_dict data
-5. For multiple versions supported, it has independent thread to load models
+2. Load the TensorFlow models with `tf.saved_model.loader` Python API.
+3. Construct the feed_dict data from the JSON body of the request.
+4. Use the TensorFlow Python API to `sess.run()` with feed_dict data.
+5. For multiple versions supported, it has independent thread to load models.
 
 ![](./images/architecture.jpeg)
 
@@ -193,4 +193,4 @@ Use your favorite HTTP clients like `Postman`.
 
 Check out the C++ implementation of TensorFlow Serving in [tensorflow/serving](https://github.com/tensorflow/serving).
 
-Feel free to open an issue or send pull request for this project.
+Feel free to open an issue or send pull request for this project. It is warmly welcome to add more clients in your languages to access TensorFlow models.
