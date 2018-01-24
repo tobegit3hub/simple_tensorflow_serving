@@ -54,6 +54,12 @@ payload = {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1
 result = requests.post(endpoint, json=payload)
 ```
 
+Here is the example client in [C++](./cpp_client/).
+
+```cpp
+
+```
+
 Here is the example client in [Java](./java_client/).
 
 ```java
@@ -101,6 +107,28 @@ var options = {
 
 request(options, function (error, response, body) {});
 ```
+
+
+Here is the example client in [PHP](./php_client/).
+
+```php
+
+```
+
+Here is the example client in [Erlang](./erlang_client/).
+
+```erlang
+ssl:start(),
+application:start(inets),
+
+httpc:request(post,
+    {"http://127.0.0.1:8500", [],
+    "application/json",
+    "{\"keys\": [[11.0], [2.0]], \"features\": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}"
+    }, [], []).
+```
+
+
 
 Or use your favorite HTTP clients, such as `Postman`.
 
