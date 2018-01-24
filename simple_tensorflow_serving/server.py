@@ -18,6 +18,7 @@ flags.DEFINE_integer("port", 8500, "The port of the server")
 flags.DEFINE_string("model_base_path", "./model", "The file path of the model")
 flags.DEFINE_string("model_name", "default", "The name of the model")
 flags.DEFINE_integer("model_version", 1, "The version of the model")
+flags.DEFINE_boolean("verbose", True, "Enable verbose log or not")
 FLAGS = flags.FLAGS
 
 logging.basicConfig(level=logging.DEBUG)
@@ -30,7 +31,8 @@ pprint.PrettyPrinter().pprint(FLAGS.__flags)
 def main():
   # Initialize TensorFlow inference service
   inferenceService = TensorFlowInferenceService(
-      FLAGS.model_base_path, FLAGS.model_name, FLAGS.model_version)
+      FLAGS.model_base_path, FLAGS.model_name, FLAGS.model_version,
+      FLAGS.verbose)
 
   # Initialize flask application
   app = Flask(__name__)
