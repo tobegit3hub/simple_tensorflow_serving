@@ -10,13 +10,13 @@ It is the HTTP client in Go to access [Simple TensorFlow Serving](https://github
 You can run the example client very easily.
 
 ```shell
-go run tensorflow_client.go
+go run client.go
 ```
 
 Or build the binary and run.
 
 ```shell
-go build tensorflow_client.go
+go build client.go
 
-./tensorflow_client
+./client
 ```

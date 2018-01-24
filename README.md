@@ -45,19 +45,13 @@ Then request with the command-line tool like `curl`.
 curl -H "Content-Type: application/json" -X POST -d '{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}' http://127.0.0.1:8500
 ```
 
-Or use your favorite HTTP clients, such as `Postman`.
-
-![](./images/simple_tensorflow_serving_client.png)
-
 Here is the example client in [Python](./python_client/).
 
 ```python
-import requests
-
 endpoint = "http://127.0.0.1:8500"
 payload = {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+
 result = requests.post(endpoint, json=payload)
-print(result.text)
 ```
 
 Here is the example client in [Java](./java_client/).
@@ -66,9 +60,16 @@ Here is the example client in [Java](./java_client/).
 
 ```
 
+Here is the example client in [Scala](./scala_client/).
+
+```scala
+
+```
+
 Here is the example client in [Go](./go_client/).
 
 ```go
+endpoint := "http://127.0.0.1:8500"
 dataByte := []byte(`{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}`)
 var dataInterface map[string]interface{}
 json.Unmarshal(dataByte, &dataInterface)
@@ -91,6 +92,19 @@ request.body = input_data.to_json
 response = http.request(request)
 ```
 
+```javascript
+var options = {
+    uri: "http://127.0.0.1:8500",
+    method: "POST",
+    json: {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+};
+
+request(options, function (error, response, body) {});
+```
+
+Or use your favorite HTTP clients, such as `Postman`.
+
+![](./images/simple_tensorflow_serving_client.png)
 
 ## How It Works
 
