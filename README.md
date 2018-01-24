@@ -31,7 +31,7 @@ python ./setup.py install
 
 ## Usage
 
-You can setup the server easily.
+You can export the [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model) and setup the server easily.
 
 ```
 simple_tensorflow_serving --port=8500 --model_base_path="./examples/tensorflow_template_application_model"

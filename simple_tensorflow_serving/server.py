@@ -27,11 +27,10 @@ if FLAGS.enable_colored_log:
 pprint.PrettyPrinter().pprint(FLAGS.__flags)
 
 
-
-
 def main():
   # Initialize TensorFlow inference service
-  inferenceService = TensorFlowInferenceService(FLAGS.model_base_path, FLAGS.model_name, FLAGS.model_version)
+  inferenceService = TensorFlowInferenceService(
+      FLAGS.model_base_path, FLAGS.model_name, FLAGS.model_version)
 
   # Initialize flask application
   app = Flask(__name__)
