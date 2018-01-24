@@ -8,24 +8,26 @@ The simpler and easy-to-use serving service for general TensorFlow models.
 * [x] Support the RESTful/HTTP APIs
 * [x] Support `curl` and command-line tools
 * [x] Support clients in any programing language
+* [x] Support statistical metrics for verbose requests
+* [ ] Support loading multiple TF models dynamically
 
 ## Installation
 
 Install the server with `pip`.
 
-```
+```shell
 pip install simple-tensorflow-serving
 ```
 
 Or install with `bazel`.
 
-```
+```shell
 bazel build simple_tensorflow_serving:server
 ```
 
 Or install from source code.
 
-```
+```shell
 python ./setup.py install
 ```
 
@@ -33,17 +35,37 @@ python ./setup.py install
 
 You can export the [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model) and setup the server easily.
 
-```
+```shell
 simple_tensorflow_serving --port=8500 --model_base_path="./examples/tensorflow_template_application_model"
 ```
 
-Then request with your favorite HTTP clients.
+Then request with the command-line tool like `curl`.
 
-```
+```shell
 curl -H "Content-Type: application/json" -X POST -d '{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}' http://127.0.0.1:8500
 ```
 
+Or use your favorite HTTP clients, such as `Postman`.
+
 ![](./images/simple_tensorflow_serving_client.png)
+
+Here is the example client in [Python](./python_client/).
+
+```python
+import requests
+
+endpoint = "http://127.0.0.1:8500"
+payload = {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+result = requests.post(endpoint, json=payload)
+print(result.text)
+```
+
+You can use the example client in [Java](./java_client/).
+
+```java
+
+```
+
 
 ## How It Works
 
