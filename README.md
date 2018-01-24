@@ -1,15 +1,17 @@
 # Simple TensorFlow Serving
 
+![](./images/simple_tensorflow_serving_introduction.jpeg)
+
 ## Introduction
 
-The simpler and easy-to-use serving service for general TensorFlow models.
+Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
 
-This builds the bridge from machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/) and so on.
+It is the bridge for TensorFlow model and bring machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/) and so on.
 
-* [x] Support TensorFlow SavedModel
-* [x] Support the RESTful/HTTP APIs
-* [x] Support `curl` and command-line tools
-* [x] Support clients in any programing language
+* [x] Support arbitrary TensorFlow models
+* [x] Support the general RESTful/HTTP APIs
+* [x] Support `curl` and other command-line tools
+* [x] Support clients in any programming language
 * [x] Support statistical metrics for verbose requests
 * [ ] Support loading multiple TF models dynamically
 
@@ -35,13 +37,13 @@ python ./setup.py install
 
 ## Usage
 
-You can export the [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model) and setup the server easily.
+You can export [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model) and setup the server easily.
 
 ```shell
 simple_tensorflow_serving --port=8500 --model_base_path="./examples/tensorflow_template_application_model"
 ```
 
-Then request with the command-line tool like `curl`.
+Then request TensorFlow serving with `curl`.
 
 ```shell
 curl -H "Content-Type: application/json" -X POST -d '{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}' http://127.0.0.1:8500
@@ -173,7 +175,7 @@ Here is the example client in [Lisp](./swift_client/).
 
 Here is the example client in [Haskell](./swift_client/).
 
-Or use your favorite HTTP clients, such as `Postman`.
+Use your favorite HTTP clients like `Postman`.
 
 ![](./images/simple_tensorflow_serving_client.png)
 
