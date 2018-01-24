@@ -2,7 +2,7 @@
 
 ## Introduction
 
-The simpler and easy-to-use serving service for TensorFlow models.
+The simpler and easy-to-use serving service for general TensorFlow models.
 
 * [x] Support TensorFlow SavedModel
 * [x] Support the RESTful/HTTP APIs
@@ -17,13 +17,15 @@ Install the server with `pip`.
 pip install simple-tensorflow-serving
 ```
 
+Or install with `bazel`.
+
+```
+bazel build simple_tensorflow_serving:server
+```
+
 Or install from source code.
 
 ```
-git clone https://github.com/tobegit3hub/simple_tensorflow_serving
-
-cd simple_tensorflow_serving/
-
 python ./setup.py install
 ```
 
