@@ -4,7 +4,7 @@
 
 The simpler and easy-to-use serving service for general TensorFlow models.
 
-It builds the bridge from machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/) and so on.
+This builds the bridge from machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/) and so on.
 
 * [x] Support TensorFlow SavedModel
 * [x] Support the RESTful/HTTP APIs
@@ -58,21 +58,9 @@ result = requests.post(endpoint, json=payload)
 
 Here is the example client in [C++](./cpp_client/).
 
-```cpp
-
-```
-
 Here is the example client in [Java](./java_client/).
 
-```java
-
-```
-
 Here is the example client in [Scala](./scala_client/).
-
-```scala
-
-```
 
 Here is the example client in [Go](./go_client/).
 
@@ -179,27 +167,11 @@ local res, code, response_headers = http.request{
 
 Here is the example client in [Rust](./swift_client/).
 
-```rust
-
-```
-
 Here is the example client in [Swift](./swift_client/).
-
-```swift
-
-```
 
 Here is the example client in [Lisp](./swift_client/).
 
-```lisp
-
-```
-
 Here is the example client in [Haskell](./swift_client/).
-
-```haskell
-
-```
 
 Or use your favorite HTTP clients, such as `Postman`.
 

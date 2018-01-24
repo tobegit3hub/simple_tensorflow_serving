@@ -10,5 +10,5 @@ It is the HTTP client in Haskell to access [Simple TensorFlow Serving](https://g
 You can run the example client very easily.
 
 ```shell
-./client.py
+./client
 ```
