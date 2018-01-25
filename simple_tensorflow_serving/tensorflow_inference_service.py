@@ -1,5 +1,7 @@
 import logging
 import os
+import signal
+import threading
 import time
 
 import tensorflow as tf
@@ -12,8 +14,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
   The TensorFlow service to load TensorFlow SavedModel and make inference.
   """
 
-  def __init__(self, model_base_path, model_name, model_version,
-               verbose=False):
+  def __init__(self, model_base_path, verbose=False):
     """
     Initialize the TensorFlow service by loading SavedModel to the Session.
         
@@ -24,40 +25,64 @@ class TensorFlowInferenceService(AbstractInferenceService):
     Return:
     """
 
+    self.model_base_path = model_base_path
     self.model_versions = []
     self.sessions = []
     self.meta_graph = None
-
-    self.load_savedmodels(model_base_path)
-
-    self.graph_signature = self.meta_graph.signature_def.items()[0][1]
+    self.graph_signature = None
     self.verbose = verbose
+    self.should_stop_all_threads = False
 
-  def load_savedmodels(self, model_base_path):
+    # Register signal to exist
+    signal.signal(signal.SIGTERM, self.stop_all_threads)
+    signal.signal(signal.SIGINT, self.stop_all_threads)
+
+    # Start new thread to load models
+    load_savedmodels_thread = threading.Thread(
+        target=self.load_savedmodels_thread, args=())
+    load_savedmodels_thread.start()
+    # dynamically_load_savedmodels_thread.join()
+
+  def stop_all_threads(self, signum, frame):
+    logging.info("Catch signal {} and exit all threads".format(signum))
+    self.should_stop_all_threads = True
+    exit(0)
+
+  def load_savedmodels_thread(self):
     """
     Load the SavedModel, update the Session object and return the Graph object.
-
-    Args:
-      model_base_path: The file path of the model.
-      model_name: The name of the model.
-      model_version: The version of the model.
-    Return:
-      The meta Graph object.
     """
 
-    current_model_versions = os.listdir(model_base_path)
-    self.model_versions = current_model_versions
-    self.sessions = []
+    while self.should_stop_all_threads == False:
+      # TODO: Add lock if needed
+      current_model_versions = os.listdir(self.model_base_path)
 
-    for model_version in self.model_versions:
-      session = tf.Session(graph=tf.Graph())
-      self.sessions.append(session)
+      if current_model_versions == self.model_versions:
+        # No version change, just sleep
+        if self.verbose:
+          logging.debug("Watch the model path: {} and sleep {} seconds".format(
+              self.model_base_path, 10))
+        time.sleep(10)
 
-      model_file_path = os.path.join(model_base_path, model_version)
-      logging.info("Load the TensorFlow model version: {}, path: {}".format(
-          model_version, model_file_path))
-      self.meta_graph = tf.saved_model.loader.load(
-          session, [tf.saved_model.tag_constants.SERVING], model_file_path)
+      else:
+        # Versions change, reload all the SavedModel
+        self.model_versions = current_model_versions
+        logging.info("Detect models change, reload the model versions: {}".
+                     format(self.model_versions))
+        del self.sessions
+        self.sessions = []
+
+        for model_version in self.model_versions:
+          # TODO: Just re-load the changed model versions
+          session = tf.Session(graph=tf.Graph())
+          self.sessions.append(session)
+
+          model_file_path = os.path.join(self.model_base_path, model_version)
+          logging.info("Load the TensorFlow model version: {}, path: {}".
+                       format(model_version, model_file_path))
+          self.meta_graph = tf.saved_model.loader.load(
+              session, [tf.saved_model.tag_constants.SERVING], model_file_path)
+          self.graph_signature = self.meta_graph.signature_def.items()[0][1]
 
   def inference(self, input_data):
     """
@@ -85,6 +110,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       feed_dict_map[input_tensor_name] = input_data[input_op_name]
 
     # 2. Build inference operators
+    # TODO: Optimize to pre-compute this before inference
     output_tensor_names = []
     output_op_names = []
     for output_item in self.graph_signature.outputs.items():

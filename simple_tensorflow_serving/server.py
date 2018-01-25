@@ -29,9 +29,8 @@ pprint.PrettyPrinter().pprint(FLAGS.__flags)
 
 def main():
   # Initialize TensorFlow inference service
-  inferenceService = TensorFlowInferenceService(
-      FLAGS.model_base_path, FLAGS.model_name, FLAGS.model_version,
-      FLAGS.verbose)
+  inferenceService = TensorFlowInferenceService(FLAGS.model_base_path,
+                                                FLAGS.verbose)
 
   # Initialize flask application
   app = Flask(__name__)
