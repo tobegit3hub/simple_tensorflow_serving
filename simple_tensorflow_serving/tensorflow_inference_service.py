@@ -26,18 +26,16 @@ class TensorFlowInferenceService(AbstractInferenceService):
     """
 
     self.model_base_path = model_base_path
-    self.model_versions = []
-    self.sessions = []
-    self.meta_graph = None
-    self.graph_signature = None
+    self.version_session_map = {}
+    self.model_graph_signature = None
     self.verbose = verbose
     self.should_stop_all_threads = False
 
-    # Register signal to exist
+    # Register the signals to exist
     signal.signal(signal.SIGTERM, self.stop_all_threads)
     signal.signal(signal.SIGINT, self.stop_all_threads)
 
-    # Start new thread to load models
+    # Start new thread to load models periodically
     load_savedmodels_thread = threading.Thread(
         target=self.load_savedmodels_thread, args=())
     load_savedmodels_thread.start()
@@ -56,12 +54,17 @@ class TensorFlowInferenceService(AbstractInferenceService):
     while self.should_stop_all_threads == False:
       # TODO: Add lock if needed
       current_model_versions_string = os.listdir(self.model_base_path)
-      current_model_versions = [
+      current_model_versions = set([
           int(version_string)
           for version_string in current_model_versions_string
-      ]
+      ])
 
-      if current_model_versions == self.model_versions:
+      old_model_versions_string = self.version_session_map.keys()
+      old_model_versions = set([
+          int(version_string) for version_string in old_model_versions_string
+      ])
+
+      if current_model_versions == old_model_versions:
         # No version change, just sleep
         if self.verbose:
           logging.debug("Watch the model path: {} and sleep {} seconds".format(
@@ -69,40 +72,31 @@ class TensorFlowInferenceService(AbstractInferenceService):
         time.sleep(10)
 
       else:
-        # Versions change, reload all the SavedModel
-        self.model_versions = current_model_versions
-        logging.info("Detect models change, reload the model versions: {}".
-                     format(self.model_versions))
-        del self.sessions
-        self.sessions = []
+        # Versions change, load the new models and offline the deprecated ones
+        logging.info(
+            "Model path updated, change model versions from: {} to: {}".format(
+                old_model_versions, current_model_versions))
 
-        for model_version in self.model_versions:
-          # TODO: Just re-load the changed model versions
+        # Put old model versions offline
+        offline_model_versions = old_model_versions - current_model_versions
+        for model_version in offline_model_versions:
+          logging.info(
+              "Put the model version: {} offline".format(str(model_version)))
+          del self.version_session_map[str(model_version)]
+
+        # Create Session for new model version
+        online_model_versions = current_model_versions - old_model_versions
+        for model_version in online_model_versions:
           session = tf.Session(graph=tf.Graph())
-          self.sessions.append(session)
+          self.version_session_map[str(model_version)] = session
 
           model_file_path = os.path.join(self.model_base_path,
                                          str(model_version))
-          logging.info("Load the TensorFlow model version: {}, path: {}".
-                       format(model_version, model_file_path))
-          self.meta_graph = tf.saved_model.loader.load(
+          logging.info("Put the model version: {} online, path: {}".format(
+              model_version, model_file_path))
+          meta_graph = tf.saved_model.loader.load(
               session, [tf.saved_model.tag_constants.SERVING], model_file_path)
-          self.graph_signature = self.meta_graph.signature_def.items()[0][1]
-
-  def get_session_by_model_version(self, model_version):
-    """
-    Get the session object by the model version.
-
-    Args:
-      The integer model version.
-    Return:
-      The session object.
-    """
-
-    for i in range(len(self.model_versions)):
-      if model_version == self.model_versions[i]:
-        # TODO: Return something if no model version matches
-        return self.sessions[i]
+          self.model_graph_signature = meta_graph.signature_def.items()[0][1]
 
   def inference(self, input_json):
     """
@@ -121,13 +115,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
     if self.verbose:
       logging.debug("Inference model_version: {}, data: {}".format(
           model_version, input_data))
-    if model_version not in self.model_versions:
+    if str(model_version) not in self.version_session_map:
       logging.error("No model version: {} to serve".format(model_version))
       return "Error, no model version for inference"
 
     # 1. Build feed dict for input data
     feed_dict_map = {}
-    for input_item in self.graph_signature.inputs.items():
+    for input_item in self.model_graph_signature.inputs.items():
       # Example: "keys"
       input_op_name = input_item[0]
       # Example: "Placeholder_0"
@@ -139,7 +133,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     # TODO: Optimize to pre-compute this before inference
     output_tensor_names = []
     output_op_names = []
-    for output_item in self.graph_signature.outputs.items():
+    for output_item in self.model_graph_signature.outputs.items():
       # Example: "keys"
       output_op_name = output_item[0]
       output_op_names.append(output_op_name)
@@ -150,7 +144,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     # 3. Inference with Session run
     if self.verbose:
       start_time = time.time()
-    sess = self.get_session_by_model_version(model_version)
+    sess = self.version_session_map[str(model_version)]
     result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
     if self.verbose:
       logging.debug("Inference time: {} s".format(time.time() - start_time))
