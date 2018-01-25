@@ -55,7 +55,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     while self.should_stop_all_threads == False:
       # TODO: Add lock if needed
-      current_model_versions = os.listdir(self.model_base_path)
+      current_model_versions_string = os.listdir(self.model_base_path)
+      current_model_versions = [
+          int(version_string)
+          for version_string in current_model_versions_string
+      ]
 
       if current_model_versions == self.model_versions:
         # No version change, just sleep
@@ -77,27 +81,49 @@ class TensorFlowInferenceService(AbstractInferenceService):
           session = tf.Session(graph=tf.Graph())
           self.sessions.append(session)
 
-          model_file_path = os.path.join(self.model_base_path, model_version)
+          model_file_path = os.path.join(self.model_base_path,
+                                         str(model_version))
           logging.info("Load the TensorFlow model version: {}, path: {}".
                        format(model_version, model_file_path))
           self.meta_graph = tf.saved_model.loader.load(
               session, [tf.saved_model.tag_constants.SERVING], model_file_path)
           self.graph_signature = self.meta_graph.signature_def.items()[0][1]
 
-  def inference(self, input_data):
+  def get_session_by_model_version(self, model_version):
+    """
+    Get the session object by the model version.
+
+    Args:
+      The integer model version.
+    Return:
+      The session object.
+    """
+
+    for i in range(len(self.model_versions)):
+      if model_version == self.model_versions[i]:
+        # TODO: Return something if no model version matches
+        return self.sessions[i]
+
+  def inference(self, input_json):
     """
     Make inference with the current Session object and JSON request data.
         
     Args:
       input_data: The JSON serialized object with key and array data.
-                  Example is {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}.
+                  Example is {"model_version": 1, "data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}.
     Return:
       The JSON serialized object with key and array data.
       Example is {"keys": [[11], [2]], "softmax": [[0.61554497, 0.38445505], [0.61554497, 0.38445505]], "prediction": [0, 0]}.
     """
 
+    model_version = int(input_json.get("model_version", "1"))
+    input_data = input_json.get("data", "")
     if self.verbose:
-      logging.debug("Inference data: {}".format(input_data))
+      logging.debug("Inference model_version: {}, data: {}".format(
+          model_version, input_data))
+    if model_version not in self.model_versions:
+      logging.error("No model version: {} to serve".format(model_version))
+      return "Error, no model version for inference"
 
     # 1. Build feed dict for input data
     feed_dict_map = {}
@@ -124,8 +150,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
     # 3. Inference with Session run
     if self.verbose:
       start_time = time.time()
-    result_ndarrays = self.sessions[0].run(
-        output_tensor_names, feed_dict=feed_dict_map)
+    sess = self.get_session_by_model_version(model_version)
+    result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
     if self.verbose:
       logging.debug("Inference time: {} s".format(time.time() - start_time))
 

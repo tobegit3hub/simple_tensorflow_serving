@@ -46,7 +46,7 @@ simple_tensorflow_serving --port=8500 --model_base_path="./examples/tensorflow_t
 Then request serving service with `curl`.
 
 ```shell
-curl -H "Content-Type: application/json" -X POST -d '{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}' http://127.0.0.1:8500
+curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
 ```
 
 Here is the example client in [Python](./python_client/).

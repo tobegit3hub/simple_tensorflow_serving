@@ -6,7 +6,7 @@ except ImportError:
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.1.2",
+    version="0.2.2",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
