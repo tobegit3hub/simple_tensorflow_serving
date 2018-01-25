@@ -43,7 +43,7 @@ You can export [SavedModel](https://www.tensorflow.org/programmers_guide/saved_m
 simple_tensorflow_serving --port=8500 --model_base_path="./examples/tensorflow_template_application_model"
 ```
 
-Then request TensorFlow serving with `curl`.
+Then request serving service with `curl`.
 
 ```shell
 curl -H "Content-Type: application/json" -X POST -d '{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}' http://127.0.0.1:8500
@@ -171,11 +171,24 @@ Here is the example client in [Rust](./swift_client/).
 
 Here is the example client in [Swift](./swift_client/).
 
+Here is the example client in [Perl](./perl_client/).
+
+```perl
+my $endpoint = "http://127.0.0.1:8500";
+my $json = '{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}';
+my $req = HTTP::Request->new( 'POST', $endpoint );
+$req->header( 'Content-Type' => 'application/json' );
+$req->content( $json );
+$ua = LWP::UserAgent->new;
+
+$response = $ua->request($req);
+```
+
 Here is the example client in [Lisp](./swift_client/).
 
 Here is the example client in [Haskell](./swift_client/).
 
-Use your favorite HTTP clients like `Postman`.
+Here is the example of `Postman`.
 
 ![](./images/simple_tensorflow_serving_client.png)
 
