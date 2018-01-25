@@ -26,6 +26,19 @@ int main() {
     float array[5] = {1, 2, 3, 4, 5};
     vector<float> brryay(10);
     print_array(array);
+
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 

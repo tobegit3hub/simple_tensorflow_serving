@@ -16,7 +16,10 @@ local input_data = {
     ["keys"] = keys_array,
     ["features"] = features_array,
 }
-request_body = json:encode (input_data)
+local json_data = {
+    ["data"] = input_data
+}
+request_body = json:encode (json_data)
 local response_body = {}
 
 local res, code, response_headers = http.request{

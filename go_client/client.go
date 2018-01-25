@@ -14,7 +14,7 @@ func main() {
     log.Print("Request tensorflow serving in " + endpoint)
 
     // Construct request data
-    dataByte := []byte(`{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}`)
+    dataByte := []byte(`{"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}`)
     var dataInterface map[string]interface{}
     json.Unmarshal(dataByte, &dataInterface)
     dataJson, _ := json.Marshal(dataInterface)

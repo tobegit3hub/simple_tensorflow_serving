@@ -1,6 +1,6 @@
 
 cc_binary(
-  name = "print_hello",
-  srcs = ["print_hello.cpp"],
+  name = "client",
+  srcs = ["client.cpp"],
   deps = [],
 )

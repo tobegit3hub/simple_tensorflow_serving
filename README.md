@@ -13,7 +13,8 @@ It is the bridge for TensorFlow model and bring machine learning to any programm
 * [x] Support `curl` and other command-line tools
 * [x] Support clients in any programming language
 * [x] Support statistical metrics for verbose requests
-* [x] Support loading multiple TF models dynamically
+* [x] Support serving multiple models at the same time
+* [x] Support dynamic online and offline for model versions
 
 ## Installation
 
@@ -68,7 +69,7 @@ Here is the example client in [Go](./go_client/).
 
 ```go
 endpoint := "http://127.0.0.1:8500"
-dataByte := []byte(`{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}`)
+dataByte := []byte(`{"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}`)
 var dataInterface map[string]interface{}
 json.Unmarshal(dataByte, &dataInterface)
 dataJson, _ := json.Marshal(dataInterface)
@@ -82,7 +83,7 @@ Here is the example client in [Ruby](./ruby_client/).
 endpoint = "http://127.0.0.1:8500"
 uri = URI.parse(endpoint)
 header = {"Content-Type" => "application/json"}
-input_data = {"keys"=> [[11.0], [2.0]], "features"=> [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+input_data = {"data" => {"keys"=> [[11.0], [2.0]], "features"=> [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}
 http = Net::HTTP.new(uri.host, uri.port)
 request = Net::HTTP::Post.new(uri.request_uri, header)
 request.body = input_data.to_json
@@ -96,7 +97,7 @@ Here is the example client in [JavaScript](./javascript_client/).
 var options = {
     uri: "http://127.0.0.1:8500",
     method: "POST",
-    json: {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+    json: {"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}
 };
 
 request(options, function (error, response, body) {});
@@ -106,9 +107,12 @@ Here is the example client in [PHP](./php_client/).
 
 ```php
 $endpoint = "127.0.0.1:8500";
-$postData = array(
+$inputData = array(
     "keys" => [[11.0], [2.0]],
     "features" => [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]],
+);
+$jsonData = array(
+    "data" => $inputData,
 );
 $ch = curl_init($endpoint);
 curl_setopt_array($ch, array(
@@ -117,11 +121,10 @@ curl_setopt_array($ch, array(
     CURLOPT_HTTPHEADER => array(
         "Content-Type: application/json"
     ),
-    CURLOPT_POSTFIELDS => json_encode($postData)
+    CURLOPT_POSTFIELDS => json_encode($jsonData)
 ));
 
 $response = curl_exec($ch);
-
 ```
 
 Here is the example client in [Erlang](./erlang_client/).
@@ -129,12 +132,11 @@ Here is the example client in [Erlang](./erlang_client/).
 ```erlang
 ssl:start(),
 application:start(inets),
-
 httpc:request(post,
-    {"http://127.0.0.1:8500", [],
-    "application/json",
-    "{\"keys\": [[11.0], [2.0]], \"features\": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}"
-    }, [], []).
+  {"http://127.0.0.1:8500", [],
+  "application/json",
+  "{\"data\": {\"keys\": [[11.0], [2.0]], \"features\": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}"
+  }, [], []).
 ```
 
 Here is the example client in [Lua](./lua_client/).
@@ -151,7 +153,10 @@ local input_data = {
     ["keys"] = keys_array,
     ["features"] = features_array,
 }
-request_body = json:encode (input_data)
+local json_data = {
+    ["data"] = input_data
+}
+request_body = json:encode (json_data)
 local response_body = {}
 
 local res, code, response_headers = http.request{
@@ -175,7 +180,7 @@ Here is the example client in [Perl](./perl_client/).
 
 ```perl
 my $endpoint = "http://127.0.0.1:8500";
-my $json = '{"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}';
+my $json = '{"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}';
 my $req = HTTP::Request->new( 'POST', $endpoint );
 $req->header( 'Content-Type' => 'application/json' );
 $req->content( $json );
