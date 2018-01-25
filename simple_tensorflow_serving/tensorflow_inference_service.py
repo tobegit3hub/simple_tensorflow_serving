@@ -24,18 +24,20 @@ class TensorFlowInferenceService(AbstractInferenceService):
     Return:
     """
 
-    self.sess = tf.Session(graph=tf.Graph())
-    self.meta_graph = self.load_savedmodel(self.sess, model_base_path,
-                                           model_name, model_version)
+    self.model_versions = []
+    self.sessions = []
+    self.meta_graph = None
+
+    self.load_savedmodels(model_base_path)
+
     self.graph_signature = self.meta_graph.signature_def.items()[0][1]
     self.verbose = verbose
 
-  def load_savedmodel(self, sess, model_base_path, model_name, model_version):
+  def load_savedmodels(self, model_base_path):
     """
     Load the SavedModel, update the Session object and return the Graph object.
 
     Args:
-      sess: The Session object to restore.
       model_base_path: The file path of the model.
       model_name: The name of the model.
       model_version: The version of the model.
@@ -43,13 +45,19 @@ class TensorFlowInferenceService(AbstractInferenceService):
       The meta Graph object.
     """
 
-    model_file_path = os.path.join(model_base_path, str(model_version))
-    logging.info("Load the TensorFlow model: {}, version: {}, path: {}".format(
-        model_name, model_version, model_file_path))
+    current_model_versions = os.listdir(model_base_path)
+    self.model_versions = current_model_versions
+    self.sessions = []
 
-    meta_graph = tf.saved_model.loader.load(
-        sess, [tf.saved_model.tag_constants.SERVING], model_file_path)
-    return meta_graph
+    for model_version in self.model_versions:
+      session = tf.Session(graph=tf.Graph())
+      self.sessions.append(session)
+
+      model_file_path = os.path.join(model_base_path, model_version)
+      logging.info("Load the TensorFlow model version: {}, path: {}".format(
+          model_version, model_file_path))
+      self.meta_graph = tf.saved_model.loader.load(
+          session, [tf.saved_model.tag_constants.SERVING], model_file_path)
 
   def inference(self, input_data):
     """
@@ -90,7 +98,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     # 3. Inference with Session run
     if self.verbose:
       start_time = time.time()
-    result_ndarrays = self.sess.run(
+    result_ndarrays = self.sessions[0].run(
         output_tensor_names, feed_dict=feed_dict_map)
     if self.verbose:
       logging.debug("Inference time: {} s".format(time.time() - start_time))

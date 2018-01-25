@@ -6,14 +6,14 @@
 
 Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
 
-It is the bridge for TensorFlow model and bring machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/) and so on.
+It is the bridge for TensorFlow model and bring machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/) and so on.
 
 * [x] Support arbitrary TensorFlow models
 * [x] Support the general RESTful/HTTP APIs
 * [x] Support `curl` and other command-line tools
 * [x] Support clients in any programming language
 * [x] Support statistical metrics for verbose requests
-* [ ] Support loading multiple TF models dynamically
+* [x] Support loading multiple TF models dynamically
 
 ## Installation
 
