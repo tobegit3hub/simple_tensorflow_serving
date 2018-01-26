@@ -6,7 +6,7 @@
 
 Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
 
-It is the bridge for TensorFlow model and bring machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/) and so on.
+It is the bridge for TensorFlow model and bring machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/) and so on.
 
 * [x] Support arbitrary TensorFlow models
 * [x] Support the general RESTful/HTTP APIs
@@ -192,6 +192,24 @@ $response = $ua->request($req);
 Here is the example client in [Lisp](./swift_client/).
 
 Here is the example client in [Haskell](./swift_client/).
+
+Here is the example client in [Clojure](./clojure_client/).
+
+Here is the example client in [R](./r_client/).
+
+```r
+endpoint <- "http://127.0.0.1:8500"
+body <- list(data = list(a = 1), keys = 1)
+json_data <- list(
+  data = list(
+    keys = list(list(1.0), list(2.0)), features = list(list(1, 1, 1, 1, 1, 1, 1, 1, 1), list(1, 1, 1, 1, 1, 1, 1, 1, 1))
+  )
+)
+
+r <- POST(endpoint, body = json_data, encode = "json")
+stop_for_status(r)
+content(r, "parsed", "text/html")
+```
 
 Here is the example of `Postman`.
 
