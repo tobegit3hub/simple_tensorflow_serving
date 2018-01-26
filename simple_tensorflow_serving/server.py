@@ -16,7 +16,6 @@ flags.DEFINE_string("host", "0.0.0.0", "The host of the server")
 flags.DEFINE_integer("port", 8500, "The port of the server")
 flags.DEFINE_string("model_base_path", "./model", "The file path of the model")
 flags.DEFINE_string("model_name", "default", "The name of the model")
-flags.DEFINE_integer("model_version", 1, "The version of the model")
 flags.DEFINE_boolean("verbose", True, "Enable verbose log or not")
 FLAGS = flags.FLAGS
 
@@ -35,18 +34,18 @@ def main():
   # Initialize flask application
   app = Flask(__name__)
 
+  # Define APIs
   @app.route("/", methods=["GET"])
   def index():
-    return "Get is not supported"
+    return "API Test"
 
   @app.route("/", methods=["POST"])
   def inference():
-    input_data = json.loads(request.data)
-    result = inferenceService.inference(input_data)
+    json_data = json.loads(request.data)
+    result = inferenceService.inference(json_data)
     return str(result)
 
-  logging.info(
-      "Start the server in host: {}, port: {}".format(FLAGS.host, FLAGS.port))
+  # Start HTTP server
   app.run(host=FLAGS.host, port=FLAGS.port)
 
 

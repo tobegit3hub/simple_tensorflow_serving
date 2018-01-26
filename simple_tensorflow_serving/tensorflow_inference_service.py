@@ -98,26 +98,34 @@ class TensorFlowInferenceService(AbstractInferenceService):
               session, [tf.saved_model.tag_constants.SERVING], model_file_path)
           self.model_graph_signature = meta_graph.signature_def.items()[0][1]
 
-  def inference(self, input_json):
+  def inference(self, json_data):
     """
     Make inference with the current Session object and JSON request data.
         
     Args:
-      input_data: The JSON serialized object with key and array data.
-                  Example is {"model_version": 1, "data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}.
+      json_data: The JSON serialized object with key and array data.
+                 Example is {"model_version": 1, "data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}.
     Return:
       The JSON serialized object with key and array data.
       Example is {"keys": [[11], [2]], "softmax": [[0.61554497, 0.38445505], [0.61554497, 0.38445505]], "prediction": [0, 0]}.
     """
 
-    model_version = int(input_json.get("model_version", "1"))
-    input_data = input_json.get("data", "")
+    # Use the latest model version if not specified
+    model_version = int(json_data.get("model_version", -1))
+    input_data = json_data.get("data", "")
+    if model_version == -1:
+      for model_version_string in self.version_session_map.keys():
+        if int(model_version_string) > model_version:
+          model_version = int(model_version_string)
+
+    if str(model_version) not in self.version_session_map or input_data == "":
+      logging.error("No model version: {} to serve".format(model_version))
+      return "Fail to request the model version: {} with data: {}".format(
+          model_version, input_data)
+
     if self.verbose:
       logging.debug("Inference model_version: {}, data: {}".format(
           model_version, input_data))
-    if str(model_version) not in self.version_session_map:
-      logging.error("No model version: {} to serve".format(model_version))
-      return "Error, no model version for inference"
 
     # 1. Build feed dict for input data
     feed_dict_map = {}

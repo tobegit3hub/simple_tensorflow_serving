@@ -9,10 +9,10 @@ class AbstractInferenceService(object):
   __metaclass__ = ABCMeta
 
   @abstractmethod
-  def inference(self, input_data):
+  def inference(self, json_data):
     """
     Args:
-      input_data: The JSON serialized object with key and array data.
+      json_data: The JSON serialized object with key and array data.
     Return:
       The JSON serialized object with key and array data.
     """
