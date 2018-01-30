@@ -10,8 +10,10 @@ It is the bridge for TensorFlow model and bring machine learning to any programm
 
 * [x] Support arbitrary TensorFlow models
 * [x] Support the general RESTful/HTTP APIs
+* [x] Support inference with accelerated GPU
 * [x] Support `curl` and other command-line tools
 * [x] Support clients in any programming language
+* [x] Support code-gen SDKs without writing clients
 * [x] Support statistical metrics for verbose requests
 * [x] Support serving multiple models at the same time
 * [x] Support dynamic online and offline for model versions
@@ -214,6 +216,32 @@ content(r, "parsed", "text/html")
 Here is the example of `Postman`.
 
 ![](./images/simple_tensorflow_serving_client.png)
+
+## Generated SDK
+
+Now we can generate SDKs for your model without writing any client code.
+
+```shell
+simple_tensorflow_serving --model_base_path="../examples/tensorflow_template_application_model/" --gen_sdk python
+```
+
+The generated code should look like this which can be test immediately.
+
+```
+#!/usr/bin/env python
+
+import requests
+
+def main():
+    endpoint = "http://127.0.0.1:8500"
+
+    input_data = {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+    result = requests.post(endpoint, json=input_data)
+    print(result.text)
+
+if __name__ == "__main__":
+    main()
+```
 
 ## How It Works
 

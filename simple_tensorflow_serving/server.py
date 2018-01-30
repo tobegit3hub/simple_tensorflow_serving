@@ -7,6 +7,7 @@ import pprint
 import tensorflow as tf
 from flask import Flask, request
 
+from gen_sdk import gen_sdk
 from tensorflow_inference_service import TensorFlowInferenceService
 
 # Define parameters
@@ -17,6 +18,7 @@ flags.DEFINE_integer("port", 8500, "The port of the server")
 flags.DEFINE_string("model_base_path", "./model", "The file path of the model")
 flags.DEFINE_string("model_name", "default", "The name of the model")
 flags.DEFINE_boolean("verbose", True, "Enable verbose log or not")
+flags.DEFINE_string("gen_sdk", "", "Generate the SDK code")
 FLAGS = flags.FLAGS
 
 logging.basicConfig(level=logging.DEBUG)
@@ -30,6 +32,13 @@ def main():
   # Initialize TensorFlow inference service
   inferenceService = TensorFlowInferenceService(FLAGS.model_base_path,
                                                 FLAGS.verbose)
+
+  if FLAGS.gen_sdk != "":
+    gen_sdk.gen_tensorflow_sdk(inferenceService, FLAGS.gen_sdk)
+
+    return
+
+  inferenceService.dynmaically_reload_models()
 
   # Initialize flask application
   app = Flask(__name__)
