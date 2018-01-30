@@ -220,6 +220,16 @@ Here is the example of `Postman`.
 1. `simple_tensorflow_serving` starts the HTTP server with `flask` application.
 2. Load the TensorFlow models with `tf.saved_model.loader` Python API.
 3. Construct the feed_dict data from the JSON body of the request.
+   ```
+   // Method: POST, Content-Type: application/json
+   {
+     "model_version": 1, // Optional
+     "data": {
+       "keys": [[1.0], [2.0]],
+       "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]
+     }
+   }
+   ```
 4. Use the TensorFlow Python API to `sess.run()` with feed_dict data.
 5. For multiple versions supported, it has independent thread to load models.
 
