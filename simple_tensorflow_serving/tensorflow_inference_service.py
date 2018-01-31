@@ -35,6 +35,9 @@ class TensorFlowInferenceService(AbstractInferenceService):
     signal.signal(signal.SIGTERM, self.stop_all_threads)
     signal.signal(signal.SIGINT, self.stop_all_threads)
 
+    model_version = self.get_one_model_version()
+    self.load_saved_model_version(model_version)
+
   def dynmaically_reload_models(self):
     """
     Start new thread to load models periodically.
@@ -43,6 +46,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       None
     """
 
+    logging.info("Start the new thread to periodically reload model versions")
     load_savedmodels_thread = threading.Thread(
         target=self.load_savedmodels_thread, args=())
     load_savedmodels_thread.start()

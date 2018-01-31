@@ -2,7 +2,6 @@
 
 import json
 import logging
-import pprint
 
 import tensorflow as tf
 from flask import Flask, render_template, request
@@ -17,6 +16,7 @@ flags.DEFINE_string("host", "0.0.0.0", "The host of the server")
 flags.DEFINE_integer("port", 8500, "The port of the server")
 flags.DEFINE_string("model_base_path", "./model", "The file path of the model")
 flags.DEFINE_string("model_name", "default", "The name of the model")
+flags.DEFINE_boolean("reload_models", True, "Reload models or not")
 flags.DEFINE_boolean("verbose", True, "Enable verbose log or not")
 flags.DEFINE_string("gen_sdk", "", "Generate the SDK code")
 FLAGS = flags.FLAGS
@@ -25,40 +25,42 @@ logging.basicConfig(level=logging.DEBUG)
 if FLAGS.enable_colored_log:
   import coloredlogs
   coloredlogs.install()
-pprint.PrettyPrinter().pprint(FLAGS.__flags)
+#logging.debug(FLAGS.__flags)
 
 
 def main():
-  # Initialize TensorFlow inference service
+  # Initialize TensorFlow inference service to load models
   inferenceService = TensorFlowInferenceService(FLAGS.model_base_path,
                                                 FLAGS.verbose)
 
+  # Generate sdk code and exit or not
   if FLAGS.gen_sdk != "":
-    model_version = inferenceService.get_one_model_version()
-    inferenceService.load_saved_model_version(model_version)
     gen_sdk.gen_tensorflow_sdk(inferenceService, FLAGS.gen_sdk)
-
     return
 
-  inferenceService.dynmaically_reload_models()
+  # Start thread to periodically reload models or not
+  if FLAGS.reload_models == True:
+    inferenceService.dynmaically_reload_models()
 
   # Initialize flask application
-  #app = Flask(__name__)
   app = Flask(__name__, template_folder='templates')
 
-  # Define APIs
+  # The API to render the dashboard page
   @app.route("/", methods=["GET"])
   def index():
-    #return "API Test"
-    return render_template('client.py')
+    return render_template(
+        "index.html",
+        model_versions=inferenceService.version_session_map.keys(),
+        model_graph_signature=str(inferenceService.model_graph_signature))
 
+  # The API to rocess inference request
   @app.route("/", methods=["POST"])
   def inference():
     json_data = json.loads(request.data)
     result = inferenceService.inference(json_data)
     return str(result)
 
-  # Start HTTP server
+  # Start the HTTP server
   app.run(host=FLAGS.host, port=FLAGS.port)
 
 

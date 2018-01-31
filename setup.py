@@ -17,7 +17,9 @@ setup(
     install_requires=["tensorflow>=1.0.0"],
     description=
     "The simpler and easy-to-use serving service for TensorFlow models",
-    packages=["simple_tensorflow_serving", "simple_tensorflow_serving.gen_sdk"],
+    packages=[
+        "simple_tensorflow_serving", "simple_tensorflow_serving.gen_sdk"
+    ],
     entry_points={
         "console_scripts": [
             "simple_tensorflow_serving=simple_tensorflow_serving.server:main",
