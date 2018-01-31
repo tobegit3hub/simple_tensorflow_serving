@@ -9,7 +9,7 @@ It is the HTTP client in C++ to access [Simple TensorFlow Serving](https://githu
 
 You can run the example client very easily.
 
-```shell
+```bash
 bazel build client:client
 
 bazel-bin/client/client

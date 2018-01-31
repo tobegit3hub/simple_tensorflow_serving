@@ -9,7 +9,7 @@ It is the HTTP client in JavaScript to access [Simple TensorFlow Serving](https:
 
 You can run the example client very easily.
 
-```shell
+```bash
 npm install request
 
 ./client.js

@@ -9,11 +9,11 @@ It is the HTTP client in Rust to access [Simple TensorFlow Serving](https://gith
 
 You can run the example client very easily.
 
-```shell
+```bash
 cargo run
 ```
 
-```shell
+```bash
 cargo build
 
 ./target/debug/client

@@ -9,7 +9,7 @@ It is the HTTP client in Lua to access [Simple TensorFlow Serving](https://githu
 
 You can run the example client very easily.
 
-```shell
+```bash
 luarocks install luasocket
 luarocks install json-lua
 

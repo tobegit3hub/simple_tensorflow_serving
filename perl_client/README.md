@@ -9,7 +9,7 @@ It is the HTTP client in Perl to access [Simple TensorFlow Serving](https://gith
 
 You can run the example client very easily.
 
-```shell
+```bash
 cpan HTTP::Request
 cpan LWP::UserAgent
 

@@ -9,6 +9,6 @@ It is the HTTP client in Bash to access [Simple TensorFlow Serving](https://gith
 
 You can run the example client very easily.
 
-```shell
+```bash
 ./client.sh
 ```

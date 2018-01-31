@@ -9,6 +9,6 @@ It is the HTTP client in Python to access [Simple TensorFlow Serving](https://gi
 
 You can run the example client very easily.
 
-```shell
+```bash
 ./client.py
 ```

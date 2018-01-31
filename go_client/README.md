@@ -9,13 +9,13 @@ It is the HTTP client in Go to access [Simple TensorFlow Serving](https://github
 
 You can run the example client very easily.
 
-```shell
+```bash
 go run client.go
 ```
 
 Or build the binary and run.
 
-```shell
+```bash
 go build client.go
 
 ./client

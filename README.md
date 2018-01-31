@@ -6,9 +6,9 @@
 
 Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
 
-It is the bridge for TensorFlow model and bring machine learning to any programming language, such as [Bash](./bash_client/), [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/) and so on.
+It is the bridge for TensorFlow models and bring machine learning to any programming language, such as [Bash](./bash_client/), [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/) and so on.
 
-* [x] Support arbitrary TensorFlow models
+* [x] Support distributed TensorFlow models
 * [x] Support the general RESTful/HTTP APIs
 * [x] Support inference with accelerated GPU
 * [x] Support `curl` and other command-line tools
@@ -20,22 +20,28 @@ It is the bridge for TensorFlow model and bring machine learning to any programm
 
 ## Installation
 
-Install the server with `pip`.
+Install the server with [pip](https://pypi.python.org/pypi/simple-tensorflow-serving).
 
 ```bash
 pip install simple-tensorflow-serving
 ```
 
-Or install with `bazel`.
+Or install with [bazel](https://bazel.build/).
 
 ```bash
 bazel build simple_tensorflow_serving:server
 ```
 
-Or install from source code.
+Or install from [source code](https://github.com/tobegit3hub/simple_tensorflow_serving).
 
 ```bash
 python ./setup.py install
+```
+
+Or use official [docker image](https://hub.docker.com/r/tobegit3hub/simple_tensorflow_serving/).
+
+```bash
+docker run -d -P 8500:8500 tobegit3hub/simple_tensorflow_serving
 ```
 
 ## Usage
@@ -213,7 +219,7 @@ stop_for_status(r)
 content(r, "parsed", "text/html")
 ```
 
-Here is the example of `Postman`.
+Here is the example with Postman.
 
 ![](./images/simple_tensorflow_serving_client.png)
 

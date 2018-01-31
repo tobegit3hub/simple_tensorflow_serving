@@ -9,9 +9,11 @@ It is the HTTP client in R to access [Simple TensorFlow Serving](https://github.
 
 You can run the example client very easily.
 
-```shell
+```bash
 install.packages("httr")
 install.packages("xml2")
+```
 
+```bash
 Rscript ./client.R
 ```

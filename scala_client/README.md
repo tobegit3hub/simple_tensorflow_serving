@@ -9,5 +9,5 @@ It is the HTTP client in Scala to access [Simple TensorFlow Serving](https://git
 
 You can run the example client very easily.
 
-```shell
+```bash
 ```
