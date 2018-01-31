@@ -235,7 +235,7 @@ import requests
 def main():
   endpoint = "http://127.0.0.1:8500"
 
-  input_data = {"keys": [[1], [1]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+  input_data = {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
   result = requests.post(endpoint, json=input_data)
   print(result.text)
 

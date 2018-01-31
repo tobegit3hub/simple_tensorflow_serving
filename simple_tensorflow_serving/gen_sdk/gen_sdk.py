@@ -1,8 +1,8 @@
 import logging
 
-import gen_python
 import gen_golang
 import gen_javascript
+import gen_python
 
 
 def gen_tensorflow_sdk(tensorflow_inference_service, language):

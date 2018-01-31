@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var request = require('request');
+var request = require("request");
 
 var options = {
     uri: "http://127.0.0.1:8500",
