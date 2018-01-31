@@ -6,7 +6,7 @@
 
 Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
 
-It is the bridge for TensorFlow model and bring machine learning to any programming language, such as [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/) and so on.
+It is the bridge for TensorFlow model and bring machine learning to any programming language, such as [Bash](./bash_client/), [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/) and so on.
 
 * [x] Support arbitrary TensorFlow models
 * [x] Support the general RESTful/HTTP APIs
@@ -46,7 +46,7 @@ You can export [SavedModel](https://www.tensorflow.org/programmers_guide/saved_m
 simple_tensorflow_serving --port=8500 --model_base_path="./examples/tensorflow_template_application_model"
 ```
 
-Then request serving service with `curl`.
+Here is the example client in [Bash](./bash_client/) with `curl`.
 
 ```shell
 curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
