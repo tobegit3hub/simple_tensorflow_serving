@@ -13,7 +13,7 @@ It is the bridge for TensorFlow model and bring machine learning to any programm
 * [x] Support inference with accelerated GPU
 * [x] Support `curl` and other command-line tools
 * [x] Support clients in any programming language
-* [x] Support code-gen SDKs without writing clients
+* [x] Support code-gen SDKs by models without coding
 * [x] Support statistical metrics for verbose requests
 * [x] Support serving multiple models at the same time
 * [x] Support dynamic online and offline for model versions
@@ -219,7 +219,7 @@ Here is the example of `Postman`.
 
 ## Generated SDK
 
-Now we can generate SDKs for your model without writing any client code.
+You can also generate SDK in different languages(Python, Golang, JavaScript etc.) for your model without writing any code.
 
 ```shell
 simple_tensorflow_serving --model_base_path="../examples/tensorflow_template_application_model/" --gen_sdk python
@@ -233,14 +233,14 @@ The generated code should look like this which can be test immediately.
 import requests
 
 def main():
-    endpoint = "http://127.0.0.1:8500"
+  endpoint = "http://127.0.0.1:8500"
 
-    input_data = {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
-    result = requests.post(endpoint, json=input_data)
-    print(result.text)
+  input_data = {"keys": [[1], [1]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+  result = requests.post(endpoint, json=input_data)
+  print(result.text)
 
 if __name__ == "__main__":
-    main()
+  main()
 ```
 
 ## How It Works
