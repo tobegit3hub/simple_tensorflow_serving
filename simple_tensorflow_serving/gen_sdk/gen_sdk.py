@@ -1,5 +1,6 @@
 import logging
 
+import gen_bash
 import gen_golang
 import gen_javascript
 import gen_python
@@ -17,7 +18,7 @@ def gen_tensorflow_sdk(tensorflow_inference_service, language):
     None
   """
 
-  if language not in ["python", "golang", "javascript"]:
+  if language not in ["bash", "python", "golang", "javascript"]:
     logging.error("Language: {} is not supported to gen sdk".format(language))
     return
 
@@ -62,7 +63,9 @@ def gen_tensorflow_sdk(tensorflow_inference_service, language):
 
     generated_tensor_data[opname] = internal_array
 
-  if language == "python":
+  if language == "bash":
+    gen_bash.gen_tensorflow_sdk(generated_tensor_data)
+  elif language == "python":
     gen_python.gen_tensorflow_sdk(generated_tensor_data)
   elif language == "golang":
     gen_golang.gen_tensorflow_sdk(generated_tensor_data)

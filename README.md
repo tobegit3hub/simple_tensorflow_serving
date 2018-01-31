@@ -22,19 +22,19 @@ It is the bridge for TensorFlow model and bring machine learning to any programm
 
 Install the server with `pip`.
 
-```shell
+```bash
 pip install simple-tensorflow-serving
 ```
 
 Or install with `bazel`.
 
-```shell
+```bash
 bazel build simple_tensorflow_serving:server
 ```
 
 Or install from source code.
 
-```shell
+```bash
 python ./setup.py install
 ```
 
@@ -42,13 +42,13 @@ python ./setup.py install
 
 You can export [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model) and setup the server easily.
 
-```shell
+```bash
 simple_tensorflow_serving --port=8500 --model_base_path="./examples/tensorflow_template_application_model"
 ```
 
 Here is the example client in [Bash](./bash_client/) with `curl`.
 
-```shell
+```bash
 curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
 ```
 
@@ -219,15 +219,25 @@ Here is the example of `Postman`.
 
 ## Generated SDK
 
-You can also generate SDK in different languages(Python, Golang, JavaScript etc.) for your model without writing any code.
+You can also generate SDK in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
 
-```shell
+```bash
+simple_tensorflow_serving --model_base_path="../examples/tensorflow_template_application_model/" --gen_sdk bash
+```
+
+```bash
 simple_tensorflow_serving --model_base_path="../examples/tensorflow_template_application_model/" --gen_sdk python
 ```
 
-The generated code should look like this which can be test immediately.
+The generated code should look like these which can be test immediately.
 
+```bash
+#!/bin/bash
+
+curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]} }' http://127.0.0.1:8500
 ```
+
+```python
 #!/usr/bin/env python
 
 import requests
@@ -259,7 +269,8 @@ if __name__ == "__main__":
    }
    ```
 4. Use the TensorFlow Python API to `sess.run()` with feed_dict data.
-5. For multiple versions supported, it has independent thread to load models.
+5. For multiple versions supported, it starts independent thread to load models.
+6. For generated SDKs, it reads user's model and render code with [Jinja](http://jinja.pocoo.org/) templates. 
 
 ![](./images/architecture.jpeg)
 
