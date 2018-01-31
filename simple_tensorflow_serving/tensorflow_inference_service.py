@@ -97,16 +97,25 @@ class TensorFlowInferenceService(AbstractInferenceService):
         # Create Session for new model version
         online_model_versions = current_model_versions - old_model_versions
         for model_version in online_model_versions:
-          session = tf.Session(graph=tf.Graph())
-          self.version_session_map[str(model_version)] = session
+          self.load_saved_model_version(model_version)
 
-          model_file_path = os.path.join(self.model_base_path,
-                                         str(model_version))
-          logging.info("Put the model version: {} online, path: {}".format(
-              model_version, model_file_path))
-          meta_graph = tf.saved_model.loader.load(
-              session, [tf.saved_model.tag_constants.SERVING], model_file_path)
-          self.model_graph_signature = meta_graph.signature_def.items()[0][1]
+  def load_saved_model_version(self, model_version):
+    session = tf.Session(graph=tf.Graph())
+    self.version_session_map[str(model_version)] = session
+
+    model_file_path = os.path.join(self.model_base_path, str(model_version))
+    logging.info("Put the model version: {} online, path: {}".format(
+        model_version, model_file_path))
+    meta_graph = tf.saved_model.loader.load(
+        session, [tf.saved_model.tag_constants.SERVING], model_file_path)
+    self.model_graph_signature = meta_graph.signature_def.items()[0][1]
+
+  def get_one_model_version(self):
+    current_model_versions_string = os.listdir(self.model_base_path)
+    if len(current_model_versions_string) > 0:
+      return int(current_model_versions_string[0])
+    else:
+      logging.error("No model version found")
 
   def inference(self, json_data):
     """

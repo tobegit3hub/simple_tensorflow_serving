@@ -5,7 +5,7 @@ import logging
 import pprint
 
 import tensorflow as tf
-from flask import Flask, request
+from flask import Flask, render_template, request
 
 from gen_sdk import gen_sdk
 from tensorflow_inference_service import TensorFlowInferenceService
@@ -34,6 +34,8 @@ def main():
                                                 FLAGS.verbose)
 
   if FLAGS.gen_sdk != "":
+    model_version = inferenceService.get_one_model_version()
+    inferenceService.load_saved_model_version(model_version)
     gen_sdk.gen_tensorflow_sdk(inferenceService, FLAGS.gen_sdk)
 
     return
@@ -41,12 +43,14 @@ def main():
   inferenceService.dynmaically_reload_models()
 
   # Initialize flask application
-  app = Flask(__name__)
+  #app = Flask(__name__)
+  app = Flask(__name__, template_folder='templates')
 
   # Define APIs
   @app.route("/", methods=["GET"])
   def index():
-    return "API Test"
+    #return "API Test"
+    return render_template('client.py')
 
   @app.route("/", methods=["POST"])
   def inference():
