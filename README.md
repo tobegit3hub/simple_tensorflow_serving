@@ -49,7 +49,7 @@ docker run -d -P 8500:8500 tobegit3hub/simple_tensorflow_serving
 You can export [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model) and setup the server easily.
 
 ```bash
-simple_tensorflow_serving --port=8500 --model_base_path="./examples/tensorflow_template_application_model"
+simple_tensorflow_serving --port=8500 --model_base_path="./models/tensorflow_template_application_model"
 ```
 
 Here is the example client in [Bash](./bash_client/) with `curl`.
@@ -228,11 +228,11 @@ Here is the example with Postman.
 You can also generate SDK in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
 
 ```bash
-simple_tensorflow_serving --model_base_path="../examples/tensorflow_template_application_model/" --gen_sdk bash
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_sdk bash
 ```
 
 ```bash
-simple_tensorflow_serving --model_base_path="../examples/tensorflow_template_application_model/" --gen_sdk python
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_sdk python
 ```
 
 The generated code should look like these which can be test immediately.
