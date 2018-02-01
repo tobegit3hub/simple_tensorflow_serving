@@ -3,10 +3,11 @@
 import cStringIO
 import json
 import logging
+from functools import wraps
 
 import numpy as np
 import tensorflow as tf
-from flask import Flask, render_template, request
+from flask import Flask, Response, render_template, request
 from PIL import Image
 
 from gen_sdk import gen_sdk
@@ -22,6 +23,9 @@ flags.DEFINE_string("model_name", "default", "The name of the model")
 flags.DEFINE_boolean("reload_models", True, "Reload models or not")
 flags.DEFINE_boolean("verbose", True, "Enable verbose log or not")
 flags.DEFINE_string("gen_sdk", "", "Generate the SDK code")
+flags.DEFINE_boolean("enable_auth", False, "Enable basic auth or not")
+flags.DEFINE_string("auth_username", "admin", "The username of basic auth")
+flags.DEFINE_string("auth_password", "admin", "The password of basic auth")
 FLAGS = flags.FLAGS
 
 logging.basicConfig(level=logging.DEBUG)
@@ -29,6 +33,48 @@ if FLAGS.enable_colored_log:
   import coloredlogs
   coloredlogs.install()
 #logging.debug(FLAGS.__flags)
+
+
+def verify_authentication(username, password):
+  """
+  Verify if this user should be authenticated or not.
+
+  Args:
+    username: The user name.
+    password: The password.
+
+  Return:
+    True if it passes and False if it does not pass.
+  """
+  if FLAGS.enable_auth:
+    if username == FLAGS.auth_username and password == FLAGS.auth_password:
+      return True
+    else:
+      return False
+  else:
+    return True
+
+
+def requires_auth(f):
+  """
+  The decorator to enable basic auth.
+  """
+
+  @wraps(f)
+  def decorated(*args, **kwargs):
+
+    auth = request.authorization
+
+    if FLAGS.enable_auth:
+      if not auth or not verify_authentication(auth.username, auth.password):
+        response = Response("Need basic auth to request the resources", 401, {
+            "WWW-Authenticate": '"Basic realm="Login Required"'
+        })
+        return response
+
+    return f(*args, **kwargs)
+
+  return decorated
 
 
 def main():
@@ -50,6 +96,7 @@ def main():
 
   # The API to render the dashboard page
   @app.route("/", methods=["GET"])
+  @requires_auth
   def index():
     return render_template(
         "index.html",
@@ -58,6 +105,7 @@ def main():
 
   # The API to rocess inference request
   @app.route("/", methods=["POST"])
+  @requires_auth
   def inference():
 
     # Process requests with json data

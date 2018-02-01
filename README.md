@@ -18,6 +18,7 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support statistical metrics for verbose requests
 * [x] Support serving multiple models at the same time
 * [x] Support dynamic online and offline for model versions
+* [x] Support secure authentication with configurable basic auth
 
 ## Installation
 
@@ -278,14 +279,42 @@ For image models, we can request with the raw image files instead of constructin
  
 Now start serving the image model like [deep_image_model](https://github.com/tobegit3hub/deep_image_model).
 
-```
+```bash
 simple_tensorflow_serving --model_base_path="../models/deep_image_model/"
 ```
 
 Then request with the raw image file which has the same shape of your model.
 
-```
+```bash
 curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
+```
+
+## Authentication
+
+For enterprises, we can enable basic auth for all the APIs and any anonymous request is denied.
+
+Now start the server with the configured username and password.
+
+```bash
+./server.py --model_base_path="../models/tensorflow_template_application_model/" --enable_auth=True --auth_username="admin" --auth_password="admin"
+```
+
+If you are using the Web dashboard, just type your certification. If you are using clients, give the username and password within the request.
+
+```
+curl -u admin:admin -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}' http://127.0.0.1:8500
+```
+
+```python
+endpoint = "http://127.0.0.1:8500"
+input_data = {
+  "data": {
+      "keys": [[11.0], [2.0]],
+      "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]
+  }
+}
+auth = requests.auth.HTTPBasicAuth("admin", "admin")
+result = requests.post(endpoint, json=input_data, auth=auth)
 ```
 
 ## How It Works
