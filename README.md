@@ -14,6 +14,7 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support `curl` and other command-line tools
 * [x] Support clients in any programming language
 * [x] Support code-gen SDKs by models without coding
+* [x] Support inference for image models with raw file
 * [x] Support statistical metrics for verbose requests
 * [x] Support serving multiple models at the same time
 * [x] Support dynamic online and offline for model versions
@@ -269,6 +270,22 @@ def main():
 
 if __name__ == "__main__":
   main()
+```
+
+## Image Models
+
+For image models, we can request with the raw image files instead of constructing array data.
+ 
+Now start serving the image model like [deep_image_model](https://github.com/tobegit3hub/deep_image_model).
+
+```
+simple_tensorflow_serving --model_base_path="../models/deep_image_model/"
+```
+
+Then request with the raw image file which has the same shape of your model.
+
+```
+curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
 ```
 
 ## How It Works
