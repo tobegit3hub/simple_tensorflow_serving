@@ -233,7 +233,7 @@ content(r, "parsed", "text/html")
 
 Here is the example with Postman.
 
-![](./images/simple_tensorflow_serving_client.png)
+![](./images/postman.png)
 
 ## Generated SDK
 
