@@ -74,7 +74,7 @@ Here is the example client in [Python](./python_client/).
 
 ```python
 endpoint = "http://127.0.0.1:8500"
-payload = {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}
+payload = {"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}
 
 result = requests.post(endpoint, json=payload)
 ```

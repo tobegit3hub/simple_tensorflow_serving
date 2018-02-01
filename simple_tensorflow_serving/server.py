@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 
+import cStringIO
 import json
 import logging
 
+import numpy as np
 import tensorflow as tf
 from flask import Flask, render_template, request
+from PIL import Image
 
 from gen_sdk import gen_sdk
 from tensorflow_inference_service import TensorFlowInferenceService
@@ -56,7 +59,33 @@ def main():
   # The API to rocess inference request
   @app.route("/", methods=["POST"])
   def inference():
-    json_data = json.loads(request.data)
+
+    # Process requests with json data
+    if request.content_type.startswith("application/json"):
+      json_data = json.loads(request.data)
+
+    # Process requests with raw image
+    elif request.content_type.startswith("multipart/form-data"):
+      json_data = {}
+
+      if "model_version" in request.form:
+        json_data["model_version"] = int(request.form["model_version"])
+
+      image_content = request.files["image"].read()
+      image_string = np.fromstring(image_content, np.uint8)
+      image_string_io = cStringIO.StringIO(image_string)
+      image_file = Image.open(image_string_io)
+      image_array = np.array(image_file)
+
+      json_data["data"] = {"image": image_array}
+
+    else:
+      logging.error(
+          "Unsupported content type: {}".format(request.content_type))
+      return "Error, unsupported content type"
+
+    # Request backend service with json data
+    logging.debug("Constructed request data as json: {}".format(json_data))
     result = inferenceService.inference(json_data)
     return str(result)
 
