@@ -46,7 +46,7 @@ Or use official [docker image](https://hub.docker.com/r/tobegit3hub/simple_tenso
 docker run -d -P 8500:8500 tobegit3hub/simple_tensorflow_serving
 ```
 
-## Usage
+## Basic Usage
 
 Start the server with the exported [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model).
 
