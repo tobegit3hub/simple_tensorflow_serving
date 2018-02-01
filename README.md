@@ -46,13 +46,25 @@ docker run -d -P 8500:8500 tobegit3hub/simple_tensorflow_serving
 
 ## Usage
 
-You can export [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model) and setup the server easily.
+Start the server with the exported [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model).
 
 ```bash
 simple_tensorflow_serving --port=8500 --model_base_path="./models/tensorflow_template_application_model"
 ```
 
-Here is the example client in [Bash](./bash_client/) with `curl`.
+Check out the dashboard in [http://127.0.0.1:8500](http://127.0.0.1:8500) in your browser.
+ 
+![dashboard](./images/dashboard.png)
+
+Then access the TensorFlow model and inference with test dataset.
+
+```bash
+curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
+```
+
+## Advanced Usage
+
+Here is the example client in [Bash](./bash_client/).
 
 ```bash
 curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
