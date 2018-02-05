@@ -1,5 +1,7 @@
 import logging
 
+import tensorflow as tf
+
 import gen_bash
 import gen_golang
 import gen_javascript
@@ -24,12 +26,14 @@ def gen_tensorflow_sdk(tensorflow_inference_service, language):
 
   # Example: {"keys": [-1, 1], "features": [-1, 9]}
   input_opname_shape_map = {}
+  input_opname_dtype_map = {}
 
   for input_item in tensorflow_inference_service.model_graph_signature.inputs.items(
   ):
     # Example: "keys"
     input_opname = input_item[0]
     input_opname_shape_map[input_opname] = []
+    input_opname_dtype_map[input_opname] = input_item[1].dtype
 
     # Example: [-1, 1]
     shape_dims = input_item[1].tensor_shape.dim
@@ -57,7 +61,22 @@ def gen_tensorflow_sdk(tensorflow_inference_service, language):
         dim = batch_size
 
       if internal_array == None:
-        internal_array = [1.0 for i in range(dim)]
+        # Fill with default values by the types, refer to https://www.tensorflow.org/api_docs/python/tf/DType
+        default_value = 1.0
+        dtype = input_opname_dtype_map[opname]
+        if dtype == int(tf.int8) or dtype == int(tf.uint8) or dtype == int(
+            tf.int16) or dtype == int(tf.uint16) or dtype == int(
+                tf.int32) or dtype == int(tf.uint32):
+          default_value = 1
+        elif dtype == int(tf.int64) or dtype == int(tf.uint64):
+          default_value = 1l
+        elif dtype == int(tf.int32):
+          default_value = True
+        elif dtype == int(tf.string):
+          default_value = ""
+
+        internal_array = [default_value for i in range(dim)]
+
       else:
         internal_array = [internal_array for i in range(dim)]
 

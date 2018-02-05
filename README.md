@@ -43,7 +43,7 @@ python ./setup.py install
 Or use official [docker image](https://hub.docker.com/r/tobegit3hub/simple_tensorflow_serving/).
 
 ```bash
-docker run -d -P 8500:8500 tobegit3hub/simple_tensorflow_serving
+docker run -d -p 8501:8500 tobegit3hub/simple_tensorflow_serving
 ```
 
 ## Basic Usage
