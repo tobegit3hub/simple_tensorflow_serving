@@ -129,7 +129,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       json_data: The JSON serialized object with key and array data.
                  Example is {"model_version": 1, "data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}.
     Return:
-      The JSON serialized object with key and array data.
+      The dictionary with key and array data.
       Example is {"keys": [[11], [2]], "softmax": [[0.61554497, 0.38445505], [0.61554497, 0.38445505]], "prediction": [0, 0]}.
     """
 
