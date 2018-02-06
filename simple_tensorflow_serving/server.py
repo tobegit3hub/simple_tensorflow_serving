@@ -7,7 +7,7 @@ from functools import wraps
 
 import numpy as np
 import tensorflow as tf
-from flask import Flask, Response, render_template, request
+from flask import Flask, Response, render_template, request, jsonify
 from PIL import Image
 
 from gen_sdk import gen_sdk
@@ -33,6 +33,13 @@ if FLAGS.enable_colored_log:
   import coloredlogs
   coloredlogs.install()
 #logging.debug(FLAGS.__flags)
+
+
+class NumpyEncoder(json.JSONEncoder):
+  def default(self, obj):
+    if isinstance(obj, np.ndarray):
+      return obj.tolist()
+    return json.JSONEncoder.default(self, obj)
 
 
 def verify_authentication(username, password):
@@ -135,9 +142,12 @@ def main():
       return "Error, unsupported content type"
 
     # Request backend service with json data
-    logging.debug("Constructed request data as json: {}".format(json_data))
+    #logging.debug("Constructed request data as json: {}".format(json_data))
     result = inferenceService.inference(json_data)
-    return str(result)
+
+    # TODO: Change the decoder for numpy data
+    return jsonify(json.loads(json.dumps(result, cls=NumpyEncoder)))
+
 
   # Start the HTTP server
   app.run(host=FLAGS.host, port=FLAGS.port)
