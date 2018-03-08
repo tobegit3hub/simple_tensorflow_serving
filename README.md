@@ -6,7 +6,7 @@
 
 Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
 
-It is the bridge for TensorFlow models and bring machine learning to any programming language, such as [Bash](./bash_client/), [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/) and so on.
+It is the bridge for TensorFlow models and bring machine learning to any programming language, such as [Bash](./bash_client/), [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/).
 
 * [x] Support distributed TensorFlow models
 * [x] Support the general RESTful/HTTP APIs
@@ -40,28 +40,32 @@ Or install from [source code](https://github.com/tobegit3hub/simple_tensorflow_s
 python ./setup.py install
 ```
 
-Or use official [docker image](https://hub.docker.com/r/tobegit3hub/simple_tensorflow_serving/).
+Or use [docker image](https://hub.docker.com/r/tobegit3hub/simple_tensorflow_serving/).
 
 ```bash
 docker run -d -p 8501:8500 tobegit3hub/simple_tensorflow_serving
 ```
 
-## Basic Usage
+## Quick Start
 
-Start the server with the exported [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model).
+Start the server with the TensorFlow [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model).
 
 ```bash
-simple_tensorflow_serving --port=8500 --model_base_path="./models/tensorflow_template_application_model"
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model"
 ```
 
-Check out the dashboard in [http://127.0.0.1:8500](http://127.0.0.1:8500) in your browser.
+Check out the dashboard in [http://127.0.0.1:8500](http://127.0.0.1:8500) in web browser.
  
 ![dashboard](./images/dashboard.png)
 
-Then access the TensorFlow model and inference with test dataset.
+Generate Python click and access the model with the test dataset.
 
 ```bash
-curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --gen_sdk="python"
+```
+
+```bash
+python ./client.py
 ```
 
 ## Advanced Usage
