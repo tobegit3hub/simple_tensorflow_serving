@@ -1,4 +1,2 @@
-# Add all static files
-
-include simple_tensorflow_serving/templates/index.html
-include simple_tensorflow_serving/static/*
+recursive-include simple_tensorflow_serving/static/ *
+recursive-include simple_tensorflow_serving/template/ *

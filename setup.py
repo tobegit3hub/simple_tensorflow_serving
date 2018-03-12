@@ -10,7 +10,7 @@ except ImportError:
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.2.3",
+    version="0.2.4",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
@@ -18,7 +18,7 @@ setup(
     description=
     "The simpler and easy-to-use serving service for TensorFlow models",
     packages=[
-        "simple_tensorflow_serving", "simple_tensorflow_serving.gen_sdk"
+        "simple_tensorflow_serving", "simple_tensorflow_serving.gen_client"
     ],
     #package_data={
     #    "simple_tensorflow_serving/static": ['simple_tensorflow_serving/templates/*.html', 'simple_tensorflow_serving/static/*']
