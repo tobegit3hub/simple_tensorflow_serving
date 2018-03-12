@@ -293,6 +293,16 @@ Then request with the raw image file which has the same shape of your model.
 curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
 ```
 
+## Custom Op
+
+If your models rely on new TensorFlow [custom op](https://www.tensorflow.org/extend/adding_an_op), you can run the server while loading the so files.
+
+```bash
+simple_tensorflow_serving --model_base_path="./model/" --custom_op_paths="./foo_op/"
+```
+
+Please check out the complete example in [./examples/custom_op/](./examples/custom_op/).
+
 ## Authentication
 
 For enterprises, we can enable basic auth for all the APIs and any anonymous request is denied.
