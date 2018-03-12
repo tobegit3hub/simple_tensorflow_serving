@@ -14,7 +14,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
   The TensorFlow service to load TensorFlow SavedModel and make inference.
   """
 
-  def __init__(self, model_base_path, verbose=False):
+  def __init__(self, model_base_path, custom_op_paths="", verbose=False):
     """
     Initialize the TensorFlow service by loading SavedModel to the Session.
         
@@ -25,9 +25,21 @@ class TensorFlowInferenceService(AbstractInferenceService):
     Return:
     """
 
+    self.load_custom_op(custom_op_paths)
+
+    self.model_name_path_map = {}
+    self.model_name_path_map["model1"] = model_base_path
+    self.model_name_path_map["model2"] = model_base_path
+
     self.model_base_path = model_base_path
     self.version_session_map = {}
+
+    self.model_name_version_session_map = {}
+
     self.model_graph_signature = None
+
+    self.model_name_graph_signature_map = {}
+
     self.verbose = verbose
     self.should_stop_all_threads = False
 
@@ -37,6 +49,22 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     model_version = self.get_one_model_version()
     self.load_saved_model_version(model_version)
+
+  def load_custom_op(self, custom_op_paths):
+
+    custom_op_path_list = custom_op_paths.split(",")
+
+    for custom_op_path in custom_op_path_list:
+      if os.path.isdir(custom_op_path):
+        for filename in os.listdir(custom_op_path):
+          if filename.endswith(".so"):
+
+            op_filepath = os.path.join(custom_op_path, filename)
+            logging.info("Load the so file from: {}".format(op_filepath))
+            tf.load_op_library(op_filepath)
+
+      else:
+        logging.error("The path does not exist: {}".format(custom_op_path))
 
   def dynmaically_reload_models(self):
     """

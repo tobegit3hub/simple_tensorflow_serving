@@ -20,12 +20,13 @@ flags.DEFINE_boolean("enable_colored_log", False, "Enable colored log")
 flags.DEFINE_string("bind", "0.0.0.0:8500", "Bind address of the server")
 flags.DEFINE_string("host", "0.0.0.0", "The host of the server")
 flags.DEFINE_integer("port", 8500, "The port of the server")
-flags.DEFINE_string("model_base_path",
-                    "../models/tensorflow_template_application_model/",
-                    "The file path of the model")
-# flags.DEFINE_string("model_base_path", "./model", "The file path of the model")
+#flags.DEFINE_string("model_base_path",
+#                    "../models/tensorflow_template_application_model/",
+#                    "The file path of the model")
+flags.DEFINE_string("model_base_path", "./model", "The file path of the model")
 flags.DEFINE_string("model_name", "default", "The name of the model")
 flags.DEFINE_boolean("reload_models", True, "Reload models or not")
+flags.DEFINE_string("custom_op_paths", "", "The path of custom op so files")
 flags.DEFINE_boolean("verbose", True, "Enable verbose log or not")
 flags.DEFINE_string("gen_sdk", "", "Generate the SDK code")
 flags.DEFINE_boolean("enable_auth", False, "Enable basic auth or not")
@@ -94,8 +95,8 @@ def requires_auth(f):
 application = Flask(__name__, template_folder='templates')
 
 # Initialize TensorFlow inference service to load models
-inferenceService = TensorFlowInferenceService(FLAGS.model_base_path,
-                                              FLAGS.verbose)
+inferenceService = TensorFlowInferenceService(
+    FLAGS.model_base_path, FLAGS.custom_op_paths, FLAGS.verbose)
 
 # Generate sdk code and exit or not
 if FLAGS.gen_sdk != "":
