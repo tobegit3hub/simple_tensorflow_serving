@@ -21,7 +21,8 @@ def gen_tensorflow_client(tensorflow_inference_service, language):
   """
 
   if language not in ["bash", "python", "golang", "javascript"]:
-    logging.error("Language: {} is not supported to gen client".format(language))
+    logging.error(
+        "Language: {} is not supported to gen client".format(language))
     return
 
   # Example: {"keys": [-1, 1], "features": [-1, 9]}

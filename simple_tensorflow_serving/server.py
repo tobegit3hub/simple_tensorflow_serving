@@ -1,45 +1,93 @@
 #!/usr/bin/env python
 
+import argparse
+import argcomplete
 import cStringIO
 import json
 import logging
+import sys
 from functools import wraps
 
 import numpy as np
-import tensorflow as tf
 from flask import Flask, Response, jsonify, render_template, request
 from PIL import Image
 
 from gen_client import gen_client
 from tensorflow_inference_service import TensorFlowInferenceService
 
-# Define parameters
-flags = tf.app.flags
-flags.DEFINE_boolean("enable_colored_log", False, "Enable colored log")
-# TODO: Remove if it does not need gunicorn
-flags.DEFINE_string("bind", "0.0.0.0:8500", "Bind address of the server")
-flags.DEFINE_string("host", "0.0.0.0", "The host of the server")
-flags.DEFINE_integer("port", 8500, "The port of the server")
-#flags.DEFINE_string("model_base_path",
-#                    "../models/tensorflow_template_application_model/",
-#                    "The file path of the model")
-flags.DEFINE_string("model_base_path", "./model", "The file path of the model")
-flags.DEFINE_string("model_name", "default", "The name of the model")
-flags.DEFINE_boolean("reload_models", True, "Reload models or not")
-flags.DEFINE_string("custom_op_paths", "", "The path of custom op so files")
-flags.DEFINE_boolean("verbose", True, "Enable verbose log or not")
-flags.DEFINE_string("gen_client", "", "Generate the SDK code")
-flags.DEFINE_boolean("enable_auth", False, "Enable basic auth or not")
-flags.DEFINE_string("auth_username", "admin", "The username of basic auth")
-flags.DEFINE_string("auth_password", "admin", "The password of basic auth")
-FLAGS = flags.FLAGS
-
 logging.basicConfig(level=logging.DEBUG)
-if FLAGS.enable_colored_log:
-  import coloredlogs
-  coloredlogs.install()
-# TODO: Support configured log level
-#logging.debug(FLAGS.__flags)
+
+# Define parameters
+parser = argparse.ArgumentParser()
+
+# TODO: Remove if it does not need gunicorn
+parser.add_argument(
+    "--bind",
+    default="0.0.0.0:8500",
+    help="Bind address of the server(eg. 0.0.0.0:8500)")
+parser.add_argument(
+    "--host", default="0.0.0.0", help="The host of the server(eg. 0.0.0.0)")
+parser.add_argument(
+    "--port", default=8500, help="The port of the server(eg. 8500)", type=int)
+parser.add_argument(
+    "--model_base_path",
+    default="./model",
+    help="The file path of the model(eg. 8500)")
+parser.add_argument(
+    "--model_name",
+    default="default",
+    help="The name of the model(eg. default)")
+parser.add_argument(
+    "--reload_models",
+    default=True,
+    help="Reload models or not(eg. True)",
+    type=bool)
+parser.add_argument(
+    "--custom_op_paths",
+    default="",
+    help="The path of custom op so files(eg. ./)")
+parser.add_argument(
+    "--verbose",
+    default=True,
+    help="Enable verbose log or not(eg. True)",
+    type=bool)
+parser.add_argument(
+    "--gen_client", default="", help="Generate the client code(eg. python)")
+parser.add_argument(
+    "--enable_auth",
+    default=False,
+    help="Enable basic auth or not(eg. False)",
+    type=bool)
+parser.add_argument(
+    "--auth_username",
+    default="admin",
+    help="The username of basic auth(eg. admin)")
+parser.add_argument(
+    "--auth_password",
+    default="admin",
+    help="The password of basic auth(eg. admin)")
+parser.add_argument(
+    "--enable_colored_log",
+    default=False,
+    help="Enable colored log(eg. False)",
+    type=bool)
+
+# For auto-complete
+argcomplete.autocomplete(parser)
+
+if len(sys.argv) == 1:
+  args = parser.parse_args(["-h"])
+  args.func(args)
+else:
+  args = parser.parse_args(sys.argv[1:])
+  #import ipdb;ipdb.set_trace()
+
+  for arg in vars(args):
+    logging.info("{}: {}".format(arg, getattr(args, arg)))
+
+  if args.enable_colored_log:
+    import coloredlogs
+    coloredlogs.install()
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -60,8 +108,8 @@ def verify_authentication(username, password):
   Return:
     True if it passes and False if it does not pass.
   """
-  if FLAGS.enable_auth:
-    if username == FLAGS.auth_username and password == FLAGS.auth_password:
+  if args.enable_auth:
+    if username == args.auth_username and password == args.auth_password:
       return True
     else:
       return False
@@ -79,7 +127,7 @@ def requires_auth(f):
 
     auth = request.authorization
 
-    if FLAGS.enable_auth:
+    if args.enable_auth:
       if not auth or not verify_authentication(auth.username, auth.password):
         response = Response("Need basic auth to request the resources", 401, {
             "WWW-Authenticate": '"Basic realm="Login Required"'
@@ -96,15 +144,15 @@ application = Flask(__name__, template_folder='templates')
 
 # Initialize TensorFlow inference service to load models
 inferenceService = TensorFlowInferenceService(
-    FLAGS.model_base_path, FLAGS.custom_op_paths, FLAGS.verbose)
+    args.model_base_path, args.custom_op_paths, args.verbose)
 
 # Generate client code and exit or not
-if FLAGS.gen_client != "":
-  gen_client.gen_tensorflow_client(inferenceService, FLAGS.gen_client)
+if args.gen_client != "":
+  gen_client.gen_tensorflow_client(inferenceService, args.gen_client)
   exit(0)
 
 # Start thread to periodically reload models or not
-if FLAGS.reload_models == True:
+if args.reload_models == True:
   inferenceService.dynmaically_reload_models()
 
 
@@ -158,7 +206,7 @@ def inference():
 
 def main():
   # Start the HTTP server
-  application.run(host=FLAGS.host, port=FLAGS.port)
+  application.run(host=args.host, port=args.port)
 
 
 if __name__ == "__main__":

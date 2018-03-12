@@ -19,7 +19,7 @@ Now we can train and export the model with this script.
 If we run the serving service like this, we will get the error about missing custom op.
 
 ```
-simple_tensorflow_serving --model_base_path="./model/
+simple_tensorflow_serving --model_base_path="./model/"
 ```
 
 Now we can load the custom op while starting the serving service with this command.

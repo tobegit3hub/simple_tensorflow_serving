@@ -26,7 +26,7 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 Install the server with [pip](https://pypi.python.org/pypi/simple-tensorflow-serving).
 
 ```bash
-pip install simple-tensorflow-serving
+pip install simple_tensorflow_serving
 ```
 
 Or install with [bazel](https://bazel.build/).
@@ -44,7 +44,7 @@ python ./setup.py install
 Or use [docker image](https://hub.docker.com/r/tobegit3hub/simple_tensorflow_serving/).
 
 ```bash
-docker run -d -p 8501:8500 tobegit3hub/simple_tensorflow_serving
+docker run -d -p 8500:8500 tobegit3hub/simple_tensorflow_serving
 ```
 
 ## Quick Start
