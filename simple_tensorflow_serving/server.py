@@ -10,7 +10,7 @@ import tensorflow as tf
 from flask import Flask, Response, jsonify, render_template, request
 from PIL import Image
 
-from gen_sdk import gen_sdk
+from gen_client import gen_client
 from tensorflow_inference_service import TensorFlowInferenceService
 
 # Define parameters
@@ -28,7 +28,7 @@ flags.DEFINE_string("model_name", "default", "The name of the model")
 flags.DEFINE_boolean("reload_models", True, "Reload models or not")
 flags.DEFINE_string("custom_op_paths", "", "The path of custom op so files")
 flags.DEFINE_boolean("verbose", True, "Enable verbose log or not")
-flags.DEFINE_string("gen_sdk", "", "Generate the SDK code")
+flags.DEFINE_string("gen_client", "", "Generate the SDK code")
 flags.DEFINE_boolean("enable_auth", False, "Enable basic auth or not")
 flags.DEFINE_string("auth_username", "admin", "The username of basic auth")
 flags.DEFINE_string("auth_password", "admin", "The password of basic auth")
@@ -98,9 +98,9 @@ application = Flask(__name__, template_folder='templates')
 inferenceService = TensorFlowInferenceService(
     FLAGS.model_base_path, FLAGS.custom_op_paths, FLAGS.verbose)
 
-# Generate sdk code and exit or not
-if FLAGS.gen_sdk != "":
-  gen_sdk.gen_tensorflow_sdk(inferenceService, FLAGS.gen_sdk)
+# Generate client code and exit or not
+if FLAGS.gen_client != "":
+  gen_client.gen_tensorflow_client(inferenceService, FLAGS.gen_client)
   exit(0)
 
 # Start thread to periodically reload models or not

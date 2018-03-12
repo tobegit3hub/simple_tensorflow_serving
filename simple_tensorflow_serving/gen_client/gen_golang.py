@@ -4,7 +4,7 @@ import logging
 from jinja2 import Template
 
 
-def gen_tensorflow_sdk(generated_tensor_data):
+def gen_tensorflow_client(generated_tensor_data):
   """
   Generate TensorFlow SDK in Golang.
 

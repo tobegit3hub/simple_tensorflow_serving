@@ -30,8 +30,9 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.model_name_path_map = {}
     self.model_name_path_map["model1"] = model_base_path
     self.model_name_path_map["model2"] = model_base_path
-
+    #self.model_base_path = model_base_paths
     self.model_base_path = model_base_path
+
     self.version_session_map = {}
 
     self.model_name_version_session_map = {}

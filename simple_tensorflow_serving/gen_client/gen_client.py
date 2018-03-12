@@ -8,20 +8,20 @@ import gen_javascript
 import gen_python
 
 
-def gen_tensorflow_sdk(tensorflow_inference_service, language):
+def gen_tensorflow_client(tensorflow_inference_service, language):
   """
-  Generate the TensorFlow SDK for programming languages.
+  Generate the TensorFlow client for programming languages.
   
   Args:
     tensorflow_inference_service: The tensorflow service object.
-    language: The sdk in this programming language to generate.
+    language: The client in this programming language to generate.
     
   Return:
     None
   """
 
   if language not in ["bash", "python", "golang", "javascript"]:
-    logging.error("Language: {} is not supported to gen sdk".format(language))
+    logging.error("Language: {} is not supported to gen client".format(language))
     return
 
   # Example: {"keys": [-1, 1], "features": [-1, 9]}
@@ -83,10 +83,10 @@ def gen_tensorflow_sdk(tensorflow_inference_service, language):
     generated_tensor_data[opname] = internal_array
 
   if language == "bash":
-    gen_bash.gen_tensorflow_sdk(generated_tensor_data)
+    gen_bash.gen_tensorflow_client(generated_tensor_data)
   elif language == "python":
-    gen_python.gen_tensorflow_sdk(generated_tensor_data)
+    gen_python.gen_tensorflow_client(generated_tensor_data)
   elif language == "golang":
-    gen_golang.gen_tensorflow_sdk(generated_tensor_data)
+    gen_golang.gen_tensorflow_client(generated_tensor_data)
   elif language == "javascript":
-    gen_javascript.gen_tensorflow_sdk(generated_tensor_data)
+    gen_javascript.gen_tensorflow_client(generated_tensor_data)

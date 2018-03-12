@@ -13,7 +13,7 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support inference with accelerated GPU
 * [x] Support `curl` and other command-line tools
 * [x] Support clients in any programming language
-* [x] Support code-gen SDKs by models without coding
+* [x] Support code-gen client by models without coding
 * [x] Support inference for image models with raw file
 * [x] Support statistical metrics for verbose requests
 * [x] Support serving multiple models at the same time
@@ -61,7 +61,7 @@ Check out the dashboard in [http://127.0.0.1:8500](http://127.0.0.1:8500) in web
 Generate Python click and access the model with the test dataset.
 
 ```bash
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --gen_sdk="python"
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --gen_client="python"
 ```
 
 ```bash
@@ -241,16 +241,16 @@ Here is the example with Postman.
 
 ![](./images/postman.png)
 
-## Generated SDK
+## Generate Client
 
-You can also generate SDK in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
+You can also generate clients in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
 
 ```bash
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_sdk bash
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client bash
 ```
 
 ```bash
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_sdk python
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client python
 ```
 
 The generated code should look like these which can be test immediately.
@@ -277,7 +277,7 @@ if __name__ == "__main__":
   main()
 ```
 
-## Image Models
+## Image Model
 
 For image models, we can request with the raw image files instead of constructing array data.
  
@@ -338,7 +338,7 @@ result = requests.post(endpoint, json=input_data, auth=auth)
    ```
 4. Use the TensorFlow Python API to `sess.run()` with feed_dict data.
 5. For multiple versions supported, it starts independent thread to load models.
-6. For generated SDKs, it reads user's model and render code with [Jinja](http://jinja.pocoo.org/) templates. 
+6. For generated clients, it reads user's model and render code with [Jinja](http://jinja.pocoo.org/) templates. 
 
 ![](./images/architecture.jpeg)
 
