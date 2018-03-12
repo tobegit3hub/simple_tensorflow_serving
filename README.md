@@ -18,6 +18,7 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support statistical metrics for verbose requests
 * [x] Support serving multiple models at the same time
 * [x] Support dynamic online and offline for model versions
+* [x] Support loading new custom op for TensorFlow models
 * [x] Support secure authentication with configurable basic auth
 
 ## Installation
