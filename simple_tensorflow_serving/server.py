@@ -123,7 +123,7 @@ def requires_auth(f):
   """
 
   @wraps(f)
-  def decorated(*args, **kwargs):
+  def decorated(*decorator_args, **decorator_kwargs):
 
     auth = request.authorization
 
@@ -134,7 +134,7 @@ def requires_auth(f):
         })
         return response
 
-    return f(*args, **kwargs)
+    return f(*decorator_args, **decorator_kwargs)
 
   return decorated
 
