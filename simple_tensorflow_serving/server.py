@@ -75,9 +75,6 @@ parser.add_argument(
 # TODO: Support auto-complete
 #argcomplete.autocomplete(parser)
 
-import tensorflow as tf
-tf.add(1)
-
 if len(sys.argv) == 1:
   args = parser.parse_args(["-h"])
   args.func(args)
