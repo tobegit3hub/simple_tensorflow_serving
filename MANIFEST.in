@@ -1,2 +1,2 @@
 recursive-include simple_tensorflow_serving/static/ *
-recursive-include simple_tensorflow_serving/template/ *
+recursive-include simple_tensorflow_serving/templates/ *
