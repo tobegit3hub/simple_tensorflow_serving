@@ -59,7 +59,7 @@ Check out the dashboard in [http://127.0.0.1:8500](http://127.0.0.1:8500) in web
  
 ![dashboard](./images/dashboard.png)
 
-Generate Python click and access the model with the test dataset.
+Generate Python client and access the model with the test dataset.
 
 ```bash
 simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --gen_client="python"

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
-import argcomplete
+#import argcomplete
 import cStringIO
 import json
 import logging
@@ -72,8 +72,11 @@ parser.add_argument(
     help="Enable colored log(eg. False)",
     type=bool)
 
-# For auto-complete
-argcomplete.autocomplete(parser)
+# TODO: Support auto-complete
+#argcomplete.autocomplete(parser)
+
+import tensorflow as tf
+tf.add(1)
 
 if len(sys.argv) == 1:
   args = parser.parse_args(["-h"])
