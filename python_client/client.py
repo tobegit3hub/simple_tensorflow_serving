@@ -7,6 +7,8 @@ def main():
 
   endpoint = "http://127.0.0.1:8500"
   input_data = {
+      "model_name": "default",
+      "model_version": 1,
       "data": {
           "keys": [[11.0], [2.0]],
           "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1],

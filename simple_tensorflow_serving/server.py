@@ -45,11 +45,11 @@ parser.add_argument(
     "--model_config_file",
     default="",
     help="The file of the model config(eg. '')")
+# TODO: type=bool not works, make it true by default if fixing exit bug
 parser.add_argument(
     "--reload_models",
-    default=True,
-    help="Reload models or not(eg. True)",
-    type=bool)
+    default="False",
+    help="Reload models or not(eg. True)")
 parser.add_argument(
     "--custom_op_paths",
     default="",
@@ -165,25 +165,31 @@ if args.model_config_file != "":
       # Example: {"name": "tensorflow_template_application", "base_path": "/", "platform": "tensorflow"}
       model_name = model_config["name"]
       model_base_path = model_config["base_path"]
+
       model_platform = model_config["platform"]
 
       if model_platform == "tensorflow":
-        inferenceService = TensorFlowInferenceService(model_base_path, args.custom_op_paths, args.verbose)
+        inference_service = TensorFlowInferenceService(model_base_path, args.custom_op_paths, args.verbose)
       else:
         logging.error("Unsupported platform: {}".format(model_platform))
-        inferenceService = None
-      model_name_service_map[model_name] = inferenceService
-
+        inference_service = None
+      model_name_service_map[model_name] = inference_service
 else:
-  inferenceService = TensorFlowInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
-  model_name_service_map[args.model_name] = inferenceService
+  inference_service = TensorFlowInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+  model_name_service_map[args.model_name] = inference_service
 
 
 # Generate client code and exit or not
 if args.gen_client != "":
-  inferenceService = model_name_service_map[args.model_name]
-  gen_client.gen_tensorflow_client(inferenceService, args.gen_client)
+  inference_service = model_name_service_map[args.model_name]
+  gen_client.gen_tensorflow_client(inference_service, args.gen_client)
   exit(0)
+
+
+# Start thread to periodically reload models or not
+if args.reload_models == "True" or args.reload_models == "true":
+  for model_name, inference_service in model_name_service_map.items():
+    inference_service.dynmaically_reload_models()
 
 """
 # Initialize TensorFlow inference service to load models
@@ -204,10 +210,10 @@ if args.reload_models == True:
 @application.route("/", methods=["GET"])
 @requires_auth
 def index():
+
   return render_template(
       "index.html",
-      model_versions=inferenceService.version_session_map.keys(),
-      model_graph_signature=str(inferenceService.model_graph_signature))
+      model_name_service_map=model_name_service_map)
 
 
 # The API to rocess inference request

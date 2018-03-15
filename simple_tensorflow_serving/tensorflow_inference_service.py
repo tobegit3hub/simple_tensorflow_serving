@@ -147,6 +147,10 @@ class TensorFlowInferenceService(AbstractInferenceService):
     else:
       logging.error("No model version found")
 
+  # TODO: load all model version by default
+  #def load_all_saved_model_version(self):
+
+
   def inference(self, json_data):
     """
     Make inference with the current Session object and JSON request data.
