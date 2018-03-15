@@ -1,0 +1,13 @@
+{
+  "model_config_list": [
+    {
+      "name": "tensorflow_template_application",
+      "base_path": "/Users/tobe/code/simple_tensorflow_serving/models/tensorflow_template_application_model/",
+      "platform": "tensorflow"
+    }, {
+      "name": "deep_image_model",
+      "base_path": "/Users/tobe/code/simple_tensorflow_serving/models/deep_image_model/",
+      "platform": "tensorflow"
+    }
+  ]
+}

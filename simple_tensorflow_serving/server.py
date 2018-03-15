@@ -30,13 +30,21 @@ parser.add_argument(
 parser.add_argument(
     "--port", default=8500, help="The port of the server(eg. 8500)", type=int)
 parser.add_argument(
+    "--model_name",
+    default="default",
+    help="The name of the model(eg. default)")
+parser.add_argument(
     "--model_base_path",
     default="./model",
     help="The file path of the model(eg. 8500)")
 parser.add_argument(
-    "--model_name",
-    default="default",
-    help="The name of the model(eg. default)")
+    "--model_platform",
+    default="tensorflow",
+    help="The platform of model(eg. tensorflow)")
+parser.add_argument(
+    "--model_config_file",
+    default="",
+    help="The file of the model config(eg. '')")
 parser.add_argument(
     "--reload_models",
     default=True,
@@ -142,6 +150,42 @@ def requires_auth(f):
 # Initialize flask application
 application = Flask(__name__, template_folder='templates')
 
+# Example: {"default": TensorFlowInferenceService}
+model_name_service_map = {}
+
+#import ipdb;ipdb.set_trace()
+
+if args.model_config_file != "":
+  with open(args.model_config_file) as data_file:
+    model_config_file_dict = json.load(data_file)
+    # Example: [{u'platform': u'tensorflow', u'name': u'tensorflow_template_application', u'base_path': u'/Users/tobe/code/simple_tensorflow_serving/models/tensorflow_template_application_model/'}, {u'platform': u'tensorflow', u'name': u'deep_image_model', u'base_path': u'/Users/tobe/code/simple_tensorflow_serving/models/deep_image_model/'}]
+    model_config_list = model_config_file_dict["model_config_list"]
+
+    for model_config in model_config_list:
+      # Example: {"name": "tensorflow_template_application", "base_path": "/", "platform": "tensorflow"}
+      model_name = model_config["name"]
+      model_base_path = model_config["base_path"]
+      model_platform = model_config["platform"]
+
+      if model_platform == "tensorflow":
+        inferenceService = TensorFlowInferenceService(model_base_path, args.custom_op_paths, args.verbose)
+      else:
+        logging.error("Unsupported platform: {}".format(model_platform))
+        inferenceService = None
+      model_name_service_map[model_name] = inferenceService
+
+else:
+  inferenceService = TensorFlowInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+  model_name_service_map[args.model_name] = inferenceService
+
+
+# Generate client code and exit or not
+if args.gen_client != "":
+  inferenceService = model_name_service_map[args.model_name]
+  gen_client.gen_tensorflow_client(inferenceService, args.gen_client)
+  exit(0)
+
+"""
 # Initialize TensorFlow inference service to load models
 inferenceService = TensorFlowInferenceService(
     args.model_base_path, args.custom_op_paths, args.verbose)
@@ -154,7 +198,7 @@ if args.gen_client != "":
 # Start thread to periodically reload models or not
 if args.reload_models == True:
   inferenceService.dynmaically_reload_models()
-
+"""
 
 # The API to render the dashboard page
 @application.route("/", methods=["GET"])
@@ -198,6 +242,15 @@ def inference():
 
   # Request backend service with json data
   #logging.debug("Constructed request data as json: {}".format(json_data))
+
+  if "model_name" in json_data:
+    model_name = json_data.get("model_name", "")
+    if model_name == "":
+      logging.error("The model does not exist: {}".format(model_name))
+  else:
+    model_name = "default"
+
+  inferenceService = model_name_service_map[model_name]
   result = inferenceService.inference(json_data)
 
   # TODO: Change the decoder for numpy data

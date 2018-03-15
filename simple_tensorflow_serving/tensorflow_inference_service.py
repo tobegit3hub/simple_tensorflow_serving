@@ -25,12 +25,9 @@ class TensorFlowInferenceService(AbstractInferenceService):
     Return:
     """
 
-    self.load_custom_op(custom_op_paths)
+    if custom_op_paths != "":
+      self.load_custom_op(custom_op_paths)
 
-    self.model_name_path_map = {}
-    self.model_name_path_map["model1"] = model_base_path
-    self.model_name_path_map["model2"] = model_base_path
-    #self.model_base_path = model_base_paths
     self.model_base_path = model_base_path
 
     self.version_session_map = {}
