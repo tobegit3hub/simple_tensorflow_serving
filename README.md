@@ -71,6 +71,138 @@ python ./client.py
 
 ## Advanced Usage
 
+### Multiple Models
+
+It supports serve multiple models and multiple versions of these models. You can run the server with this configuration.
+
+```
+{
+  "model_config_list": [
+    {
+      "name": "tensorflow_template_application",
+      "base_path": "./models/tensorflow_template_application_model/",
+      "platform": "tensorflow"
+    }, {
+      "name": "deep_image_model",
+      "base_path": "./models/deep_image_model/",
+      "platform": "tensorflow"
+    }
+  ]
+}
+```
+
+```
+simple_tensorflow_serving --model_config_file="../examples/model_config_file.json"
+```
+
+Adding or removing model versions will be detected automatically and re-load latest files in memory. You can easily choose the specified model and version for inference.
+
+```
+endpoint = "http://127.0.0.1:8500"
+input_data = {
+  "model_name": "default",
+  "model_version": 1,
+  "data": {
+      "keys": [[11.0], [2.0]],
+      "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1],
+                   [1, 1, 1, 1, 1, 1, 1, 1, 1]]
+  }
+}
+result = requests.post(endpoint, json=input_data)
+```
+
+### Generated Client
+
+You can generate clients in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
+
+```bash
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client bash
+```
+
+```bash
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client python
+```
+
+The generated code should look like these which can be test immediately.
+
+```bash
+#!/bin/bash
+
+curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]} }' http://127.0.0.1:8500
+```
+
+```python
+#!/usr/bin/env python
+
+import requests
+
+def main():
+  endpoint = "http://127.0.0.1:8500"
+
+  input_data = {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
+  result = requests.post(endpoint, json=input_data)
+  print(result.text)
+
+if __name__ == "__main__":
+  main()
+```
+
+### Image Model
+
+For image models, we can request with the raw image files instead of constructing array data.
+
+Now start serving the image model like [deep_image_model](https://github.com/tobegit3hub/deep_image_model).
+
+```bash
+simple_tensorflow_serving --model_base_path="../models/deep_image_model/"
+```
+
+Then request with the raw image file which has the same shape of your model.
+
+```bash
+curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
+```
+
+### Custom Op
+
+If your models rely on new TensorFlow [custom op](https://www.tensorflow.org/extend/adding_an_op), you can run the server while loading the so files.
+
+```bash
+simple_tensorflow_serving --model_base_path="./model/" --custom_op_paths="./foo_op/"
+```
+
+Please check out the complete example in [./examples/custom_op/](./examples/custom_op/).
+
+### Authentication
+
+For enterprises, we can enable basic auth for all the APIs and any anonymous request is denied.
+
+Now start the server with the configured username and password.
+
+```bash
+./server.py --model_base_path="../models/tensorflow_template_application_model/" --enable_auth=True --auth_username="admin" --auth_password="admin"
+```
+
+If you are using the Web dashboard, just type your certification. If you are using clients, give the username and password within the request.
+
+```
+curl -u admin:admin -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}' http://127.0.0.1:8500
+```
+
+```python
+endpoint = "http://127.0.0.1:8500"
+input_data = {
+  "data": {
+      "keys": [[11.0], [2.0]],
+      "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]
+  }
+}
+auth = requests.auth.HTTPBasicAuth("admin", "admin")
+result = requests.post(endpoint, json=input_data, auth=auth)
+```
+
+## Supported Client
+
 Here is the example client in [Bash](./bash_client/).
 
 ```bash
@@ -241,96 +373,6 @@ content(r, "parsed", "text/html")
 Here is the example with Postman.
 
 ![](./images/postman.png)
-
-## Generate Client
-
-You can also generate clients in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
-
-```bash
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client bash
-```
-
-```bash
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client python
-```
-
-The generated code should look like these which can be test immediately.
-
-```bash
-#!/bin/bash
-
-curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]} }' http://127.0.0.1:8500
-```
-
-```python
-#!/usr/bin/env python
-
-import requests
-
-def main():
-  endpoint = "http://127.0.0.1:8500"
-
-  input_data = {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]}
-  result = requests.post(endpoint, json=input_data)
-  print(result.text)
-
-if __name__ == "__main__":
-  main()
-```
-
-## Image Model
-
-For image models, we can request with the raw image files instead of constructing array data.
- 
-Now start serving the image model like [deep_image_model](https://github.com/tobegit3hub/deep_image_model).
-
-```bash
-simple_tensorflow_serving --model_base_path="../models/deep_image_model/"
-```
-
-Then request with the raw image file which has the same shape of your model.
-
-```bash
-curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
-```
-
-## Custom Op
-
-If your models rely on new TensorFlow [custom op](https://www.tensorflow.org/extend/adding_an_op), you can run the server while loading the so files.
-
-```bash
-simple_tensorflow_serving --model_base_path="./model/" --custom_op_paths="./foo_op/"
-```
-
-Please check out the complete example in [./examples/custom_op/](./examples/custom_op/).
-
-## Authentication
-
-For enterprises, we can enable basic auth for all the APIs and any anonymous request is denied.
-
-Now start the server with the configured username and password.
-
-```bash
-./server.py --model_base_path="../models/tensorflow_template_application_model/" --enable_auth=True --auth_username="admin" --auth_password="admin"
-```
-
-If you are using the Web dashboard, just type your certification. If you are using clients, give the username and password within the request.
-
-```
-curl -u admin:admin -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}' http://127.0.0.1:8500
-```
-
-```python
-endpoint = "http://127.0.0.1:8500"
-input_data = {
-  "data": {
-      "keys": [[11.0], [2.0]],
-      "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]
-  }
-}
-auth = requests.auth.HTTPBasicAuth("admin", "admin")
-result = requests.post(endpoint, json=input_data, auth=auth)
-```
 
 ## How It Works
 
