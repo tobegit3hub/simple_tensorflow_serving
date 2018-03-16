@@ -155,9 +155,8 @@ application = Flask(__name__, template_folder='templates')
 # Example: {"default": TensorFlowInferenceService}
 model_name_service_map = {}
 
-#import ipdb;ipdb.set_trace()
-
 if args.model_config_file != "":
+  # Read from configuration file
   with open(args.model_config_file) as data_file:
     model_config_file_dict = json.load(data_file)
     # Example: [{u'platform': u'tensorflow', u'name': u'tensorflow_template_application', u'base_path': u'/Users/tobe/code/simple_tensorflow_serving/models/tensorflow_template_application_model/'}, {u'platform': u'tensorflow', u'name': u'deep_image_model', u'base_path': u'/Users/tobe/code/simple_tensorflow_serving/models/deep_image_model/'}]
@@ -167,21 +166,22 @@ if args.model_config_file != "":
       # Example: {"name": "tensorflow_template_application", "base_path": "/", "platform": "tensorflow"}
       model_name = model_config["name"]
       model_base_path = model_config["base_path"]
+      model_platform = model_config.get("platform", "tensorflow")
+      custom_op_paths = model_config.get("custom_op_paths", "")
 
-      model_platform = model_config["platform"]
 
       if model_platform == "tensorflow":
-        inference_service = TensorFlowInferenceService(model_base_path, args.custom_op_paths, args.verbose)
+        inference_service = TensorFlowInferenceService(model_name, model_base_path, custom_op_paths, args.verbose)
       if model_platform == "mxnet":
-        inference_service = MxnetInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+        inference_service = MxnetInferenceService(model_name, model_base_path, custom_op_paths, args.verbose)
 
       model_name_service_map[model_name] = inference_service
 else:
-
+  # Read from command-line parameter
   if args.model_platform == "tensorflow":
-    inference_service = TensorFlowInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+    inference_service = TensorFlowInferenceService(args.model_name, args.model_base_path, args.custom_op_paths, args.verbose)
   elif args.model_platform == "mxnet":
-    inference_service = MxnetInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+    inference_service = MxnetInferenceService(args.model_name, args.model_base_path, args.custom_op_paths, args.verbose)
 
   model_name_service_map[args.model_name] = inference_service
 

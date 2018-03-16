@@ -14,7 +14,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
   The TensorFlow service to load TensorFlow SavedModel and make inference.
   """
 
-  def __init__(self, model_base_path, custom_op_paths="", verbose=False):
+  def __init__(self, model_name, model_base_path, custom_op_paths="", verbose=False):
     """
     Initialize the TensorFlow service by loading SavedModel to the Session.
         
@@ -25,18 +25,18 @@ class TensorFlowInferenceService(AbstractInferenceService):
     Return:
     """
 
+    super(TensorFlowInferenceService, self).__init__()
+
+    self.model_name = model_name
+    self.model_base_path = model_base_path
+    self.model_version_list = []
+    self.model_graph_signature = None
+    self.platform = "TensorFlow"
+
     if custom_op_paths != "":
       self.load_custom_op(custom_op_paths)
 
-    self.model_base_path = model_base_path
-
     self.version_session_map = {}
-
-    self.model_name_version_session_map = {}
-
-    self.model_graph_signature = None
-
-    self.model_name_graph_signature_map = {}
 
     self.verbose = verbose
     self.should_stop_all_threads = False
@@ -123,8 +123,10 @@ class TensorFlowInferenceService(AbstractInferenceService):
           logging.info(
               "Put the model version: {} offline".format(str(model_version)))
           del self.version_session_map[str(model_version)]
+          self.version_session_map.remove(model_version)
 
-        # Create Session for new model version
+
+      # Create Session for new model version
         online_model_versions = current_model_versions - old_model_versions
         for model_version in online_model_versions:
           self.load_saved_model_version(model_version)
@@ -132,6 +134,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
   def load_saved_model_version(self, model_version):
     session = tf.Session(graph=tf.Graph())
     self.version_session_map[str(model_version)] = session
+    self.model_version_list.append(model_version)
 
     model_file_path = os.path.join(self.model_base_path, str(model_version))
     logging.info("Put the model version: {} online, path: {}".format(

@@ -20,30 +20,31 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support dynamic online and offline for model versions
 * [x] Support loading new custom op for TensorFlow models
 * [x] Support secure authentication with configurable basic auth
+* [x] Support multiple serving backends such as TensorFlow/MXNet
 
 ## Installation
 
 Install the server with [pip](https://pypi.python.org/pypi/simple-tensorflow-serving).
 
-```bash
+```
 pip install simple_tensorflow_serving
 ```
 
 Or install with [bazel](https://bazel.build/).
 
-```bash
+```
 bazel build simple_tensorflow_serving:server
 ```
 
 Or install from [source code](https://github.com/tobegit3hub/simple_tensorflow_serving).
 
-```bash
+```
 python ./setup.py install
 ```
 
 Or use [docker image](https://hub.docker.com/r/tobegit3hub/simple_tensorflow_serving/).
 
-```bash
+```
 docker run -d -p 8500:8500 tobegit3hub/simple_tensorflow_serving
 ```
 
@@ -51,7 +52,7 @@ docker run -d -p 8500:8500 tobegit3hub/simple_tensorflow_serving
 
 Start the server with the TensorFlow [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model).
 
-```bash
+```
 simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model"
 ```
 
@@ -61,11 +62,11 @@ Check out the dashboard in [http://127.0.0.1:8500](http://127.0.0.1:8500) in web
 
 Generate Python client and access the model with the test dataset.
 
-```bash
+```
 simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --gen_client="python"
 ```
 
-```bash
+```
 python ./client.py
 ```
 
@@ -115,17 +116,17 @@ result = requests.post(endpoint, json=input_data)
 
 You can generate clients in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
 
-```bash
+```
 simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client bash
 ```
 
-```bash
+```
 simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client python
 ```
 
 The generated code should look like these which can be test immediately.
 
-```bash
+```
 #!/bin/bash
 
 curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]} }' http://127.0.0.1:8500
@@ -153,13 +154,13 @@ For image models, we can request with the raw image files instead of constructin
 
 Now start serving the image model like [deep_image_model](https://github.com/tobegit3hub/deep_image_model).
 
-```bash
+```
 simple_tensorflow_serving --model_base_path="../models/deep_image_model/"
 ```
 
 Then request with the raw image file which has the same shape of your model.
 
-```bash
+```
 curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
 ```
 
@@ -167,7 +168,7 @@ curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
 
 If your models rely on new TensorFlow [custom op](https://www.tensorflow.org/extend/adding_an_op), you can run the server while loading the so files.
 
-```bash
+```
 simple_tensorflow_serving --model_base_path="./model/" --custom_op_paths="./foo_op/"
 ```
 
@@ -179,7 +180,7 @@ For enterprises, we can enable basic auth for all the APIs and any anonymous req
 
 Now start the server with the configured username and password.
 
-```bash
+```
 ./server.py --model_base_path="../models/tensorflow_template_application_model/" --enable_auth=True --auth_username="admin" --auth_password="admin"
 ```
 
@@ -201,11 +202,34 @@ auth = requests.auth.HTTPBasicAuth("admin", "admin")
 result = requests.post(endpoint, json=input_data, auth=auth)
 ```
 
+### MXNet Model
+
+In addiction, it supports loading and serving the general MXNet models in standard checkpoint format. You can load the models with commands or configuration as well.
+
+```
+simple_tensorflow_serving --model_base_path="./models/mxnet_mlp/mx_mlp" --model_platform="mxnet"
+```
+
+The clients are similar and you can implement in your favourite programming language. 
+
+```python
+endpoint = "http://127.0.0.1:8500"
+input_data = {
+  "model_name": "default",
+  "model_version": 1,
+  "data": {
+      "data": [[12.0, 2.0]]
+  }
+}
+result = requests.post(endpoint, json=input_data)
+print(result.text)
+```
+
 ## Supported Client
 
 Here is the example client in [Bash](./bash_client/).
 
-```bash
+```
 curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
 ```
 

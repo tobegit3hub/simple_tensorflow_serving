@@ -12,7 +12,7 @@ class MxnetInferenceService(AbstractInferenceService):
   The MXNet service to load MXNet checkpoint and make inference.
   """
 
-  def __init__(self, model_base_path, custom_op_paths="", verbose=False):
+  def __init__(self, model_name, model_base_path, custom_op_paths="", verbose=False):
     """
     Initialize the service.
         
@@ -23,20 +23,28 @@ class MxnetInferenceService(AbstractInferenceService):
     Return:
     """
 
+    super(MxnetInferenceService, self).__init__()
+
+    self.model_name = model_name
+    self.model_base_path = model_base_path
+    self.model_version_list = [1]
+    self.model_graph_signature = ""
+    self.platform = "MXNet"
+
+    # TODO: Import as needed and only once
     import mxnet as mx
 
-    self.model_base_path = model_base_path
+    # TODO: Select the available version
+    epoch_number = 1
 
-    self.version_session_map = {}
-
-    self.model_name_version_session_map = {}
-
-    self.model_graph_signature = None
-
-    self.model_name_graph_signature_map = {}
+    # Load model
+    sym, arg_params, aux_params = mx.model.load_checkpoint(self.model_base_path, epoch_number)
+    self.mod = mx.mod.Module(symbol=sym, context=mx.cpu())
+    self.mod.bind(for_training=False, data_shapes=[('data', (1L,2L))])
+    self.mod.set_params(arg_params, aux_params, allow_missing=True)
+    self.model_graph_signature = self.mod.symbol.tojson()
 
     self.verbose = verbose
-    self.should_stop_all_threads = False
 
 
   def inference(self, json_data):
@@ -53,38 +61,20 @@ class MxnetInferenceService(AbstractInferenceService):
 
     import mxnet as mx
 
-    model_version = int(json_data.get("model_version", -1))
-    if model_version == -1:
-      # TODO: Select the available version
-      """
-      for model_version_string in self.version_session_map.keys():
-        if int(model_version_string) > model_version:
-          model_version = int(model_version_string)
-      """
-      model_version = 1
-
-
+    # 1. Build inference data
     Batch = namedtuple('Batch', ['data'])
-
-    # 1. Load model
-    sym, arg_params, aux_params = mx.model.load_checkpoint(self.model_base_path, model_version)
-    mod = mx.mod.Module(symbol=sym, context=mx.cpu())
-    mod.bind(for_training=False, data_shapes=[('data', (1L,2L))])
-    mod.set_params(arg_params, aux_params, allow_missing=True)
-
-    # 2. Build inference data
     # batch = Batch([mx.nd.array([[7.0, 2.0]])])
     request_ndarray_data = json_data["data"]["data"]
     request_mxnet_ndarray_data = [mx.nd.array(request_ndarray_data)]
     batch_data = Batch(request_mxnet_ndarray_data)
 
-    # 3. Do inference
+    # 2. Do inference
     mod.forward(batch_data)
     model_outputs = mod.get_outputs()
     prob = mod.get_outputs()[0].asnumpy()
     print(prob)
 
-    # 4. Build return data
+    # 3. Build return data
     result = {}
     for i, model_output in enumerate(model_outputs):
       result[str(i)] = model_output.asnumpy()

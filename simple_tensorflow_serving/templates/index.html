@@ -98,9 +98,10 @@
 
             <thead>
             <tr class="table-active">
-                <th class="text-center">Model Name</th>
-                <th class="text-center">Model Version</th>
-                <th class="text-center">Model Status</th>
+                <th class="text-center">Name</th>
+                <th class="text-center">Version</th>
+                <th class="text-center">Platform</th>
+                <th class="text-center">Status</th>
             </tr>
             </thead>
 
@@ -108,10 +109,11 @@
 
 
             {% for model_name, inference_service in model_name_service_map.iteritems() %}
-                {% for model_version in inference_service.version_session_map.keys() %}
+                {% for model_version in inference_service.model_version_list %}
                     <tr>
                         <td class="text-center">{{ model_name }}</td>
                         <td class="text-center">{{ model_version }}</td>
+                        <td class="text-center">{{ inference_service.platform }}</td>
                         <td class="text-center">Online</td>
                     </tr>
                 {% endfor %}
