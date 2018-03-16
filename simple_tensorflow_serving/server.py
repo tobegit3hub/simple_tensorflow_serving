@@ -14,6 +14,7 @@ from PIL import Image
 
 from gen_client import gen_client
 from tensorflow_inference_service import TensorFlowInferenceService
+from mxnet_inference_service import MxnetInferenceService
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -146,6 +147,7 @@ def requires_auth(f):
 
   return decorated
 
+# TODO: Check args for model_platform and others
 
 # Initialize flask application
 application = Flask(__name__, template_folder='templates')
@@ -170,12 +172,17 @@ if args.model_config_file != "":
 
       if model_platform == "tensorflow":
         inference_service = TensorFlowInferenceService(model_base_path, args.custom_op_paths, args.verbose)
-      else:
-        logging.error("Unsupported platform: {}".format(model_platform))
-        inference_service = None
+      if model_platform == "mxnet":
+        inference_service = MxnetInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+
       model_name_service_map[model_name] = inference_service
 else:
-  inference_service = TensorFlowInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+
+  if args.model_platform == "tensorflow":
+    inference_service = TensorFlowInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+  elif args.model_platform == "mxnet":
+    inference_service = MxnetInferenceService(args.model_base_path, args.custom_op_paths, args.verbose)
+
   model_name_service_map[args.model_name] = inference_service
 
 
