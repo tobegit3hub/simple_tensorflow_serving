@@ -19,10 +19,10 @@ class TensorFlowInferenceService(AbstractInferenceService):
     Initialize the TensorFlow service by loading SavedModel to the Session.
         
     Args:
-      model_base_path: The file path of the model.
       model_name: The name of the model.
-      model_version: The version of the model.
+      model_base_path: The file path of the model.
     Return:
+      None
     """
 
     super(TensorFlowInferenceService, self).__init__()

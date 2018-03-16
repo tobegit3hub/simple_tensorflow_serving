@@ -1,7 +1,7 @@
 {
   "model_config_list": [
     {
-      "name": "tensorflow_template_application",
+      "name": "tensorflow_template_application_model",
       "base_path": "/Users/tobe/code/simple_tensorflow_serving/models/tensorflow_template_application_model/",
       "platform": "tensorflow"
     }, {

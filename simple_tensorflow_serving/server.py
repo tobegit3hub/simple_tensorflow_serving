@@ -173,7 +173,7 @@ if args.model_config_file != "":
       if model_platform == "tensorflow":
         inference_service = TensorFlowInferenceService(model_name, model_base_path, custom_op_paths, args.verbose)
       if model_platform == "mxnet":
-        inference_service = MxnetInferenceService(model_name, model_base_path, custom_op_paths, args.verbose)
+        inference_service = MxnetInferenceService(model_name, model_base_path, args.verbose)
 
       model_name_service_map[model_name] = inference_service
 else:
@@ -181,7 +181,7 @@ else:
   if args.model_platform == "tensorflow":
     inference_service = TensorFlowInferenceService(args.model_name, args.model_base_path, args.custom_op_paths, args.verbose)
   elif args.model_platform == "mxnet":
-    inference_service = MxnetInferenceService(args.model_name, args.model_base_path, args.custom_op_paths, args.verbose)
+    inference_service = MxnetInferenceService(args.model_name, args.model_base_path, args.verbose)
 
   model_name_service_map[args.model_name] = inference_service
 
@@ -196,28 +196,14 @@ if args.gen_client != "":
 # Start thread to periodically reload models or not
 if args.reload_models == "True" or args.reload_models == "true":
   for model_name, inference_service in model_name_service_map.items():
-    inference_service.dynmaically_reload_models()
+    if inference_service.platform == "tensorflow":
+      inference_service.dynmaically_reload_models()
 
-"""
-# Initialize TensorFlow inference service to load models
-inferenceService = TensorFlowInferenceService(
-    args.model_base_path, args.custom_op_paths, args.verbose)
-
-# Generate client code and exit or not
-if args.gen_client != "":
-  gen_client.gen_tensorflow_client(inferenceService, args.gen_client)
-  exit(0)
-
-# Start thread to periodically reload models or not
-if args.reload_models == True:
-  inferenceService.dynmaically_reload_models()
-"""
 
 # The API to render the dashboard page
 @application.route("/", methods=["GET"])
 @requires_auth
 def index():
-
   return render_template(
       "index.html",
       model_name_service_map=model_name_service_map)
