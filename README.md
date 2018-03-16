@@ -14,7 +14,7 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support `curl` and other command-line tools
 * [x] Support clients in any programming language
 * [x] Support code-gen client by models without coding
-* [x] Support inference for image models with raw file
+* [x] Support inference with raw file for image models
 * [x] Support statistical metrics for verbose requests
 * [x] Support serving multiple models at the same time
 * [x] Support dynamic online and offline for model versions
