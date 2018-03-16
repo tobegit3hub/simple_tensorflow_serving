@@ -52,36 +52,39 @@ class MxnetInferenceService(AbstractInferenceService):
     """
 
     import mxnet as mx
-    # model_version = 1
+
+    model_version = int(json_data.get("model_version", -1))
+    if model_version == -1:
+      # TODO: Select the available version
+      """
+      for model_version_string in self.version_session_map.keys():
+        if int(model_version_string) > model_version:
+          model_version = int(model_version_string)
+      """
+      model_version = 1
+
 
     Batch = namedtuple('Batch', ['data'])
 
-    # TODO: Load from model_base_path
-    sym, arg_params, aux_params = mx.model.load_checkpoint('mx_mlp', 50)
-
-    # TODO: Not work
-    #sym = mx.symbol.load('/Users/tobe/code/simple_tensorflow_serving/models/mxnet_mlp/mx_mlp-symbol.json')
-
-    #mod = mx.mod.Module(symbol=sym, context=mx.cpu(), label_names=None)
+    # 1. Load model
+    sym, arg_params, aux_params = mx.model.load_checkpoint(self.model_base_path, model_version)
     mod = mx.mod.Module(symbol=sym, context=mx.cpu())
-
-    #mod.bind(for_training=False, data_shapes=[('data', (1L,2L))],
-    #         label_shapes=mod._label_shapes)
     mod.bind(for_training=False, data_shapes=[('data', (1L,2L))])
-
     mod.set_params(arg_params, aux_params, allow_missing=True)
 
-    # 1. Build inference data
+    # 2. Build inference data
     # batch = Batch([mx.nd.array([[7.0, 2.0]])])
-    batch = Batch([mx.nd.array( json_data["data"]["data"])])
+    request_ndarray_data = json_data["data"]["data"]
+    request_mxnet_ndarray_data = [mx.nd.array(request_ndarray_data)]
+    batch_data = Batch(request_mxnet_ndarray_data)
 
-    # 2. Do inference
-    mod.forward(batch)
+    # 3. Do inference
+    mod.forward(batch_data)
     model_outputs = mod.get_outputs()
     prob = mod.get_outputs()[0].asnumpy()
     print(prob)
 
-    # 3. Build return data
+    # 4. Build return data
     result = {}
     for i, model_output in enumerate(model_outputs):
       result[str(i)] = model_output.asnumpy()
