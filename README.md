@@ -80,20 +80,24 @@ It supports serve multiple models and multiple versions of these models. You can
 {
   "model_config_list": [
     {
-      "name": "tensorflow_template_application",
+      "name": "tensorflow_template_application_model",
       "base_path": "./models/tensorflow_template_application_model/",
       "platform": "tensorflow"
     }, {
       "name": "deep_image_model",
       "base_path": "./models/deep_image_model/",
       "platform": "tensorflow"
+    }, {
+       "name": "mxnet_mlp_model",
+       "base_path": "./models/mxnet_mlp/mx_mlp",
+       "platform": "mxnet"
     }
   ]
 }
 ```
 
 ```
-simple_tensorflow_serving --model_config_file="../examples/model_config_file.json"
+simple_tensorflow_serving --model_config_file="./examples/model_config_file.json"
 ```
 
 Adding or removing model versions will be detected automatically and re-load latest files in memory. You can easily choose the specified model and version for inference.
@@ -155,7 +159,7 @@ For image models, we can request with the raw image files instead of constructin
 Now start serving the image model like [deep_image_model](https://github.com/tobegit3hub/deep_image_model).
 
 ```
-simple_tensorflow_serving --model_base_path="../models/deep_image_model/"
+simple_tensorflow_serving --model_base_path="./models/deep_image_model/"
 ```
 
 Then request with the raw image file which has the same shape of your model.
@@ -181,7 +185,7 @@ For enterprises, we can enable basic auth for all the APIs and any anonymous req
 Now start the server with the configured username and password.
 
 ```
-./server.py --model_base_path="../models/tensorflow_template_application_model/" --enable_auth=True --auth_username="admin" --auth_password="admin"
+./server.py --model_base_path="./models/tensorflow_template_application_model/" --enable_auth=True --auth_username="admin" --auth_password="admin"
 ```
 
 If you are using the Web dashboard, just type your certification. If you are using clients, give the username and password within the request.
