@@ -74,7 +74,10 @@ class MxnetInferenceService(AbstractInferenceService):
 
     self.mod.bind(for_training=False, data_shapes=data_shapes)
     self.mod.set_params(arg_params, aux_params, allow_missing=True)
-    self.model_graph_signature = self.mod.symbol.tojson()
+    if self.has_signature_file:
+      self.model_graph_signature = "Inputs: {}\nOutputs: {}\n{}".format(self.signature_input_names, self.signature_output_names, self.mod.symbol.tojson())
+    else:
+      self.model_graph_signature = "{}".format(self.mod.symbol.tojson())
 
     self.verbose = verbose
 

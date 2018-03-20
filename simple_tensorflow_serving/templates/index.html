@@ -141,16 +141,34 @@
 
     <ul class="nav nav-pills mb-3">
         {% for model_name, inference_service in model_name_service_map.iteritems() %}
-            <li class="nav-item"><a class="nav-link" href="#{{ model_name }}" data-toggle="tab">{{ model_name }}</a></li>
+
+            <!-- Make the first item active -->
+            {% if loop.index0 == 0 %}
+                <li class="nav-item"><a class="nav-link active" href="#{{ model_name }}" data-toggle="tab">{{ model_name }}</a></li>
+            {% else %}
+                <li class="nav-item"><a class="nav-link" href="#{{ model_name }}" data-toggle="tab">{{ model_name }}</a></li>
+            {% endif %}
+
+
         {% endfor %}
 
     </ul>
 
     <div class="tab-content ">
         {% for model_name, inference_service in model_name_service_map.iteritems() %}
-            <div class="tab-pane active" id="{{ model_name }}">
-                <textarea class="form-control" rows="15">{{ inference_service.model_graph_signature }}</textarea>
-            </div>
+
+            <!-- Make the first item active -->
+            {% if loop.index0 == 0 %}
+                <div class="tab-pane active" id="{{ model_name }}">
+                    <textarea class="form-control" rows="15">{{ inference_service.model_graph_signature }}</textarea>
+                </div>
+            {% else %}
+                <div class="tab-pane fade" id="{{ model_name }}">
+                    <textarea class="form-control" rows="15">{{ inference_service.model_graph_signature }}</textarea>
+                </div>
+            {% endif %}
+
+
         {% endfor %}
     </div>
 
