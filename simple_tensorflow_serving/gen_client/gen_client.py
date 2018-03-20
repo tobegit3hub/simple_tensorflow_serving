@@ -8,13 +8,14 @@ import gen_javascript
 import gen_python
 
 
-def gen_tensorflow_client(tensorflow_inference_service, language):
+def gen_tensorflow_client(tensorflow_inference_service, language, model_name):
   """
   Generate the TensorFlow client for programming languages.
   
   Args:
     tensorflow_inference_service: The tensorflow service object.
     language: The client in this programming language to generate.
+    model_name: The name of the model.
     
   Return:
     None
@@ -84,10 +85,10 @@ def gen_tensorflow_client(tensorflow_inference_service, language):
     generated_tensor_data[opname] = internal_array
 
   if language == "bash":
-    gen_bash.gen_tensorflow_client(generated_tensor_data)
+    gen_bash.gen_tensorflow_client(generated_tensor_data, model_name)
   elif language == "python":
-    gen_python.gen_tensorflow_client(generated_tensor_data)
+    gen_python.gen_tensorflow_client(generated_tensor_data, model_name)
   elif language == "golang":
-    gen_golang.gen_tensorflow_client(generated_tensor_data)
+    gen_golang.gen_tensorflow_client(generated_tensor_data, model_name)
   elif language == "javascript":
-    gen_javascript.gen_tensorflow_client(generated_tensor_data)
+    gen_javascript.gen_tensorflow_client(generated_tensor_data, model_name)

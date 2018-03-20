@@ -4,7 +4,7 @@ import logging
 from jinja2 import Template
 
 
-def gen_tensorflow_client(generated_tensor_data):
+def gen_tensorflow_client(generated_tensor_data, model_name):
   """
   Generate TensorFlow SDK in Golang.
 
@@ -29,7 +29,7 @@ func main() {
     log.Print("Request tensorflow serving in " + endpoint)
 
     // Construct request data
-    dataByte := []byte(`{"data": {{ tensor_data }} }`)
+    dataByte := []byte(`{"model_name": "{{ model_name }}", "data": {{ tensor_data }} }`)
     var dataInterface map[string]interface{}
     json.Unmarshal(dataByte, &dataInterface)
     dataJson, _ := json.Marshal(dataInterface)
@@ -51,7 +51,7 @@ func main() {
 
   generated_tensor_data_string = json.dumps(generated_tensor_data)
   template = Template(code_template)
-  generate_code = template.render(tensor_data=generated_tensor_data_string)
+  generate_code = template.render(model_name=model_name, tensor_data=generated_tensor_data_string)
   logging.debug("Generate the code in Golang:\n{}".format(generate_code))
 
   generated_code_filename = "client.go"

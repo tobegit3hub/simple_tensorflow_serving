@@ -188,8 +188,10 @@ else:
 
 # Generate client code and exit or not
 if args.gen_client != "":
-  inference_service = model_name_service_map[args.model_name]
-  gen_client.gen_tensorflow_client(inference_service, args.gen_client)
+  if args.model_platform == "tensorflow":
+    inference_service = model_name_service_map[args.model_name]
+    gen_client.gen_tensorflow_client(inference_service, args.gen_client, args.model_name)
+
   exit(0)
 
 
