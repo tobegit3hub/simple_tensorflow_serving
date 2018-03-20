@@ -45,8 +45,9 @@ class TensorFlowInferenceService(AbstractInferenceService):
     signal.signal(signal.SIGTERM, self.stop_all_threads)
     signal.signal(signal.SIGINT, self.stop_all_threads)
 
-    model_version = self.get_one_model_version()
-    self.load_saved_model_version(model_version)
+    model_versions = self.get_all_model_versions()
+    for model_version in model_versions:
+      self.load_saved_model_version(model_version)
 
   def load_custom_op(self, custom_op_paths):
 
@@ -150,8 +151,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
     else:
       logging.error("No model version found")
 
-  # TODO: load all model version by default
-  #def load_all_saved_model_version(self):
+  def get_all_model_versions(self):
+    current_model_versions_string = os.listdir(self.model_base_path)
+    if len(current_model_versions_string) > 0:
+      model_versions = [int(model_version_string) for model_version_string in current_model_versions_string]
+      return model_versions
+    else:
+      logging.error("No model version found")
 
 
   def inference(self, json_data):

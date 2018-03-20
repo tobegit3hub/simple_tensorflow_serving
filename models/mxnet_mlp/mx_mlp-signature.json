@@ -1,0 +1,16 @@
+{
+  "inputs": [
+    {
+      "data_name": "data",
+      "data_shape": [1, 2]
+    }
+  ],
+  "input_type": "application/json",
+  "outputs": [
+    {
+      "data_name": "lro",
+      "data_shape": [1, 1]
+    }
+  ],
+  "output_type": "application/json"
+}
