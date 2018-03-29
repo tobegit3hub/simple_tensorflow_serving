@@ -232,8 +232,18 @@ def inference():
     image_string_io = cStringIO.StringIO(image_string)
     image_file = Image.open(image_string_io)
     image_array = np.array(image_file)
+
     # TODO: Support multiple images without reshaping
-    image_array = image_array.reshape(1, *image_array.shape)
+    if "shape" in request.form:
+      # Example: "32,32,1,3" -> (32, 32, 1, 3)
+      shape = tuple([int(item) for item in request.form["shape"].split(",")])
+      image_array = image_array.reshape(shape)
+    else:
+      image_array = image_array.reshape(1, *image_array.shape)
+
+    #import ipdb;ipdb.set_trace()
+
+
 
     json_data["data"] = {"image": image_array}
 
