@@ -15,6 +15,7 @@ from PIL import Image
 from gen_client import gen_client
 from tensorflow_inference_service import TensorFlowInferenceService
 from mxnet_inference_service import MxnetInferenceService
+from onnx_inference_service import OnnxInferenceService
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -48,9 +49,7 @@ parser.add_argument(
     help="The file of the model config(eg. '')")
 # TODO: type=bool not works, make it true by default if fixing exit bug
 parser.add_argument(
-    "--reload_models",
-    default="False",
-    help="Reload models or not(eg. True)")
+    "--reload_models", default="False", help="Reload models or not(eg. True)")
 parser.add_argument(
     "--custom_op_paths",
     default="",
@@ -89,7 +88,6 @@ if len(sys.argv) == 1:
   args.func(args)
 else:
   args = parser.parse_args(sys.argv[1:])
-  #import ipdb;ipdb.set_trace()
 
   for arg in vars(args):
     logging.info("{}: {}".format(arg, getattr(args, arg)))
@@ -147,6 +145,7 @@ def requires_auth(f):
 
   return decorated
 
+
 # TODO: Check args for model_platform and others
 
 # Initialize flask application
@@ -169,31 +168,40 @@ if args.model_config_file != "":
       model_platform = model_config.get("platform", "tensorflow")
       custom_op_paths = model_config.get("custom_op_paths", "")
 
-
       if model_platform == "tensorflow":
-        inference_service = TensorFlowInferenceService(model_name, model_base_path, custom_op_paths, args.verbose)
-      if model_platform == "mxnet":
-        inference_service = MxnetInferenceService(model_name, model_base_path, args.verbose)
+        inference_service = TensorFlowInferenceService(
+            model_name, model_base_path, custom_op_paths, args.verbose)
+      elif model_platform == "mxnet":
+        inference_service = MxnetInferenceService(model_name, model_base_path,
+                                                  args.verbose)
+      elif model_platform == "onnx":
+        inference_service = OnnxInferenceService(model_name, model_base_path,
+                                                 args.verbose)
 
       model_name_service_map[model_name] = inference_service
 else:
   # Read from command-line parameter
   if args.model_platform == "tensorflow":
-    inference_service = TensorFlowInferenceService(args.model_name, args.model_base_path, args.custom_op_paths, args.verbose)
+    inference_service = TensorFlowInferenceService(
+        args.model_name, args.model_base_path, args.custom_op_paths,
+        args.verbose)
   elif args.model_platform == "mxnet":
-    inference_service = MxnetInferenceService(args.model_name, args.model_base_path, args.verbose)
+    inference_service = MxnetInferenceService(
+        args.model_name, args.model_base_path, args.verbose)
+  elif args.model_platform == "onnx":
+    inference_service = OnnxInferenceService(
+        args.model_name, args.model_base_path, args.verbose)
 
   model_name_service_map[args.model_name] = inference_service
-
 
 # Generate client code and exit or not
 if args.gen_client != "":
   if args.model_platform == "tensorflow":
     inference_service = model_name_service_map[args.model_name]
-    gen_client.gen_tensorflow_client(inference_service, args.gen_client, args.model_name)
+    gen_client.gen_tensorflow_client(inference_service, args.gen_client,
+                                     args.model_name)
 
   exit(0)
-
 
 # Start thread to periodically reload models or not
 if args.reload_models == "True" or args.reload_models == "true":
@@ -207,8 +215,7 @@ if args.reload_models == "True" or args.reload_models == "true":
 @requires_auth
 def index():
   return render_template(
-      "index.html",
-      model_name_service_map=model_name_service_map)
+      "index.html", model_name_service_map=model_name_service_map)
 
 
 # The API to rocess inference request
@@ -240,10 +247,6 @@ def inference():
       image_array = image_array.reshape(shape)
     else:
       image_array = image_array.reshape(1, *image_array.shape)
-
-    #import ipdb;ipdb.set_trace()
-
-
 
     json_data["data"] = {"image": image_array}
 
