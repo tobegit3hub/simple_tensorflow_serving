@@ -8,6 +8,14 @@
       "name": "deep_image_model",
       "base_path": "/Users/tobe/code/simple_tensorflow_serving/models/deep_image_model/",
       "platform": "tensorflow"
+    }, {
+      "name": "mxnet_mlp_model",
+      "base_path": "/Users/tobe/code/simple_tensorflow_serving/models/mxnet_mlp/mx_mlp",
+      "platform": "mxnet"
+    }, {
+      "name": "onnx_mnist_model",
+      "base_path": "/Users/tobe/code/simple_tensorflow_serving/models/onnx_mnist_model/onnx_model.proto",
+      "platform": "onnx"
     }
   ]
 }
