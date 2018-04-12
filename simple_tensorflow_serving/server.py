@@ -2,6 +2,7 @@
 
 import argparse
 #import argcomplete
+import os
 import cStringIO
 import json
 import logging
@@ -16,6 +17,7 @@ from gen_client import gen_client
 from tensorflow_inference_service import TensorFlowInferenceService
 from mxnet_inference_service import MxnetInferenceService
 from onnx_inference_service import OnnxInferenceService
+import python_predict_client
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -151,6 +153,9 @@ def requires_auth(f):
 # Initialize flask application
 application = Flask(__name__, template_folder='templates')
 
+UPLOAD_FOLDER = os.path.basename('static')
+application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 # Example: {"default": TensorFlowInferenceService}
 model_name_service_map = {}
 
@@ -271,9 +276,49 @@ def inference():
   return jsonify(json.loads(json.dumps(result, cls=NumpyEncoder)))
 
 
+@application.route('/image_inference', methods=["GET"])
+def image_inference():
+  return render_template('image_inference.html')
+
+
+@application.route('/run_image_inference', methods=['POST'])
+def run_image_inference():
+  file = request.files['image']
+  file_path = os.path.join(application.config['UPLOAD_FOLDER'], file.filename)
+  file.save(file_path)
+
+  image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
+                                 file.filename)
+  predict_result = python_predict_client.predict_image(image_file_path)
+
+  return render_template(
+      'image_inference.html',
+      image_file_path=image_file_path,
+      predict_result=predict_result)
+
+
+@application.route('/json_inference', methods=["GET"])
+def json_inference():
+  return render_template('json_inference.html')
+
+
+@application.route('/run_json_inference', methods=['POST'])
+def run_json_inference():
+  json_data_string = request.form["json_data"]
+  json_data = json.loads(json_data_string)
+  model_name = request.form["model_name"]
+
+  request_json_data = {"model_name": model_name, "data": json_data}
+
+  predict_result = python_predict_client.predict_json(request_json_data)
+
+  return render_template('json_inference.html', predict_result=predict_result)
+
+
 def main():
   # Start the HTTP server
-  application.run(host=args.host, port=args.port)
+  # Support multi-thread for json inference and image inference
+  application.run(host=args.host, port=args.port, threaded=True)
 
 
 if __name__ == "__main__":

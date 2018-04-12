@@ -1,0 +1,22 @@
+{% include "header.html" %}
+
+  <br />
+  <div class="container">
+
+    <form action="/run_image_inference" method="post" enctype="multipart/form-data" >
+        <span class="btn btn-default btn-file">
+          Browse files<input type="file" name="image">
+        </span>
+
+      <input type="submit" value="Upload image" class="btn btn-primary">
+    </form>
+
+    <h2>Predict image: </h2>
+    <img src={{ image_file_path }} />
+
+    <h2>Predict result: </h2>
+    <p>{{ predict_result }}</p>
+
+  </div>
+
+{% include "footer.html" %}
