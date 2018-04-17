@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  simple_tensorflow_serving:
+    restart: always
+    image: tobegit3hub/simple_tensorflow_serving
+    ports:
+      - "8500:8500"
+
