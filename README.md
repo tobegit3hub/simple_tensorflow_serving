@@ -20,7 +20,7 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support dynamic online and offline for model versions
 * [x] Support loading new custom op for TensorFlow models
 * [x] Support secure authentication with configurable basic auth
-* [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX
+* [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX/H2o
 
 ## Installation
 
@@ -251,6 +251,30 @@ input_data = {
 result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
+
+### H2o Model
+
+Now it supports loading and serving the general H2o models.
+
+```
+simple_tensorflow_serving --model_base_path="./models/h2o_prostate_model/GLM_model_python_1525255083960_17" --model_platform="h2o"
+```
+
+The clients are similar and you can implement in your favourite programming language. 
+
+```python
+endpoint = "http://127.0.0.1:8500"
+input_data = {
+  "model_name": "default",
+  "model_version": 1,
+  "data": {
+      "data": [[[[...]]]]
+  }
+}
+result = requests.post(endpoint, json=input_data)
+print(result.text)
+```
+
 
 ## Supported Client
 
