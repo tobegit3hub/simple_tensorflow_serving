@@ -16,6 +16,10 @@
       "name": "onnx_mnist_model",
       "base_path": "/Users/tobe/code/simple_tensorflow_serving/models/onnx_mnist_model/onnx_model.proto",
       "platform": "onnx"
+    }, {
+      "name": "h2o_prostate_model",
+      "base_path": "/Users/tobe/code/simple_tensorflow_serving/models/h2o_prostate_model/GLM_model_python_1525255083960_17",
+      "platform": "h2o"
     }
   ]
 }

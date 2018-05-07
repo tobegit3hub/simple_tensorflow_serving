@@ -257,6 +257,8 @@ print(result.text)
 Now it supports loading and serving the general H2o models.
 
 ```
+# Start H2o server with "java -jar h2o.jar"
+
 simple_tensorflow_serving --model_base_path="./models/h2o_prostate_model/GLM_model_python_1525255083960_17" --model_platform="h2o"
 ```
 
