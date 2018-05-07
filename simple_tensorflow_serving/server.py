@@ -1,9 +1,14 @@
 #!/usr/bin/env python
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import argparse
 #import argcomplete
 import os
-import cStringIO
+#import cStringIO
+from io import StringIO
 import json
 import logging
 import sys
@@ -18,6 +23,7 @@ from tensorflow_inference_service import TensorFlowInferenceService
 from mxnet_inference_service import MxnetInferenceService
 from onnx_inference_service import OnnxInferenceService
 from h2o_inference_service import H2oInferenceService
+
 import python_predict_client
 
 logging.basicConfig(level=logging.DEBUG)

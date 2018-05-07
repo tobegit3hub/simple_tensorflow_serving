@@ -1,3 +1,8 @@
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import logging
 import os
 import time
@@ -39,7 +44,8 @@ class MxnetInferenceService(AbstractInferenceService):
     epoch_number = 1
 
     # Load model
-    sym, arg_params, aux_params = mx.model.load_checkpoint(self.model_base_path, epoch_number)
+    sym, arg_params, aux_params = mx.model.load_checkpoint(
+        self.model_base_path, epoch_number)
     self.mod = mx.mod.Module(symbol=sym, context=mx.cpu(), label_names=None)
     self.has_signature_file = False
     self.signature_input_names = []
@@ -47,7 +53,8 @@ class MxnetInferenceService(AbstractInferenceService):
 
     # Load inputs from signature file
     signature_file_path = self.model_base_path + "-signature.json"
-    if os.path.exists(signature_file_path) and os.path.isfile(signature_file_path):
+    if os.path.exists(signature_file_path) and os.path.isfile(
+        signature_file_path):
       self.has_signature_file = True
       data_shapes = []
 
@@ -70,17 +77,18 @@ class MxnetInferenceService(AbstractInferenceService):
           self.signature_output_names.append(output_data_name)
 
     else:
-      data_shapes=[('data', (1, 2))]
+      data_shapes = [('data', (1, 2))]
 
     self.mod.bind(for_training=False, data_shapes=data_shapes)
     self.mod.set_params(arg_params, aux_params, allow_missing=True)
     if self.has_signature_file:
-      self.model_graph_signature = "Inputs: {}\nOutputs: {}\n{}".format(self.signature_input_names, self.signature_output_names, self.mod.symbol.tojson())
+      self.model_graph_signature = "Inputs: {}\nOutputs: {}\n{}".format(
+          self.signature_input_names, self.signature_output_names,
+          self.mod.symbol.tojson())
     else:
       self.model_graph_signature = "{}".format(self.mod.symbol.tojson())
 
     self.verbose = verbose
-
 
   def inference(self, json_data):
     """
@@ -123,7 +131,6 @@ class MxnetInferenceService(AbstractInferenceService):
       request_ndarray_data = json_data["data"]["data"]
       request_mxnet_ndarray_data = [mx.nd.array(request_ndarray_data)]
       batch_data = Batch(request_mxnet_ndarray_data)
-
 
     # 2. Do inference
     if self.verbose:

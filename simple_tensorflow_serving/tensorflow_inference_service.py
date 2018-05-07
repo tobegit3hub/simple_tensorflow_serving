@@ -1,3 +1,8 @@
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import logging
 import os
 import signal
@@ -14,7 +19,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
   The TensorFlow service to load TensorFlow SavedModel and make inference.
   """
 
-  def __init__(self, model_name, model_base_path, custom_op_paths="", verbose=False):
+  def __init__(self,
+               model_name,
+               model_base_path,
+               custom_op_paths="",
+               verbose=False):
     """
     Initialize the TensorFlow service by loading SavedModel to the Session.
         
@@ -126,7 +135,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
           del self.version_session_map[str(model_version)]
           self.version_session_map.remove(model_version)
 
-
       # Create Session for new model version
         online_model_versions = current_model_versions - old_model_versions
         for model_version in online_model_versions:
@@ -142,7 +150,10 @@ class TensorFlowInferenceService(AbstractInferenceService):
         model_version, model_file_path))
     meta_graph = tf.saved_model.loader.load(
         session, [tf.saved_model.tag_constants.SERVING], model_file_path)
-    self.model_graph_signature = meta_graph.signature_def.items()[0][1]
+
+    # Update ItemsView to list for Python 3
+    self.model_graph_signature = list(meta_graph.signature_def.items())[0][1]
+    #self.model_graph_signature = meta_graph.signature_def.items()[0][1]
 
   def get_one_model_version(self):
     current_model_versions_string = os.listdir(self.model_base_path)
@@ -154,11 +165,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
   def get_all_model_versions(self):
     current_model_versions_string = os.listdir(self.model_base_path)
     if len(current_model_versions_string) > 0:
-      model_versions = [int(model_version_string) for model_version_string in current_model_versions_string]
+      model_versions = [
+          int(model_version_string)
+          for model_version_string in current_model_versions_string
+      ]
       return model_versions
     else:
       logging.error("No model version found")
-
 
   def inference(self, json_data):
     """

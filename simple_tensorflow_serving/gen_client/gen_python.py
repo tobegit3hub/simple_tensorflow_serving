@@ -1,6 +1,10 @@
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import json
 import logging
-
 from jinja2 import Template
 
 
@@ -28,7 +32,8 @@ if __name__ == "__main__":
 
   generated_tensor_data_string = json.dumps(generated_tensor_data)
   template = Template(code_template)
-  generate_code = template.render(model_name=model_name, tensor_data=generated_tensor_data_string)
+  generate_code = template.render(
+      model_name=model_name, tensor_data=generated_tensor_data_string)
   logging.debug("Generate the code in Python:\n{}".format(generate_code))
 
   generated_code_filename = "client.py"
