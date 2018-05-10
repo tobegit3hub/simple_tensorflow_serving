@@ -198,9 +198,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
       return "Fail to request the model version: {} with data: {}".format(
           model_version, input_data)
 
+    """
     if self.verbose:
       logging.debug("Inference model_version: {}, data: {}".format(
           model_version, input_data))
+    """
 
     # 1. Build feed dict for input data
     feed_dict_map = {}

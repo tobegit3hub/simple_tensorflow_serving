@@ -7,13 +7,11 @@ from __future__ import print_function
 import argparse
 #import argcomplete
 import os
-#import cStringIO
-from io import StringIO
+import io
 import json
 import logging
 import sys
 from functools import wraps
-
 import numpy as np
 from flask import Flask, Response, jsonify, render_template, request
 from PIL import Image
@@ -23,7 +21,6 @@ from tensorflow_inference_service import TensorFlowInferenceService
 from mxnet_inference_service import MxnetInferenceService
 from onnx_inference_service import OnnxInferenceService
 from h2o_inference_service import H2oInferenceService
-
 import python_predict_client
 
 logging.basicConfig(level=logging.DEBUG)
@@ -219,7 +216,7 @@ if args.gen_client != "":
     gen_client.gen_tensorflow_client(inference_service, args.gen_client,
                                      args.model_name)
 
-  exit(0)
+  sys.exit(0)
 
 # Start thread to periodically reload models or not
 if args.reload_models == "True" or args.reload_models == "true":
@@ -254,7 +251,11 @@ def inference():
 
     image_content = request.files["image"].read()
     image_string = np.fromstring(image_content, np.uint8)
-    image_string_io = cStringIO.StringIO(image_string)
+    if sys.version_info[0] < 3:
+      import cStringIO
+      image_string_io = cStringIO.StringIO(image_string)
+    else:
+      image_string_io = io.BytesIO(image_string)
     image_file = Image.open(image_string_io)
     image_array = np.array(image_file)
 
@@ -330,7 +331,7 @@ def run_json_inference():
 
 def main():
   # Start the HTTP server
-  # Support multi-thread for json inference and image inference
+  # Support multi-thread for json inference and image inference in same process
   application.run(host=args.host, port=args.port, threaded=True)
 
 
