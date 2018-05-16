@@ -163,15 +163,21 @@ class TensorFlowInferenceService(AbstractInferenceService):
       logging.error("No model version found")
 
   def get_all_model_versions(self):
-    current_model_versions_string = os.listdir(self.model_base_path)
-    if len(current_model_versions_string) > 0:
-      model_versions = [
-          int(model_version_string)
-          for model_version_string in current_model_versions_string
-      ]
-      return model_versions
+
+    if self.model_base_path.startswith("hdfs://"):
+      # TODO: Support getting sub-directory from HDFS
+      return [1]
     else:
-      logging.error("No model version found")
+      current_model_versions_string = os.listdir(self.model_base_path)
+      if len(current_model_versions_string) > 0:
+        model_versions = [
+            int(model_version_string)
+            for model_version_string in current_model_versions_string
+        ]
+        return model_versions
+      else:
+        logging.error("No model version found")
+        return []
 
   def inference(self, json_data):
     """
