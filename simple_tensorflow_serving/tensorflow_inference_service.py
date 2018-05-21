@@ -217,6 +217,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       input_op_name = input_item[0]
       # Example: "Placeholder_0"
       input_tensor_name = input_item[1].name
+
       # Example: {"Placeholder_0": [[1.0], [2.0]], "Placeholder_1:0": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}
       feed_dict_map[input_tensor_name] = input_data[input_op_name]
 
@@ -225,12 +226,26 @@ class TensorFlowInferenceService(AbstractInferenceService):
     output_tensor_names = []
     output_op_names = []
     for output_item in self.model_graph_signature.outputs.items():
-      # Example: "keys"
-      output_op_name = output_item[0]
-      output_op_names.append(output_op_name)
-      # Example: "Identity:0"
-      output_tensor_name = output_item[1].name
-      output_tensor_names.append(output_tensor_name)
+      #import ipdb;ipdb.set_trace()
+
+      if output_item[1].name != "":
+        # Example: "keys"
+        output_op_name = output_item[0]
+        output_op_names.append(output_op_name)
+        # Example: "Identity:0"
+        output_tensor_name = output_item[1].name
+        output_tensor_names.append(output_tensor_name)
+      elif output_item[1].coo_sparse != None:
+        # For SparseTensor op, Example: values_tensor_name: "CTCBeamSearchDecoder_1:1", indices_tensor_name: "CTCBeamSearchDecoder_1:0", dense_shape_tensor_name: "CTCBeamSearchDecoder_1:2"
+        values_tensor_name = output_item[1].coo_sparse.values_tensor_name
+        indices_tensor_name = output_item[1].coo_sparse.indices_tensor_name
+        dense_shape_tensor_name = output_item[1].coo_sparse.dense_shape_tensor_name
+        output_op_names.append("{}_{}".format(output_item[0], "values"))
+        output_op_names.append("{}_{}".format(output_item[0], "indices"))
+        output_op_names.append("{}_{}".format(output_item[0], "shape"))
+        output_tensor_names.append(values_tensor_name)
+        output_tensor_names.append(indices_tensor_name)
+        output_tensor_names.append(dense_shape_tensor_name)
 
     # 3. Inference with Session run
     if self.verbose:
