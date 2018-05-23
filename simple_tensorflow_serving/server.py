@@ -15,9 +15,10 @@ from functools import wraps
 import numpy as np
 from flask import Flask, Response, jsonify, render_template, request
 from PIL import Image
+from flask_cors import CORS
 
-from gen_client import gen_client
 from tensorflow_inference_service import TensorFlowInferenceService
+from gen_client import gen_client
 from mxnet_inference_service import MxnetInferenceService
 from onnx_inference_service import OnnxInferenceService
 from h2o_inference_service import H2oInferenceService
@@ -85,6 +86,11 @@ parser.add_argument(
     default=False,
     help="Enable colored log(eg. False)",
     type=bool)
+parser.add_argument(
+        "--enable_cors",
+        default=True,
+        help="Enable cors(eg. True)",
+        type=bool)
 
 # TODO: Support auto-complete
 #argcomplete.autocomplete(parser)
@@ -156,6 +162,9 @@ def requires_auth(f):
 
 # Initialize flask application
 application = Flask(__name__, template_folder='templates')
+
+if args.enable_cors:
+  CORS(application)
 
 UPLOAD_FOLDER = os.path.basename('static')
 application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -268,6 +277,7 @@ def inference():
       image_array = image_array.reshape(1, *image_array.shape)
 
     json_data["data"] = {"image": image_array}
+    #json_data["data"] = {"image_data": image_array}
 
   else:
     logging.error("Unsupported content type: {}".format(request.content_type))
