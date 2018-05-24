@@ -2,5 +2,6 @@ flask
 jinja2
 pillow
 tensorflow>=1.0.0
-mxnet
+#mxnet
 flask-cors
+requests
