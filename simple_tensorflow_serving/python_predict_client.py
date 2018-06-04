@@ -11,11 +11,11 @@ from PIL import Image
 import numpy as np
 
 
-def predict_image(image_file_path):
+def predict_image(image_file_path, channel_layout="RGB"):
   endpoint = "http://127.0.0.1:8500"
 
   img = Image.open(image_file_path)
-  img = img.convert('RGB')
+  img = img.convert(channel_layout)
   img.load()
   image_ndarray = np.asarray(img, dtype="int32")
   # Shape is [48, 400, 3] -> [400, 48, 3]

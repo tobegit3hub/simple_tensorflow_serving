@@ -265,7 +265,15 @@ def inference():
       image_string_io = cStringIO.StringIO(image_string)
     else:
       image_string_io = io.BytesIO(image_string)
+
     image_file = Image.open(image_string_io)
+    if "channel_layout" in request.form:
+      channel_layout = request.form["channel_layout"]
+      if channel_layout in ["RGB", "RGBA"]:
+        image_file = image_file.convert(channel_layout)
+      else:
+        logging.error("Illegal image_layout: {}".format(channel_layout))
+
     image_array = np.array(image_file)
 
     # TODO: Support multiple images without reshaping
@@ -311,9 +319,15 @@ def run_image_inference():
   file_path = os.path.join(application.config['UPLOAD_FOLDER'], file.filename)
   file.save(file_path)
 
+  channel_layout = "RGB"
+  if "channel_layout" in request.form:
+    channel_layout_ = request.form["channel_layout"]
+    if channel_layout_ in ["RGB", "RGBA"]:
+        channel_layout = channel_layout_
   image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
                                  file.filename)
-  predict_result = python_predict_client.predict_image(image_file_path)
+  predict_result = python_predict_client.predict_image(
+    image_file_path, channel_layout=channel_layout)
 
   return render_template(
       'image_inference.html',
