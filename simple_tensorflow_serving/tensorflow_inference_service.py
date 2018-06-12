@@ -166,7 +166,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     if self.model_base_path.startswith("hdfs://"):
       # TODO: Support getting sub-directory from HDFS
-      return [1]
+      return [0]
     else:
       current_model_versions_string = os.listdir(self.model_base_path)
       if len(current_model_versions_string) > 0:
