@@ -11,8 +11,8 @@ from PIL import Image
 import numpy as np
 
 
-def predict_image(image_file_path, channel_layout="RGB"):
-  endpoint = "http://127.0.0.1:8500"
+def predict_image(image_file_path, channel_layout="RGB", run_profile="", port=8500):
+  endpoint = "http://127.0.0.1:" + str(port)
 
   img = Image.open(image_file_path)
   img = img.convert(channel_layout)
@@ -22,7 +22,9 @@ def predict_image(image_file_path, channel_layout="RGB"):
   image_ndarray = image_ndarray.transpose((1, 0, 2))
   image_array = [image_ndarray.tolist()]
   # TODO: Support specified model name
-  json_data = {"model_name": "default", "data": {"image": image_array}}
+  json_data = {"model_name": "default",
+               "data": {"image": image_array},
+               "run_profile": run_profile}
 
   result = requests.post(endpoint, json=json_data)
 
@@ -33,9 +35,9 @@ def predict_image(image_file_path, channel_layout="RGB"):
   return predict_result
 
 
-def predict_json(json_data):
+def predict_json(json_data, port=8500):
   # TODO: Support for other endpoint
-  endpoint = "http://127.0.0.1:8500"
+  endpoint = "http://127.0.0.1:" + str(port)
 
   result = requests.post(endpoint, json=json_data)
 

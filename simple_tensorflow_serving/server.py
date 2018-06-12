@@ -246,7 +246,6 @@ def index():
 @application.route("/", methods=["POST"])
 @requires_auth
 def inference():
-
   # Process requests with json data
   if request.content_type.startswith("application/json"):
     json_data = json.loads(request.data)
@@ -257,6 +256,8 @@ def inference():
 
     if "model_version" in request.form:
       json_data["model_version"] = int(request.form["model_version"])
+    if "run_profile" in request.form:
+      json_data["run_profile"] = request.form["run_profile"]
 
     image_content = request.files["image"].read()
     image_string = np.fromstring(image_content, np.uint8)
@@ -324,10 +325,15 @@ def run_image_inference():
     channel_layout_ = request.form["channel_layout"]
     if channel_layout_ in ["RGB", "RGBA"]:
         channel_layout = channel_layout_
+
+  run_profile = ""
+  if "run_profile" in request.form:
+    run_profile = request.form["run_profile"]
+
   image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
                                  file.filename)
   predict_result = python_predict_client.predict_image(
-    image_file_path, channel_layout=channel_layout)
+    image_file_path, channel_layout=channel_layout, run_profile=run_profile, port=args.port)
 
   return render_template(
       'image_inference.html',
@@ -348,7 +354,7 @@ def run_json_inference():
 
   request_json_data = {"model_name": model_name, "data": json_data}
 
-  predict_result = python_predict_client.predict_json(request_json_data)
+  predict_result = python_predict_client.predict_json(request_json_data, port=args.port)
 
   return render_template('json_inference.html', predict_result=predict_result)
 
