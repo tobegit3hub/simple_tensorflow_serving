@@ -2,11 +2,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import logging
 import os
 import signal
 import threading
 import time
+import json
+import cStringIO
 
 import tensorflow as tf
 
@@ -45,6 +48,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       self.load_custom_op(custom_op_paths)
 
     self.version_session_map = {}
+    self.profiler_map = {}
 
     self.verbose = verbose
     self.should_stop_all_threads = False
@@ -180,6 +184,33 @@ class TensorFlowInferenceService(AbstractInferenceService):
         logging.error("No model version found")
         return []
 
+  def run_with_profiler(self, session, version, output_tensors, feed_dict):
+    if version not in self.profiler_map:
+      if len(self.profiler_map) > 0:
+        logging.warn("Only support one profiler per process, run without profiler")
+        return session.run(output_tensors, feed_dict), None
+      profiler = tf.profiler.Profiler(session.graph)
+      self.profiler_map[version] = profiler
+    else:
+      profiler = self.profiler_map[version]
+    run_meta = tf.RunMetadata()
+    result = session.run(output_tensors,
+                         feed_dict=feed_dict,
+                         options=tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
+                         run_metadata=run_meta)
+    profiler.add_step(0, run_meta)
+    profiler_out_file = "/tmp/.simple_tensorflow_serving_prof-" + str(int(time.time()))
+    opts = tf.profiler.ProfileOptionBuilder.time_and_memory()
+    opts["output"] = "file:outfile=%s" % profiler_out_file
+    profiler.profile_operations(options=opts)
+    profile_result = None
+    try:
+      with open(profiler_out_file) as f:
+        profile_result = f.read()
+    except Exception as e:
+      logging.error(e.message)
+    return result, profile_result
+
   def inference(self, json_data):
     """
     Make inference with the current Session object and JSON request data.
@@ -252,7 +283,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
     if self.verbose:
       start_time = time.time()
     sess = self.version_session_map[str(model_version)]
-    result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
+    result_profile = None
+    if json_data.get("run_profile", "") == "true":
+      logging.info("run_profile=true, running with tfprof")
+      result_ndarrays, result_profile = self.run_with_profiler(
+        sess, str(model_version), output_tensor_names, feed_dict_map)
+    else:
+      result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
     if self.verbose:
       logging.debug("Inference time: {} s".format(time.time() - start_time))
 
@@ -262,6 +299,10 @@ class TensorFlowInferenceService(AbstractInferenceService):
       result[output_op_names[i]] = result_ndarrays[i]
     if self.verbose:
       logging.debug("Inference result: {}".format(result))
+
+    # 5. Build extra return information
+    if result_profile is not None and "__PROFILE__" not in output_tensor_names:
+      result["__PROFILE__"] = result_profile
     return result
 
 
