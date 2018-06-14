@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -153,7 +152,9 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     # Update ItemsView to list for Python 3
     self.model_graph_signature = list(meta_graph.signature_def.items())[0][1]
-    #self.model_graph_signature = meta_graph.signature_def.items()[0][1]
+    #import ipdb;ipdb.set_trace()
+    self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
+        self.model_graph_signature)
 
   def get_one_model_version(self):
     current_model_versions_string = os.listdir(self.model_base_path)
@@ -203,7 +204,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
       logging.error("No model version: {} to serve".format(model_version))
       return "Fail to request the model version: {} with data: {}".format(
           model_version, input_data)
-
     """
     if self.verbose:
       logging.debug("Inference model_version: {}, data: {}".format(
@@ -239,7 +239,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
         # For SparseTensor op, Example: values_tensor_name: "CTCBeamSearchDecoder_1:1", indices_tensor_name: "CTCBeamSearchDecoder_1:0", dense_shape_tensor_name: "CTCBeamSearchDecoder_1:2"
         values_tensor_name = output_item[1].coo_sparse.values_tensor_name
         indices_tensor_name = output_item[1].coo_sparse.indices_tensor_name
-        dense_shape_tensor_name = output_item[1].coo_sparse.dense_shape_tensor_name
+        dense_shape_tensor_name = output_item[
+            1].coo_sparse.dense_shape_tensor_name
         output_op_names.append("{}_{}".format(output_item[0], "values"))
         output_op_names.append("{}_{}".format(output_item[0], "indices"))
         output_op_names.append("{}_{}".format(output_item[0], "shape"))
@@ -262,3 +263,75 @@ class TensorFlowInferenceService(AbstractInferenceService):
     if self.verbose:
       logging.debug("Inference result: {}".format(result))
     return result
+
+
+def tensorflow_model_graph_to_dict(model_graph_signature):
+  model_graph_signature_dict = {}
+  model_graph_signature_dict["inputs"] = []
+  model_graph_signature_dict["outputs"] = []
+
+  for input_item in model_graph_signature.inputs.items():
+    # Example: {"name: "keys", "dtype": 1(DT_INT32), "shape": [-1, 1]}
+    input_map = {"name": "", "dtype": 0, "shape": []}
+
+    # Example: "keys"
+    input_opname = input_item[0]
+    input_map["name"] = input_opname
+
+    dtype = input_item[1].dtype
+    input_map["dtype"] = dtype
+
+    # Example: [-1, 1]
+    shape_dims = input_item[1].tensor_shape.dim
+
+    for dim in shape_dims:
+      input_map["shape"].append(int(dim.size))
+
+    model_graph_signature_dict["inputs"].append(input_map)
+
+  for output_item in model_graph_signature.outputs.items():
+
+    if output_item[1].name != "":
+      # Example: {"name: "keys", "dtype": 1(DT_INT32), "shape": [-1, 1]}
+      output_map = {"name": "", "dtype": 0, "shape": []}
+
+      # Example: "keys"
+      output_op_name = output_item[0]
+      output_map["name"] = output_op_name
+
+      dtype = output_item[1].dtype
+      output_map["dtype"] = dtype
+
+      # Example: [-1, 1]
+      shape_dims = output_item[1].tensor_shape.dim
+
+      for dim in shape_dims:
+        output_map["shape"].append(int(dim.size))
+
+      model_graph_signature_dict["outputs"].append(output_map)
+
+    elif output_item[1].coo_sparse != None:
+      # For SparseTensor op, Example: values_tensor_name: "CTCBeamSearchDecoder_1:1", indices_tensor_name: "CTCBeamSearchDecoder_1:0", dense_shape_tensor_name: "CTCBeamSearchDecoder_1:2"
+      output_map1 = {"name": "", "dtype": 0, "shape": []}
+      output_map2 = {"name": "", "dtype": 0, "shape": []}
+      output_map3 = {"name": "", "dtype": 0, "shape": []}
+
+      #values_tensor_name = output_item[1].coo_sparse.values_tensor_name
+      #indices_tensor_name = output_item[1].coo_sparse.indices_tensor_name
+      #dense_shape_tensor_name = output_item[1].coo_sparse.dense_shape_tensor_name
+
+      values_op_name = "{}_{}".format(output_item[0], "values")
+      indices_op_name = "{}_{}".format(output_item[0], "indices")
+      shape_op_name = "{}_{}".format(output_item[0], "shape")
+      output_map1["name"] = values_op_name
+      output_map2["name"] = indices_op_name
+      output_map3["name"] = shape_op_name
+
+      # TODO: Add dtype and shape for sparse model
+      model_graph_signature_dict["outputs"].append(output_map1)
+      model_graph_signature_dict["outputs"].append(output_map2)
+      model_graph_signature_dict["outputs"].append(output_map3)
+
+  import ipdb
+  ipdb.set_trace()
+  return model_graph_signature_dict

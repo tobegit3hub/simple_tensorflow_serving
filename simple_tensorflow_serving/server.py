@@ -87,10 +87,7 @@ parser.add_argument(
     help="Enable colored log(eg. False)",
     type=bool)
 parser.add_argument(
-        "--enable_cors",
-        default=True,
-        help="Enable cors(eg. True)",
-        type=bool)
+    "--enable_cors", default=True, help="Enable cors(eg. True)", type=bool)
 
 # TODO: Support auto-complete
 #argcomplete.autocomplete(parser)
@@ -323,11 +320,11 @@ def run_image_inference():
   if "channel_layout" in request.form:
     channel_layout_ = request.form["channel_layout"]
     if channel_layout_ in ["RGB", "RGBA"]:
-        channel_layout = channel_layout_
+      channel_layout = channel_layout_
   image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
                                  file.filename)
   predict_result = python_predict_client.predict_image(
-    image_file_path, channel_layout=channel_layout)
+      image_file_path, channel_layout=channel_layout)
 
   return render_template(
       'image_inference.html',
@@ -351,6 +348,25 @@ def run_json_inference():
   predict_result = python_predict_client.predict_json(request_json_data)
 
   return render_template('json_inference.html', predict_result=predict_result)
+
+
+# The API to get default of the model
+@application.route("/v1/models/<model_name>", methods=["GET"])
+@requires_auth
+def get_model_detail(model_name):
+
+  #import ipdb;ipdb.set_trace()
+
+  if model_name not in model_name_service_map:
+    return "Model not found: {}".format(model_name)
+
+  inference_service = model_name_service_map[model_name]
+
+  #bb = inference_service.get_detail()
+  #import ipdb;ipdb.set_trace()
+  return json.dumps(inference_service.get_detail())
+
+  #return "Model: {}, version: {}".format(model_name, model_version)
 
 
 def main():
