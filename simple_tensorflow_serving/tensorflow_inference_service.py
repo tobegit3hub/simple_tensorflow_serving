@@ -10,6 +10,8 @@ import threading
 import time
 import json
 import cStringIO
+import subprocess
+import pyarrow as pa
 
 import tensorflow as tf
 
@@ -160,9 +162,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
         self.model_graph_signature)
 
   def get_one_model_version(self):
-    current_model_versions_string = os.listdir(self.model_base_path)
-    if len(current_model_versions_string) > 0:
-      return int(current_model_versions_string[0])
+    all_model_versions = self.get_all_model_versions()
+    # current_model_versions_string = os.listdir(self.model_base_path)
+
+    if len(all_model_versions) > 0:
+      return all_model_versions[0]
     else:
       logging.error("No model version found")
 
@@ -170,7 +174,46 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     if self.model_base_path.startswith("hdfs://"):
       # TODO: Support getting sub-directory from HDFS
-      return [0]
+      #return [0]
+
+      # hdfs://172.27.128.31:8020/user/chendihao/tensorflow_template_application/model/
+      # hdfs://default/user/chendihao/tensorflow_template_application/model/
+      # hdfs:///user/chendihao/tensorflow_template_application/model/
+
+      hadoop_user_name = os.environ.get("HDFS_USER_NAME", "work")
+      hadoop_enable_kerberos = os.environ.get("HDFS_ENABLE_KERBEROS", "false")
+
+      if hadoop_enable_kerberos == "true" or hadoop_enable_kerberos == "True":
+        hadoop_kerberos_ticket_file = os.environ.get("HDFS_KERBEROS_TICKET_FILE", "/tmp/krb5cc_0")
+        hadoop_kinit_command = os.environ.get("HDFS_KINIT_COMMAND", "kinit work@HADOOP.COM -k -t /etc/user.keytab")
+        logging.info("Try to run the command to kinit: {}".format(hadoop_kinit_command))
+        subprocess.call(hadoop_kinit_command, shell=True)
+
+      if self.model_base_path.startswith("hdfs:///"):
+        hadoop_endpoint = os.environ.get("HDFS_ENDPOINT", "default")
+      else:
+        # 'hdfs://172.27.128.31:8020/user/chendihao/tensorflow_template_application/model/' -> ['hdfs:', '', '172.27.128.31:8020', 'user', 'chendihao', 'tensorflow_template_application', 'model', '']
+        hadoop_endpoint = self.model_base_path.split("/")[2]
+
+      if hadoop_endpoint == "default":
+        hdfs_host = "default"
+        hdfs_port = 0
+      else:
+        # 172.27.128.31:8020
+        hdfs_host_port_pair = hadoop_endpoint.split(":")
+        hdfs_host = hdfs_host_port_pair[0]
+        hdfs_port = int(hdfs_host_port_pair[1])
+
+      if hadoop_enable_kerberos == "true" or hadoop_enable_kerberos == "True":
+        client = pa.hdfs.connect(host=hdfs_host, port=hdfs_port, user=hadoop_user_name, kerb_ticket=hadoop_kerberos_ticket_file)
+      else:
+        client = pa.hdfs.connect(host=hdfs_host, port=hdfs_port, user=hadoop_user_name)
+
+      model_version_paths = client.ls(self.model_base_path)
+      model_versions = [model_version_path.split("/")[-1] for model_version_path in model_version_paths]
+
+      return model_versions
+
     else:
       current_model_versions_string = os.listdir(self.model_base_path)
       if len(current_model_versions_string) > 0:
