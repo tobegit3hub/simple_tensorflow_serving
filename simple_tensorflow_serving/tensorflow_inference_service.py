@@ -209,7 +209,15 @@ class TensorFlowInferenceService(AbstractInferenceService):
       else:
         client = pa.hdfs.connect(host=hdfs_host, port=hdfs_port, user=hadoop_user_name)
 
-      model_version_paths = client.ls(self.model_base_path)
+      if self.model_base_path.startswith("hdfs:///"):
+        model_version_paths = client.ls(self.model_base_path)
+      else:
+        if hdfs_host == "default":
+          # Remove the "default" for pyarrow
+          model_version_paths = client.ls(self.model_base_path[:7] + self.model_base_path[14:])
+        else:
+          model_version_paths = client.ls(self.model_base_path)
+
       model_versions = [model_version_path.split("/")[-1] for model_version_path in model_version_paths]
 
       return model_versions
