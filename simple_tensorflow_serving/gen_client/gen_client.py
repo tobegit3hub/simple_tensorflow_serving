@@ -25,7 +25,7 @@ def gen_tensorflow_client(tensorflow_inference_service, language, model_name):
     None
   """
 
-  if language not in ["bash", "python", "golang", "javascript"]:
+  if language not in ["json", "bash", "python", "golang", "javascript"]:
     logging.error(
         "Language: {} is not supported to gen client".format(language))
     return
@@ -88,6 +88,19 @@ def gen_tensorflow_client(tensorflow_inference_service, language, model_name):
 
     generated_tensor_data[opname] = internal_array
 
+  if language == "json":
+    return {"data": generated_tensor_data}
+  elif language == "bash":
+    return gen_bash.gen_tensorflow_client_string(generated_tensor_data, model_name)
+  elif language == "python":
+    return gen_python.gen_tensorflow_client_string(generated_tensor_data, model_name)
+  elif language == "golang":
+    return gen_golang.gen_tensorflow_client_string(generated_tensor_data, model_name)
+  elif language == "javascript":
+    return gen_javascript.gen_tensorflow_client_string(generated_tensor_data, model_name)
+
+  # TODO: Return the string instead of writing in local files
+  """
   if language == "bash":
     gen_bash.gen_tensorflow_client(generated_tensor_data, model_name)
   elif language == "python":
@@ -96,3 +109,4 @@ def gen_tensorflow_client(tensorflow_inference_service, language, model_name):
     gen_golang.gen_tensorflow_client(generated_tensor_data, model_name)
   elif language == "javascript":
     gen_javascript.gen_tensorflow_client(generated_tensor_data, model_name)
+  """

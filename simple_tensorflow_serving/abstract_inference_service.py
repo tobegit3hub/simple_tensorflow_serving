@@ -17,6 +17,7 @@ class AbstractInferenceService(object):
     self.model_base_path = ""
     self.model_version_list = []
     self.model_graph_signature = None
+    self.model_graph_signature_dict = {}
     self.platform = ""
 
   @abstractmethod
@@ -28,3 +29,12 @@ class AbstractInferenceService(object):
       The JSON serialized object with key and array data.
     """
     pass
+
+  def get_detail(self):
+    detail = {}
+    detail["model_name"] = self.model_name
+    detail["model_base_path"] = self.model_base_path
+    detail["model_version_list"] = self.model_version_list
+    detail["model_signature"] = self.model_graph_signature_dict
+    detail["platform"] = self.platform
+    return detail

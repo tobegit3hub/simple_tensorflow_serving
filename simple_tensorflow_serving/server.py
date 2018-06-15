@@ -361,18 +361,34 @@ def run_json_inference():
 @requires_auth
 def get_model_detail(model_name):
 
-  #import ipdb;ipdb.set_trace()
-
   if model_name not in model_name_service_map:
     return "Model not found: {}".format(model_name)
 
   inference_service = model_name_service_map[model_name]
-
-  #bb = inference_service.get_detail()
-  #import ipdb;ipdb.set_trace()
   return json.dumps(inference_service.get_detail())
 
   #return "Model: {}, version: {}".format(model_name, model_version)
+
+
+# The API to get example json for client
+@application.route("/v1/models/<model_name>/gen_json", methods=["GET"])
+@requires_auth
+def gen_example_json(model_name):
+  inference_service = model_name_service_map[model_name]
+  data_json_dict = gen_client.gen_tensorflow_client(inference_service, "json", model_name)
+
+  return json.dumps(data_json_dict)
+
+
+# The API to get example json for client
+@application.route("/v1/models/<model_name>/gen_client", methods=["GET"])
+@requires_auth
+def gen_example_client(model_name):
+  client_type = request.args.get("language", default = "bash", type = str)
+  inference_service = model_name_service_map[model_name]
+  example_client_string = gen_client.gen_tensorflow_client(inference_service, client_type, model_name)
+
+  return example_client_string
 
 
 def main():

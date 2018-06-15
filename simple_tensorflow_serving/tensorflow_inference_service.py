@@ -156,7 +156,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     # Update ItemsView to list for Python 3
     self.model_graph_signature = list(meta_graph.signature_def.items())[0][1]
-    #import ipdb;ipdb.set_trace()
     self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
         self.model_graph_signature)
 
@@ -257,7 +256,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
     output_tensor_names = []
     output_op_names = []
     for output_item in self.model_graph_signature.outputs.items():
-      #import ipdb;ipdb.set_trace()
 
       if output_item[1].name != "":
         # Example: "keys"
@@ -373,6 +371,4 @@ def tensorflow_model_graph_to_dict(model_graph_signature):
       model_graph_signature_dict["outputs"].append(output_map2)
       model_graph_signature_dict["outputs"].append(output_map3)
 
-  import ipdb
-  ipdb.set_trace()
   return model_graph_signature_dict

@@ -8,7 +8,7 @@ import logging
 from jinja2 import Template
 
 
-def gen_tensorflow_client(generated_tensor_data, model_name):
+def gen_tensorflow_client_string(generated_tensor_data, model_name):
   """
   Generate TensorFlow SDK in Python.
 
@@ -35,6 +35,13 @@ if __name__ == "__main__":
   generate_code = template.render(
       model_name=model_name, tensor_data=generated_tensor_data_string)
   logging.debug("Generate the code in Python:\n{}".format(generate_code))
+
+  return generate_code
+
+
+def gen_tensorflow_client(generated_tensor_data, model_name):
+
+  generate_code = gen_tensorflow_client_string(generated_tensor_data, model_name)
 
   generated_code_filename = "client.py"
   with open(generated_code_filename, "w") as f:
