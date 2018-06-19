@@ -22,6 +22,7 @@ from gen_client import gen_client
 from mxnet_inference_service import MxnetInferenceService
 from onnx_inference_service import OnnxInferenceService
 from h2o_inference_service import H2oInferenceService
+from service_utils import request_util
 import python_predict_client
 
 logging.basicConfig(level=logging.DEBUG)
@@ -243,47 +244,26 @@ def index():
 @application.route("/", methods=["POST"])
 @requires_auth
 def inference():
+    result = do_inference()
+    # TODO: Change the decoder for numpy data
+    return jsonify(json.loads(json.dumps(result, cls=NumpyEncoder)))
+
+
+def do_inference(save_file_dir=None):
   # Process requests with json data
   if request.content_type.startswith("application/json"):
     json_data = json.loads(request.data)
 
   # Process requests with raw image
   elif request.content_type.startswith("multipart/form-data"):
-    json_data = {}
-
-    if "model_version" in request.form:
-      json_data["model_version"] = int(request.form["model_version"])
-    if "run_profile" in request.form:
-      json_data["run_profile"] = request.form["run_profile"]
-
-    image_content = request.files["image"].read()
-    image_string = np.fromstring(image_content, np.uint8)
-    if sys.version_info[0] < 3:
-      import cStringIO
-      image_string_io = cStringIO.StringIO(image_string)
-    else:
-      image_string_io = io.BytesIO(image_string)
-
-    image_file = Image.open(image_string_io)
-    if "channel_layout" in request.form:
-      channel_layout = request.form["channel_layout"]
-      if channel_layout in ["RGB", "RGBA"]:
-        image_file = image_file.convert(channel_layout)
-      else:
-        logging.error("Illegal image_layout: {}".format(channel_layout))
-
-    image_array = np.array(image_file)
-
-    # TODO: Support multiple images without reshaping
-    if "shape" in request.form:
-      # Example: "32,32,1,3" -> (32, 32, 1, 3)
-      shape = tuple([int(item) for item in request.form["shape"].split(",")])
-      image_array = image_array.reshape(shape)
-    else:
-      image_array = image_array.reshape(1, *image_array.shape)
-
-    json_data["data"] = {"image": image_array}
-    #json_data["data"] = {"image_data": image_array}
+    # get supported signatures to help refactor input data
+    model_name = request.form.get("model_name", "default")
+    support_signatures = None
+    if model_name in model_name_service_map:
+        support_signatures = model_name_service_map[
+            model_name].get_detail().get("model_signature", None)
+    json_data = request_util.create_json_from_formdata_request(
+        request, support_signatures=support_signatures, save_file_dir=save_file_dir)
 
   else:
     logging.error("Unsupported content type: {}".format(request.content_type))
@@ -301,9 +281,7 @@ def inference():
 
   inferenceService = model_name_service_map[model_name]
   result = inferenceService.inference(json_data)
-
-  # TODO: Change the decoder for numpy data
-  return jsonify(json.loads(json.dumps(result, cls=NumpyEncoder)))
+  return result
 
 
 @application.route('/image_inference', methods=["GET"])
@@ -313,24 +291,10 @@ def image_inference():
 
 @application.route('/run_image_inference', methods=['POST'])
 def run_image_inference():
+  predict_result = do_inference(save_file_dir=application.config['UPLOAD_FOLDER'])
+
   file = request.files['image']
-  file_path = os.path.join(application.config['UPLOAD_FOLDER'], file.filename)
-  file.save(file_path)
-
-  channel_layout = "RGB"
-  if "channel_layout" in request.form:
-    channel_layout_ = request.form["channel_layout"]
-    if channel_layout_ in ["RGB", "RGBA"]:
-        channel_layout = channel_layout_
-
-  run_profile = ""
-  if "run_profile" in request.form:
-    run_profile = request.form["run_profile"]
-
-  image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
-                                 file.filename)
-  predict_result = python_predict_client.predict_image(
-    image_file_path, channel_layout=channel_layout, run_profile=run_profile, port=args.port)
+  image_file_path = os.path.join(application.config['UPLOAD_FOLDER'], file.filename)
 
   return render_template(
       'image_inference.html',
