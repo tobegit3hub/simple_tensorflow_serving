@@ -195,14 +195,15 @@ class TensorFlowInferenceService(AbstractInferenceService):
         # 'hdfs://172.27.128.31:8020/user/chendihao/tensorflow_template_application/model/' -> ['hdfs:', '', '172.27.128.31:8020', 'user', 'chendihao', 'tensorflow_template_application', 'model', '']
         hadoop_endpoint = self.model_base_path.split("/")[2]
 
-      if hadoop_endpoint == "default":
-        hdfs_host = "default"
-        hdfs_port = 0
-      else:
+      if len(hadoop_endpoint.split(":")) == 2:
         # 172.27.128.31:8020
         hdfs_host_port_pair = hadoop_endpoint.split(":")
         hdfs_host = hdfs_host_port_pair[0]
         hdfs_port = int(hdfs_host_port_pair[1])
+      else:
+        # "default" or "hacluster" and so on
+        hdfs_host = hadoop_endpoint
+        hdfs_port = 0
 
       if hadoop_enable_kerberos == "true" or hadoop_enable_kerberos == "True":
         client = pa.hdfs.connect(host=hdfs_host, port=hdfs_port, user=hadoop_user_name, kerb_ticket=hadoop_kerberos_ticket_file)
