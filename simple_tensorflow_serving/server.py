@@ -320,6 +320,14 @@ def run_json_inference():
   return render_template('json_inference.html', predict_result=predict_result)
 
 
+# The API to get all models
+@application.route("/v1/models", methods=["GET"])
+@requires_auth
+def get_models():
+  result = [inference_service.get_detail() for inference_service in model_name_service_map.values()]
+  return json.dumps(result)
+
+
 # The API to get default of the model
 @application.route("/v1/models/<model_name>", methods=["GET"])
 @requires_auth
