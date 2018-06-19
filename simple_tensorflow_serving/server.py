@@ -244,9 +244,9 @@ def index():
 @application.route("/", methods=["POST"])
 @requires_auth
 def inference():
-    result = do_inference()
-    # TODO: Change the decoder for numpy data
-    return jsonify(json.loads(json.dumps(result, cls=NumpyEncoder)))
+  result = do_inference()
+  # TODO: Change the decoder for numpy data
+  return jsonify(json.loads(json.dumps(result, cls=NumpyEncoder)))
 
 
 def do_inference(save_file_dir=None):
@@ -260,10 +260,12 @@ def do_inference(save_file_dir=None):
     model_name = request.form.get("model_name", "default")
     support_signatures = None
     if model_name in model_name_service_map:
-        support_signatures = model_name_service_map[
-            model_name].get_detail().get("model_signature", None)
+      support_signatures = model_name_service_map[model_name].get_detail().get(
+          "model_signature", None)
     json_data = request_util.create_json_from_formdata_request(
-        request, support_signatures=support_signatures, save_file_dir=save_file_dir)
+        request,
+        support_signatures=support_signatures,
+        save_file_dir=save_file_dir)
 
   else:
     logging.error("Unsupported content type: {}".format(request.content_type))
@@ -291,10 +293,12 @@ def image_inference():
 
 @application.route('/run_image_inference', methods=['POST'])
 def run_image_inference():
-  predict_result = do_inference(save_file_dir=application.config['UPLOAD_FOLDER'])
+  predict_result = do_inference(
+      save_file_dir=application.config['UPLOAD_FOLDER'])
 
   file = request.files['image']
-  image_file_path = os.path.join(application.config['UPLOAD_FOLDER'], file.filename)
+  image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
+                                 file.filename)
 
   return render_template(
       'image_inference.html',
@@ -315,7 +319,8 @@ def run_json_inference():
 
   request_json_data = {"model_name": model_name, "data": json_data}
 
-  predict_result = python_predict_client.predict_json(request_json_data, port=args.port)
+  predict_result = python_predict_client.predict_json(
+      request_json_data, port=args.port)
 
   return render_template('json_inference.html', predict_result=predict_result)
 
@@ -324,7 +329,10 @@ def run_json_inference():
 @application.route("/v1/models", methods=["GET"])
 @requires_auth
 def get_models():
-  result = [inference_service.get_detail() for inference_service in model_name_service_map.values()]
+  result = [
+      inference_service.get_detail()
+      for inference_service in model_name_service_map.values()
+  ]
   return json.dumps(result)
 
 
@@ -347,7 +355,8 @@ def get_model_detail(model_name):
 @requires_auth
 def gen_example_json(model_name):
   inference_service = model_name_service_map[model_name]
-  data_json_dict = gen_client.gen_tensorflow_client(inference_service, "json", model_name)
+  data_json_dict = gen_client.gen_tensorflow_client(inference_service, "json",
+                                                    model_name)
 
   return json.dumps(data_json_dict)
 
@@ -356,9 +365,10 @@ def gen_example_json(model_name):
 @application.route("/v1/models/<model_name>/gen_client", methods=["GET"])
 @requires_auth
 def gen_example_client(model_name):
-  client_type = request.args.get("language", default = "bash", type = str)
+  client_type = request.args.get("language", default="bash", type=str)
   inference_service = model_name_service_map[model_name]
-  example_client_string = gen_client.gen_tensorflow_client(inference_service, client_type, model_name)
+  example_client_string = gen_client.gen_tensorflow_client(
+      inference_service, client_type, model_name)
 
   return example_client_string
 

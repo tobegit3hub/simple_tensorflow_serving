@@ -46,6 +46,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.model_graph_signature = None
     self.platform = "TensorFlow"
 
+    self.name_signature_map = {}
+
     if custom_op_paths != "":
       self.load_custom_op(custom_op_paths)
 
@@ -157,9 +159,30 @@ class TensorFlowInferenceService(AbstractInferenceService):
         session, [tf.saved_model.tag_constants.SERVING], model_file_path)
 
     # Update ItemsView to list for Python 3
-    self.model_graph_signature = list(meta_graph.signature_def.items())[0][1]
-    self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
-        self.model_graph_signature)
+    if len(list(meta_graph.signature_def.items())) == 1:
+      signature_name = list(meta_graph.signature_def.items())[0][0]
+      self.model_graph_signature = list(meta_graph.signature_def.items())[0][1]
+      self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
+          self.model_graph_signature)
+      self.name_signature_map[signature_name] = self.model_graph_signature
+    else:
+      index = 0
+      for item in list(meta_graph.signature_def.items()):
+        signature_name = item[0]
+        self.name_signature_map[signature_name] = item[1]
+
+        #if signature_name == tf.python.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+        if signature_name == "serving_default":
+          self.model_graph_signature = item[1]
+          self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
+              self.model_graph_signature)
+        elif self.model_graph_signature == None and index == (
+            len(list(meta_graph.signature_def.items())) - 1):
+          self.model_graph_signature = item[1]
+          self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
+              self.model_graph_signature)
+
+        index += 1
 
   def get_one_model_version(self):
     all_model_versions = self.get_all_model_versions()
@@ -184,9 +207,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
       hadoop_enable_kerberos = os.environ.get("HDFS_ENABLE_KERBEROS", "false")
 
       if hadoop_enable_kerberos == "true" or hadoop_enable_kerberos == "True":
-        hadoop_kerberos_ticket_file = os.environ.get("HDFS_KERBEROS_TICKET_FILE", "/tmp/krb5cc_0")
-        hadoop_kinit_command = os.environ.get("HDFS_KINIT_COMMAND", "kinit work@HADOOP.COM -k -t /etc/user.keytab")
-        logging.info("Try to run the command to kinit: {}".format(hadoop_kinit_command))
+        hadoop_kerberos_ticket_file = os.environ.get(
+            "HDFS_KERBEROS_TICKET_FILE", "/tmp/krb5cc_0")
+        hadoop_kinit_command = os.environ.get(
+            "HDFS_KINIT_COMMAND",
+            "kinit work@HADOOP.COM -k -t /etc/user.keytab")
+        logging.info(
+            "Try to run the command to kinit: {}".format(hadoop_kinit_command))
         subprocess.call(hadoop_kinit_command, shell=True)
 
       if self.model_base_path.startswith("hdfs:///"):
@@ -206,20 +233,29 @@ class TensorFlowInferenceService(AbstractInferenceService):
         hdfs_port = 0
 
       if hadoop_enable_kerberos == "true" or hadoop_enable_kerberos == "True":
-        client = pa.hdfs.connect(host=hdfs_host, port=hdfs_port, user=hadoop_user_name, kerb_ticket=hadoop_kerberos_ticket_file)
+        client = pa.hdfs.connect(
+            host=hdfs_host,
+            port=hdfs_port,
+            user=hadoop_user_name,
+            kerb_ticket=hadoop_kerberos_ticket_file)
       else:
-        client = pa.hdfs.connect(host=hdfs_host, port=hdfs_port, user=hadoop_user_name)
+        client = pa.hdfs.connect(
+            host=hdfs_host, port=hdfs_port, user=hadoop_user_name)
 
       if self.model_base_path.startswith("hdfs:///"):
         model_version_paths = client.ls(self.model_base_path)
       else:
         if hdfs_host == "default":
           # Remove the "default" for pyarrow
-          model_version_paths = client.ls(self.model_base_path[:7] + self.model_base_path[14:])
+          model_version_paths = client.ls(self.model_base_path[:7] +
+                                          self.model_base_path[14:])
         else:
           model_version_paths = client.ls(self.model_base_path)
 
-      model_versions = [model_version_path.split("/")[-1] for model_version_path in model_version_paths]
+      model_versions = [
+          model_version_path.split("/")[-1]
+          for model_version_path in model_version_paths
+      ]
 
       return model_versions
 
@@ -238,19 +274,22 @@ class TensorFlowInferenceService(AbstractInferenceService):
   def run_with_profiler(self, session, version, output_tensors, feed_dict):
     if version not in self.profiler_map:
       if len(self.profiler_map) > 0:
-        logging.warn("Only support one profiler per process, run without profiler")
+        logging.warn(
+            "Only support one profiler per process, run without profiler")
         return session.run(output_tensors, feed_dict), None
       profiler = tf.profiler.Profiler(session.graph)
       self.profiler_map[version] = profiler
     else:
       profiler = self.profiler_map[version]
     run_meta = tf.RunMetadata()
-    result = session.run(output_tensors,
-                         feed_dict=feed_dict,
-                         options=tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
-                         run_metadata=run_meta)
+    result = session.run(
+        output_tensors,
+        feed_dict=feed_dict,
+        options=tf.RunOptions(trace_level=tf.RunOptions.FULL_TRACE),
+        run_metadata=run_meta)
     profiler.add_step(0, run_meta)
-    profiler_out_file = "/tmp/.simple_tensorflow_serving_prof-" + str(int(time.time()))
+    profiler_out_file = "/tmp/.simple_tensorflow_serving_prof-" + str(
+        int(time.time()))
     opts = tf.profiler.ProfileOptionBuilder.time_and_memory()
     opts["output"] = "file:outfile=%s" % profiler_out_file
     profiler.profile_operations(options=opts)
@@ -292,9 +331,18 @@ class TensorFlowInferenceService(AbstractInferenceService):
           model_version, input_data))
     """
 
+    signature_name = json_data.get("signature_name", "")
+    if signature_name == "":
+      current_model_graph_signature = self.model_graph_signature
+    else:
+      if signature_name in self.name_signature_map:
+        current_model_graph_signature = self.name_signature_map[signature_name]
+      else:
+        return "Fail to request the signature name: {}".format(signature_name)
+
     # 1. Build feed dict for input data
     feed_dict_map = {}
-    for input_item in self.model_graph_signature.inputs.items():
+    for input_item in current_model_graph_signature.inputs.items():
       # Example: "keys"
       input_op_name = input_item[0]
       # Example: "Placeholder_0"
@@ -307,7 +355,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     # TODO: Optimize to pre-compute this before inference
     output_tensor_names = []
     output_op_names = []
-    for output_item in self.model_graph_signature.outputs.items():
+    for output_item in current_model_graph_signature.outputs.items():
 
       if output_item[1].name != "":
         # Example: "keys"
@@ -337,7 +385,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     if json_data.get("run_profile", "") == "true":
       logging.info("run_profile=true, running with tfprof")
       result_ndarrays, result_profile = self.run_with_profiler(
-        sess, str(model_version), output_tensor_names, feed_dict_map)
+          sess, str(model_version), output_tensor_names, feed_dict_map)
     else:
       result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
     if self.verbose:
