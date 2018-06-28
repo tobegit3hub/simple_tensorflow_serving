@@ -18,6 +18,11 @@ import tensorflow as tf
 from abstract_inference_service import AbstractInferenceService
 
 
+logging.basicConfig(
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S')
+
 class TensorFlowInferenceService(AbstractInferenceService):
   """
   The TensorFlow service to load TensorFlow SavedModel and make inference.

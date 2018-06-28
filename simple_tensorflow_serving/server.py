@@ -25,7 +25,10 @@ from h2o_inference_service import H2oInferenceService
 from service_utils import request_util
 import python_predict_client
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S')
 
 # Define parameters
 parser = argparse.ArgumentParser()
