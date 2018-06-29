@@ -26,9 +26,9 @@ from service_utils import request_util
 import python_predict_client
 
 logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging.INFO,
-        datefmt='%Y-%m-%d %H:%M:%S')
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
 
 # Define parameters
 parser = argparse.ArgumentParser()
@@ -287,6 +287,11 @@ def do_inference(save_file_dir=None):
   inferenceService = model_name_service_map[model_name]
   result = inferenceService.inference(json_data)
   return result
+
+
+@application.route('/health', methods=["GET"])
+def health():
+  return Response("healthy")
 
 
 @application.route('/image_inference', methods=["GET"])
