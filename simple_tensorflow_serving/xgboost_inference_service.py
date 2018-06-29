@@ -10,9 +10,9 @@ import pickle
 from abstract_inference_service import AbstractInferenceService
 
 
-class ScikitlearnInferenceService(AbstractInferenceService):
+class XgboostInferenceService(AbstractInferenceService):
   """
-  The service to load Scikit-learn model and make inference.
+  The service to load XGBoost model and make inference.
   """
 
   def __init__(self, model_name, model_base_path, verbose=False):
@@ -26,30 +26,36 @@ class ScikitlearnInferenceService(AbstractInferenceService):
       None
     """
 
-    super(ScikitlearnInferenceService, self).__init__()
+    super(XgboostInferenceService, self).__init__()
 
     self.model_name = model_name
     self.model_base_path = model_base_path
     self.model_version_list = [1]
     self.model_graph_signature = ""
-    self.platform = "Scikit-learn"
+    self.platform = "XGBoost"
 
     # TODO: Import as needed and only once
-    from sklearn.pipeline import Pipeline
+    import xgboost as xgb
     from sklearn.externals import joblib
+
+    self.bst = xgb.Booster()
 
     # Load model
     if self.model_base_path.endswith(".joblib"):
-      self.pipeline = joblib.load(self.model_base_path)
+      self.bst = joblib.load(self.model_base_path)
     elif self.model_base_path.endswith(
         ".pkl") or self.model_base_path.endswith(".pickle"):
       with open(self.model_base_path, 'r') as f:
-        self.pipeline = pickle.load(f)
+        self.bst = pickle.load(f)
+    elif self.model_base_path.endswith(
+        ".bst") or self.model_base_path.endswith(".bin"):
+      self.bst.load_model(self.model_base_path)
     else:
       logging.error(
           "Unsupported model file format: {}".format(self.model_base_path))
 
-    self.model_graph_signature = str(self.pipeline.get_params())
+    self.model_graph_signature = "score: {}\nfscore: {}".format(
+        self.bst.get_score(), self.bst.get_fscore())
 
     self.verbose = verbose
 
@@ -66,25 +72,21 @@ class ScikitlearnInferenceService(AbstractInferenceService):
     """
 
     # 1. Build inference data
-    request_ndarray_data = np.array(json_data["data"])
+    import xgboost as xgb
+    request_ndarray_data = xgb.DMatrix(np.array(json_data["data"]))
 
     # 2. Do inference
     if self.verbose:
       start_time = time.time()
 
-    predict_result = self.pipeline.predict(request_ndarray_data)
-    predict_proba_result = self.pipeline.predict_proba(request_ndarray_data)
-    predict_log_proba_result = self.pipeline.predict_log_proba(
-        request_ndarray_data)
+    predict_result = self.bst.predict(request_ndarray_data)
 
     if self.verbose:
       logging.debug("Inference time: {} s".format(time.time() - start_time))
 
     # 3. Build return data
     result = {
-        "predict": predict_result,
-        "predict_proba": predict_proba_result,
-        "predict_log_proba": predict_log_proba_result
+        "result": predict_result,
     }
 
     if self.verbose:
