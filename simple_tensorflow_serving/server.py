@@ -22,6 +22,7 @@ from gen_client import gen_client
 from mxnet_inference_service import MxnetInferenceService
 from onnx_inference_service import OnnxInferenceService
 from h2o_inference_service import H2oInferenceService
+from scikitlearn_inference_service import ScikitlearnInferenceService
 from service_utils import request_util
 import python_predict_client
 
@@ -199,6 +200,9 @@ if args.model_config_file != "":
       elif model_platform == "h2o":
         inference_service = H2oInferenceService(model_name, model_base_path,
                                                 args.verbose)
+      elif model_platform == "scikitlearn":
+        inference_service = ScikitlearnInferenceService(
+            model_name, model_base_path, arg.verbose)
 
       model_name_service_map[model_name] = inference_service
 else:
@@ -215,6 +219,9 @@ else:
                                             args.model_base_path, args.verbose)
   elif args.model_platform == "onnx":
     inference_service = OnnxInferenceService(
+        args.model_name, args.model_base_path, args.verbose)
+  elif args.model_platform == "scikitlearn":
+    inference_service = ScikitlearnInferenceService(
         args.model_name, args.model_base_path, args.verbose)
 
   model_name_service_map[args.model_name] = inference_service
