@@ -20,7 +20,7 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support dynamic online and offline for model versions
 * [x] Support loading new custom op for TensorFlow models
 * [x] Support secure authentication with configurable basic auth
-* [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX/H2o
+* [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX/H2o/Scikit-learn
 
 ## Installation
 
@@ -277,6 +277,30 @@ result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
+### Scikit-learn Model
+
+Now it supports loading and serving the general Scikit-learn models in joblib or pickle format.
+
+```
+simple_tensorflow_serving --model_base_path="./models/scikitlearn_iris/model.joblib" --model_platform="scikitlearn"
+
+simple_tensorflow_serving --model_base_path="./models/scikitlearn_iris/model.pkl" --model_platform="scikitlearn"
+```
+
+The clients are similar and you can implement in your favourite programming language. 
+
+```python
+endpoint = "http://127.0.0.1:8500"
+input_data = {
+  "model_name": "default",
+  "model_version": 1,
+  "data": {
+      "data": [[[[...]]]]
+  }
+}
+result = requests.post(endpoint, json=input_data)
+print(result.text)
+```
 
 ## Supported Client
 
