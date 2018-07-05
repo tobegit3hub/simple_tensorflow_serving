@@ -1,20 +1,18 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import argparse
-#import argcomplete
 import os
-import io
 import json
 import logging
 import sys
 from functools import wraps
 import numpy as np
 from flask import Flask, Response, jsonify, render_template, request
-from PIL import Image
 from flask_cors import CORS
 
 from tensorflow_inference_service import TensorFlowInferenceService
@@ -31,6 +29,7 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
+
 
 # Define parameters
 parser = argparse.ArgumentParser()

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -406,6 +408,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     # 5. Build extra return information
     if result_profile is not None and "__PROFILE__" not in output_tensor_names:
       result["__PROFILE__"] = result_profile
+
     return result
 
 

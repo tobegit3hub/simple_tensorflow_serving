@@ -6,3 +6,4 @@ requests
 pyarrow
 #tensorflow>=1.0.0
 #mxnet
+#uwsgi

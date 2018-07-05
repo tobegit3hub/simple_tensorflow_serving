@@ -19,3 +19,11 @@ Or start with [gunicorn](http://gunicorn.org/).
 ```
 gunicorn --bind 0.0.0.0:8500 wsgi
 ```
+
+Or run with `uwsgi`.
+
+```
+uwsgi --http 0.0.0.0:8500 -w wsgi
+
+uwsgi --http 0.0.0.0:8501 -w wsgi --pyargv "--model_name hello"
+```
