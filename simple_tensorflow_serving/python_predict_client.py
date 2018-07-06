@@ -7,9 +7,15 @@ from __future__ import print_function
 import argparse
 import json
 import requests
+import logging
 from PIL import Image
 import numpy as np
 
+
+logging.basicConfig(
+        format='%(asctime)s %(levelname)-8s %(message)s',
+        level=logging.INFO,
+        datefmt='%Y-%m-%d %H:%M:%S')
 
 def predict_image(image_file_path, channel_layout="RGB", run_profile="", port=8500):
   endpoint = "http://127.0.0.1:" + str(port)
@@ -39,10 +45,12 @@ def predict_json(json_data, port=8500):
   # TODO: Support for other endpoint
   endpoint = "http://127.0.0.1:" + str(port)
 
-  result = requests.post(endpoint, json=json_data)
-
-  predict_result = json.loads(result.text)
-  print("Get predict result:{}".format(predict_result))
+  try:
+    result = requests.post(endpoint, json=json_data)
+    predict_result = json.loads(result.json)
+    logging.debug("Get predict result:{}".format(predict_result))
+  except Exception as e:
+    logging.error("Get result: {} and exception: {}".format(result. e.message))
 
   return predict_result
 

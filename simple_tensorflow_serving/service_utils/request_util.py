@@ -88,8 +88,13 @@ def create_json_from_formdata_request(request,
   if "run_profile" in request.form:
     json_data["run_profile"] = request.form["run_profile"]
 
-  # TODO: Decide upload file type based on file key
+  if "image" not in request.files and "images" not in request.files:
+    logging.error("Need to set image or images for form-data")
+    return None
+
+  image_b64_strings = []
   if "image" in request.files:
+
     """
     if save_file_dir is not None:
     with open(os.path.join(save_file_dir, image_file.filename), "wb") as save_file:
@@ -98,12 +103,16 @@ def create_json_from_formdata_request(request,
 
     image_file = request.files["image"]
     image_content = image_file.read()
-
     image_b64_string = base64.urlsafe_b64encode(image_content)
-    image_b64_strings = [image_b64_string]
+    image_b64_strings.append(image_b64_string)
 
-    json_data["data"] = {"image": image_b64_strings}
+  if "images" in request.files:
 
-  else:
-    raise Exception("No parameter of image in form-data")
+    for image_file in request.files.getlist("images"):
+      image_content = image_file.read()
+      image_b64_string = base64.urlsafe_b64encode(image_content)
+      image_b64_strings.append(image_b64_string)
+
+  json_data["data"] = {"images": image_b64_strings}
+
   return json_data
