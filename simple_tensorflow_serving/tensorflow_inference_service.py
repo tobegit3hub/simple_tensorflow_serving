@@ -4,14 +4,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import sys
 import logging
 import os
 import signal
 import threading
 import time
-import json
-import cStringIO
 import subprocess
 import pyarrow as pa
 
@@ -337,6 +334,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       logging.debug("Inference model_version: {}, data: {}".format(
           model_version, input_data))
     """
+    logging.debug("Inference with json data: {}".format(json_data))
 
     signature_name = json_data.get("signature_name", "")
     if signature_name == "":

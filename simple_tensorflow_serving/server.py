@@ -30,7 +30,6 @@ logging.basicConfig(
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
 
-
 # Define parameters
 parser = argparse.ArgumentParser()
 
@@ -266,29 +265,20 @@ def inference():
 
 
 def do_inference(save_file_dir=None):
-  # Process requests with json data
+
   if request.content_type.startswith("application/json"):
+    # Process requests with json data
     json_data = json.loads(request.data)
 
-  # Process requests with raw image
   elif request.content_type.startswith("multipart/form-data"):
-    # get supported signatures to help refactor input data
-    model_name = request.form.get("model_name", "default")
-    support_signatures = None
-    if model_name in model_name_service_map:
-      support_signatures = model_name_service_map[model_name].get_detail().get(
-          "model_signature", None)
+    # Process requests with raw image
     json_data = request_util.create_json_from_formdata_request(
         request,
-        support_signatures=support_signatures,
         save_file_dir=save_file_dir)
 
   else:
     logging.error("Unsupported content type: {}".format(request.content_type))
     return "Error, unsupported content type"
-
-  # Request backend service with json data
-  #logging.debug("Constructed request data as json: {}".format(json_data))
 
   if "model_name" in json_data:
     model_name = json_data.get("model_name", "")
