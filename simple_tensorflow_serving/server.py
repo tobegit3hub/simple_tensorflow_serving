@@ -92,6 +92,11 @@ parser.add_argument(
     type=bool)
 parser.add_argument(
     "--enable_cors", default=True, help="Enable cors(eg. True)", type=bool)
+parser.add_argument(
+    "--download_inference_images",
+    default=True,
+    help="Download inference images(eg. True)",
+    type=bool)
 
 # TODO: Support auto-complete
 #argcomplete.autocomplete(parser)
@@ -273,8 +278,7 @@ def do_inference(save_file_dir=None):
   elif request.content_type.startswith("multipart/form-data"):
     # Process requests with raw image
     json_data = request_util.create_json_from_formdata_request(
-        request,
-        save_file_dir=save_file_dir)
+        request, args.download_inference_images, save_file_dir=save_file_dir)
 
   else:
     logging.error("Unsupported content type: {}".format(request.content_type))
@@ -327,8 +331,15 @@ def run_json_inference():
   json_data_string = request.form["json_data"]
   json_data = json.loads(json_data_string)
   model_name = request.form["model_name"]
+  model_version = request.form["model_version"]
+  signature_name = request.form["signature_name"]
 
-  request_json_data = {"model_name": model_name, "data": json_data}
+  request_json_data = {
+      "model_name": model_name,
+      "model_version": model_version,
+      "signature_name": signature_name,
+      "data": json_data
+  }
 
   predict_result = python_predict_client.predict_json(
       request_json_data, port=args.port)

@@ -28,6 +28,7 @@ def get_image_channel_layout(request_layout, support_signatures=None):
         break
   return layout
 
+
 # Deprecatecd: Get image content to 3-D tensor for form-date request
 def get_image_request_data_and_options(request,
                                        support_signatures=None,
@@ -77,6 +78,7 @@ def get_image_request_data_and_options(request,
 
 
 def create_json_from_formdata_request(request,
+                                      download_inference_images=False,
                                       save_file_dir=None):
   json_data = {}
 
@@ -95,16 +97,15 @@ def create_json_from_formdata_request(request,
   image_b64_strings = []
   if "image" in request.files:
 
-    """
-    if save_file_dir is not None:
-    with open(os.path.join(save_file_dir, image_file.filename), "wb") as save_file:
-        save_file.write(image_content)
-    """
-
     image_file = request.files["image"]
     image_content = image_file.read()
     image_b64_string = base64.urlsafe_b64encode(image_content)
     image_b64_strings.append(image_b64_string)
+
+    if download_inference_images and save_file_dir is not None:
+      with open(os.path.join(save_file_dir, image_file.filename),
+                "wb") as save_file:
+        save_file.write(image_content)
 
   if "images" in request.files:
 
@@ -112,6 +113,11 @@ def create_json_from_formdata_request(request,
       image_content = image_file.read()
       image_b64_string = base64.urlsafe_b64encode(image_content)
       image_b64_strings.append(image_b64_string)
+
+      if download_inference_images and save_file_dir is not None:
+        with open(os.path.join(save_file_dir, image_file.filename),
+                  "wb") as save_file:
+          save_file.write(image_content)
 
   json_data["data"] = {"images": image_b64_strings}
 

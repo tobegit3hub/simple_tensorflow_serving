@@ -3,6 +3,8 @@
   <br />
   <div class="container">
 
+    <h2>Predict data:</h2>
+
     <form action="/run_json_inference" method="post">
       <div class="form-group row">
         <label for="inputEmail3" class="col-sm-2 col-form-label"><font color="red">*</font> Model Name </label>
@@ -10,15 +12,30 @@
           <input type="text" class="form-control" name="model_name" value="default" required="required">
         </div>
       </div>
+
+        <div class="form-group row">
+            <label for="inputEmail3" class="col-sm-2 col-form-label"><font color="red">*</font> Model Version </label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="model_version" value="1" required="required">
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <label for="inputEmail3" class="col-sm-2 col-form-label"><font color="red">*</font> Signature Name </label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="signature_name" value="serving_default" required="required">
+            </div>
+        </div>
+
       <div class="form-group row">
         <label for="inputEmail3" class="col-sm-2 col-form-label"><font color="red">*</font> JSON Data</label>
         <div class="col-sm-10">
           <textarea class="form-control" rows="15" cols="80" name="json_data"
                                   required="required">
 {
-  "keys": [[1.0], [2.0]],
-  "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1],
-               [1, 1, 1, 1, 1, 1, 1, 1, 1]]
+  "keys": [[1], [2]],
+  "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+               [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]]
 }
           </textarea>
         </div>
@@ -47,7 +64,9 @@
       </div>
     </form>
 
-    <h2>Predict result: </h2>
+
+    <br />
+    <h2>Predict result:</h2>
     <p>{{ predict_result }}</p>
 
   </div>
