@@ -44,13 +44,14 @@ def predict_image(image_file_path, channel_layout="RGB", run_profile="", port=85
 def predict_json(json_data, port=8500):
   # TODO: Support for other endpoint
   endpoint = "http://127.0.0.1:" + str(port)
+  predict_result = "Error"
 
   try:
     result = requests.post(endpoint, json=json_data)
-    predict_result = json.loads(result.json)
+    predict_result = result.json()
     logging.debug("Get predict result:{}".format(predict_result))
   except Exception as e:
-    logging.error("Get result: {} and exception: {}".format(result. e.message))
+    logging.error("Get result: {} and exception: {}".format(result, e.message))
 
   return predict_result
 
