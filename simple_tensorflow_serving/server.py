@@ -174,6 +174,11 @@ if args.enable_cors:
 
 UPLOAD_FOLDER = os.path.basename('static')
 application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+if (os.path.isdir(UPLOAD_FOLDER)):
+  pass
+else:
+  print("Create path to host static files: {}".format(UPLOAD_FOLDER))
+  os.mkdir(UPLOAD_FOLDER)
 
 # Example: {"default": TensorFlowInferenceService}
 model_name_service_map = {}
