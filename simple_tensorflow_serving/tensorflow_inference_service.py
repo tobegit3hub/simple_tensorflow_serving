@@ -215,7 +215,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
             "HDFS_KERBEROS_TICKET_FILE", "/tmp/krb5cc_0")
         hadoop_kinit_command = os.environ.get(
             "HDFS_KINIT_COMMAND",
-            "kinit work@HADOOP.COM -k -t /etc/user.keytab")
+            "kinit {} -k -t /etc/user.keytab".format(hadoop_user_name))
         logging.info(
             "Try to run the command to kinit: {}".format(hadoop_kinit_command))
         subprocess.call(hadoop_kinit_command, shell=True)
