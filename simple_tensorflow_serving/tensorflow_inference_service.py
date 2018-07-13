@@ -10,17 +10,17 @@ import signal
 import threading
 import time
 import subprocess
-import pyarrow as pa
+#import pyarrow as pa
 
 import tensorflow as tf
 
 from abstract_inference_service import AbstractInferenceService
 
-
 logging.basicConfig(
-        format='%(asctime)s %(levelname)-8s %(message)s',
-        level=logging.INFO,
-        datefmt='%Y-%m-%d %H:%M:%S')
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level=logging.INFO,
+    datefmt='%Y-%m-%d %H:%M:%S')
+
 
 class TensorFlowInferenceService(AbstractInferenceService):
   """
@@ -206,7 +206,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       # hdfs://172.27.128.31:8020/user/chendihao/tensorflow_template_application/model/
       # hdfs://default/user/chendihao/tensorflow_template_application/model/
       # hdfs:///user/chendihao/tensorflow_template_application/model/
-
+      """
       hadoop_user_name = os.environ.get("HDFS_USER_NAME", "work")
       hadoop_enable_kerberos = os.environ.get("HDFS_ENABLE_KERBEROS", "false")
 
@@ -236,6 +236,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
         hdfs_host = hadoop_endpoint
         hdfs_port = 0
 
+      
       if hadoop_enable_kerberos == "true" or hadoop_enable_kerberos == "True":
         client = pa.hdfs.connect(
             host=hdfs_host,
@@ -260,7 +261,9 @@ class TensorFlowInferenceService(AbstractInferenceService):
           model_version_path.split("/")[-1]
           for model_version_path in model_version_paths
       ]
+      """
 
+      model_versions = tf.gfile.ListDirectory(self.model_base_path)
       return model_versions
 
     else:
