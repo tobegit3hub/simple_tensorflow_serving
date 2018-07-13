@@ -315,15 +315,16 @@ def image_inference():
 def run_image_inference():
   predict_result = do_inference(
       save_file_dir=application.config['UPLOAD_FOLDER'])
+  json_result = json.dumps(predict_result, cls=NumpyEncoder)
 
   file = request.files['image']
   image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
                                  file.filename)
-
+   
   return render_template(
       'image_inference.html',
       image_file_path=image_file_path,
-      predict_result=predict_result)
+      predict_result=json_result)
 
 
 @application.route('/json_inference', methods=["GET"])
