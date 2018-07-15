@@ -56,13 +56,20 @@ def predict_json(json_data, port=8500):
   return predict_result
 
 
-def gen_json_and_clients(model_name="default", signature_name="serving_default", port=8500):
-  endpoint = "http://127.0.0.1:{}/v1/models/{}/gen_json".format(port, model_name)
+def get_gen_json_and_clients(model_name="default", signature_name="serving_default", language="json", port=8500):
   return_result = "Error"
 
   try:
-    result = requests.get(endpoint)
-    return_result = result.json()
+
+    if language == "json" or language == "Json" or language == "JSON":
+      endpoint = "http://127.0.0.1:{}/v1/models/{}/gen_json".format(port, model_name)
+      result = requests.get(endpoint)
+      return_result = result.json()
+    else:
+      endpoint = "http://127.0.0.1:{}/v1/models/{}/gen_client?language={}".format(port, model_name, language)
+      result = requests.get(endpoint)
+      return_result = result.text
+
     logging.debug("Get predict result:{}".format(return_result))
   except Exception as e:
     logging.error("Get exception: {}".format(e.message))

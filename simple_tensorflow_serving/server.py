@@ -401,20 +401,21 @@ def gen_example_client(model_name):
   return example_client_string
 
 
-@application.route('/example_clients', methods=["GET"])
-def example_clients():
-  return render_template('example_clients.html')
+@application.route("/generate_clients", methods=["GET"])
+def generate_clients():
+  return render_template('generate_clients.html')
 
 
-@application.route('/run_example_clients', methods=['POST'])
-def run_example_clients():
+@application.route("/run_generate_clients", methods=['POST'])
+def run_generate_clients():
   model_name = request.form["model_name"]
   signature_name = request.form["signature_name"]
+  language = request.form["language"]
 
-  result = python_predict_client.gen_json_and_clients(
-      model_name, signature_name, port=args.port)
+  result = python_predict_client.get_gen_json_and_clients(
+      model_name, signature_name, language, port=args.port)
 
-  return render_template('example_clients.html', result=result)
+  return render_template("generate_clients.html", result=result)
 
 
 def main():
