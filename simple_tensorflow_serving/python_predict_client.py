@@ -56,6 +56,21 @@ def predict_json(json_data, port=8500):
   return predict_result
 
 
+def gen_json_and_clients(model_name="default", signature_name="serving_default", port=8500):
+  endpoint = "http://127.0.0.1:{}/v1/models/{}/gen_json".format(port, model_name)
+  return_result = "Error"
+
+  try:
+    result = requests.get(endpoint)
+    return_result = result.json()
+    logging.debug("Get predict result:{}".format(return_result))
+  except Exception as e:
+    logging.error("Get exception: {}".format(e.message))
+
+  return return_result
+
+
+
 # TODO: Only support testing with images
 def parse_args():
   parser = argparse.ArgumentParser(description='Predict image')

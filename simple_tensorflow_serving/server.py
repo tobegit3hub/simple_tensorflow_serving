@@ -320,7 +320,7 @@ def run_image_inference():
   file = request.files['image']
   image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
                                  file.filename)
-   
+
   return render_template(
       'image_inference.html',
       image_file_path=image_file_path,
@@ -399,6 +399,22 @@ def gen_example_client(model_name):
       inference_service, client_type, model_name)
 
   return example_client_string
+
+
+@application.route('/example_clients', methods=["GET"])
+def example_clients():
+  return render_template('example_clients.html')
+
+
+@application.route('/run_example_clients', methods=['POST'])
+def run_example_clients():
+  model_name = request.form["model_name"]
+  signature_name = request.form["signature_name"]
+
+  result = python_predict_client.gen_json_and_clients(
+      model_name, signature_name, port=args.port)
+
+  return render_template('example_clients.html', result=result)
 
 
 def main():
