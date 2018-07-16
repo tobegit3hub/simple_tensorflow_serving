@@ -44,7 +44,7 @@
             <tbody>
 
 
-            {% for model_name, inference_service in model_name_service_map.iteritems() %}
+            {% for model_name, inference_service in model_name_service_map.items() %}
                 {% for model_version in inference_service.model_version_list %}
                     <tr>
                         <td class="text-center">{{ model_name }}</td>
@@ -76,7 +76,7 @@
     <h4>Graph Signature</h4>
 
     <ul class="nav nav-pills mb-3">
-        {% for model_name, inference_service in model_name_service_map.iteritems() %}
+        {% for model_name, inference_service in model_name_service_map.items() %}
 
             <!-- Make the first item active -->
             {% if loop.index0 == 0 %}
@@ -91,7 +91,7 @@
     </ul>
 
     <div class="tab-content ">
-        {% for model_name, inference_service in model_name_service_map.iteritems() %}
+        {% for model_name, inference_service in model_name_service_map.items() %}
 
             <!-- Make the first item active -->
             {% if loop.index0 == 0 %}

@@ -14,7 +14,7 @@ import subprocess
 
 import tensorflow as tf
 
-from abstract_inference_service import AbstractInferenceService
+from .abstract_inference_service import AbstractInferenceService
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -85,7 +85,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       else:
         logging.error("The path does not exist: {}".format(custom_op_path))
 
-  def dynmaically_reload_models(self):
+  def dynamically_reload_models(self):
     """
     Start new thread to load models periodically.
 
