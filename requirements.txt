@@ -3,7 +3,11 @@ jinja2
 pillow
 flask-cors
 requests
-pyarrow
-#tensorflow>=1.0.0
-#mxnet
 #uwsgi
+#Flask-Babel
+tensorflow>=1.0.0
+scikit-learn
+xgboost
+mxnet
+h2o
+onnx
