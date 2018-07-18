@@ -7,7 +7,7 @@ import time
 import numpy as np
 import pickle
 
-from abstract_inference_service import AbstractInferenceService
+from .abstract_inference_service import AbstractInferenceService
 
 
 class ScikitlearnInferenceService(AbstractInferenceService):

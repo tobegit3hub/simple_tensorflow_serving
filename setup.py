@@ -1,27 +1,37 @@
 # Update the code and upload the package to pypi
-# 1. python ./setup.py sdist --format=gztar
-# 2. twine upload dist/simple_tensorflow_serving-1.0.0.tar.gz
+# 1. python ./setup.py bdist_wheel --universal
+# 2. twine upload dist/simple_tensorflow_serving-0.4.x-py2.py3-none-any.whl
 
-try:
-  from setuptools import setup
-  setup()
-except ImportError:
-  from distutils.core import setup
+from setuptools import setup, find_packages
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.4.1",
+    version="0.4.7",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
-    #install_requires=["tensorflow>=1.0.0"],
     description=
     "The simpler and easy-to-use serving service for TensorFlow models",
-    packages=[
-        "simple_tensorflow_serving", "simple_tensorflow_serving.gen_client"
+    packages=find_packages(),
+    install_requires=[
+        'pandas',
+        'numpy',
+        'flask',
+        'jinja2',
+        'pillow',
+        'flask-cors',
+        'requests',
+        'pyarrow',
+        'tensorflow',
+        'scikit-learn',
+        'xgboost',
+        'mxnet',
+        'h2o',
+        'onnx',
     ],
     #package_data={
-    #    "simple_tensorflow_serving/static": ['simple_tensorflow_serving/templates/*.html', 'simple_tensorflow_serving/static/*']
+    #    "simple_tensorflow_serving/static": ['simple_tensorflow_serving/templates/*.html',
+    #                                         'simple_tensorflow_serving/static/*']
     #},
     include_package_data=True,
     zip_safe=False,

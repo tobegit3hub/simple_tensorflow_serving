@@ -15,15 +15,15 @@ import numpy as np
 from flask import Flask, Response, jsonify, render_template, request
 from flask_cors import CORS
 
-from tensorflow_inference_service import TensorFlowInferenceService
-from gen_client import gen_client
-from mxnet_inference_service import MxnetInferenceService
-from onnx_inference_service import OnnxInferenceService
-from h2o_inference_service import H2oInferenceService
-from scikitlearn_inference_service import ScikitlearnInferenceService
-from xgboost_inference_service import XgboostInferenceService
-from service_utils import request_util
-import python_predict_client
+from .tensorflow_inference_service import TensorFlowInferenceService
+from .gen_client import gen_client
+from .mxnet_inference_service import MxnetInferenceService
+from .onnx_inference_service import OnnxInferenceService
+from .h2o_inference_service import H2oInferenceService
+from .scikitlearn_inference_service import ScikitlearnInferenceService
+from .xgboost_inference_service import XgboostInferenceService
+from .service_utils import request_util
+from . import python_predict_client
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -254,7 +254,7 @@ if args.gen_client != "":
 if args.reload_models == "True" or args.reload_models == "true":
   for model_name, inference_service in model_name_service_map.items():
     if inference_service.platform == "tensorflow":
-      inference_service.dynmaically_reload_models()
+      inference_service.dynamically_reload_models()
 
 
 # The API to render the dashboard page
