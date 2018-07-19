@@ -1,0 +1,3 @@
+a b
+string float
+hello 0.5
