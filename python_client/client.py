@@ -8,7 +8,8 @@ def main():
   endpoint = "http://127.0.0.1:8500"
   input_data = {
       #"model_name": "tensorflow_template_application_model",
-      "model_version": 1,
+      #"model_version": 1,
+      #"signature_name": "serving_default",
       "data": {
           "keys": [[1.0], [2.0]],
           "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1],

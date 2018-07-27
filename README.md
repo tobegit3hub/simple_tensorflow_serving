@@ -118,22 +118,36 @@ result = requests.post(endpoint, json=input_data)
 
 ### Generated Client
 
-You can generate clients in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
+You can generate the test json data for the online models.
 
 ```
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client bash
+curl http://localhost:8500/v1/models/default/gen_json
 ```
 
+Or generate clients in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
+
 ```
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client python
+curl http://localhost:8500/v1/models/default/gen_client?language=python > client.py
+curl http://localhost:8500/v1/models/default/gen_client?language=bash > client.sh
+curl http://localhost:8500/v1/models/default/gen_client?language=golang > client.go
+curl http://localhost:8500/v1/models/default/gen_client?language=javascript > client.js
 ```
 
 The generated code should look like these which can be test immediately.
 
 ```
-#!/bin/bash
+#!/usr/bin/env python
 
-curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]} }' http://127.0.0.1:8500
+import requests
+
+def main():
+  endpoint = "http://127.0.0.1:8500"
+  json_data = {"model_name": "default", "data": {"keys": [[1], [1]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]} }
+  result = requests.post(endpoint, json=json_data)
+  print(result.text)
+
+if __name__ == "__main__":
+  main()
 ```
 
 ```python
