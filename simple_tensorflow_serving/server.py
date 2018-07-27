@@ -22,6 +22,7 @@ from .onnx_inference_service import OnnxInferenceService
 from .h2o_inference_service import H2oInferenceService
 from .scikitlearn_inference_service import ScikitlearnInferenceService
 from .xgboost_inference_service import XgboostInferenceService
+from .pmml_inference_service import PmmlInferenceService
 from .service_utils import request_util
 from . import python_predict_client
 
@@ -215,6 +216,9 @@ if args.model_config_file != "":
       elif model_platform == "xgboost":
         inference_service = XgboostInferenceService(
             model_name, model_base_path, arg.verbose)
+      elif model_platform == "pmml":
+        inference_service = PmmlInferenceService(
+                model_name, model_base_path, arg.verbose)
 
       model_name_service_map[model_name] = inference_service
 else:
@@ -238,6 +242,9 @@ else:
   elif args.model_platform == "xgboost":
     inference_service = XgboostInferenceService(
         args.model_name, args.model_base_path, args.verbose)
+  elif args.model_platform == "pmml":
+    inference_service = PmmlInferenceService(
+            args.model_name, args.model_base_path, args.verbose)
 
   model_name_service_map[args.model_name] = inference_service
 
@@ -334,6 +341,11 @@ def json_inference():
 
 @application.route('/run_json_inference', methods=['POST'])
 def run_json_inference():
+  # TODO: Fail to parse u'{\r\n  "inputs": [\'\\n\\x1f\\n\\x0e\\n\\x01a\\x12\\t\\n\\x07\\n\\x05hello\\n\\r\\n\\x01b\\x12\\x08\\x12\\x06\\n\\x04\\x00\\x00\\x00?\']\r\n}\r\n          '
+  # {
+  # "inputs": ['\n\x1f\n\x0e\n\x01a\x12\t\n\x07\n\x05hello\n\r\n\x01b\x12\x08\x12\x06\n\x04\x00\x00\x00?']
+  #}
+  #import ipdb;ipdb.set_trace()
   json_data_string = request.form["json_data"]
   json_data = json.loads(json_data_string)
   model_name = request.form["model_name"]
