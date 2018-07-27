@@ -11,6 +11,7 @@ import threading
 import time
 import subprocess
 #import pyarrow as pa
+import base64
 
 import tensorflow as tf
 
@@ -20,6 +21,7 @@ logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
     level=logging.INFO,
     datefmt='%Y-%m-%d %H:%M:%S')
+
 
 
 class TensorFlowInferenceService(AbstractInferenceService):
@@ -395,7 +397,20 @@ class TensorFlowInferenceService(AbstractInferenceService):
       result_ndarrays, result_profile = self.run_with_profiler(
           sess, str(model_version), output_tensor_names, feed_dict_map)
     else:
+
+      # TODO: Update input data by decoding base64 string for esitmator model
+      should_decode_base64 = False
+      if feed_dict_map.has_key("input_example_tensor:0") and should_decode_base64:
+        final_example_strings = []
+        base64_example_strings = feed_dict_map["input_example_tensor:0"]
+        for base64_example_string in base64_example_strings:
+          final_example_string = base64.urlsafe_b64decode(base64_example_string.encode("utf-8"))
+          final_example_strings.append(final_example_string)
+        feed_dict_map["input_example_tensor:0"] = final_example_strings
+
       result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
+
+
     if self.verbose:
       logging.debug("Inference time: {} s".format(time.time() - start_time))
 
