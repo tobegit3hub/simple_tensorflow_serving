@@ -217,8 +217,8 @@ if args.model_config_file != "":
         inference_service = XgboostInferenceService(
             model_name, model_base_path, arg.verbose)
       elif model_platform == "pmml":
-        inference_service = PmmlInferenceService(
-                model_name, model_base_path, arg.verbose)
+        inference_service = PmmlInferenceService(model_name, model_base_path,
+                                                 arg.verbose)
 
       model_name_service_map[model_name] = inference_service
 else:
@@ -244,11 +244,11 @@ else:
         args.model_name, args.model_base_path, args.verbose)
   elif args.model_platform == "pmml":
     inference_service = PmmlInferenceService(
-            args.model_name, args.model_base_path, args.verbose)
+        args.model_name, args.model_base_path, args.verbose)
 
   model_name_service_map[args.model_name] = inference_service
 
-# Generate client code and exit or not
+# TODO(Deprecated): Generate client code and exit or not
 if args.gen_client != "":
   if args.model_platform == "tensorflow":
     inference_service = model_name_service_map[args.model_name]
@@ -304,7 +304,12 @@ def do_inference(save_file_dir=None):
     model_name = "default"
 
   inferenceService = model_name_service_map[model_name]
-  result = inferenceService.inference(json_data)
+
+  try:
+    result = inferenceService.inference(json_data)
+  except Exception as e:
+    result = {"error": "Inference error {}: {}".format(type(e), e)}
+
   return result
 
 
