@@ -25,6 +25,7 @@ from .xgboost_inference_service import XgboostInferenceService
 from .pmml_inference_service import PmmlInferenceService
 from .service_utils import request_util
 from . import python_predict_client
+from . import base64_util
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
@@ -306,6 +307,9 @@ def do_inference(save_file_dir=None):
   inferenceService = model_name_service_map[model_name]
 
   try:
+    # Decode base64 string and modify request json data
+    base64_util.replace_b64_in_dict(json_data)
+
     result = inferenceService.inference(json_data)
   except Exception as e:
     result = {"error": "Inference error {}: {}".format(type(e), e)}
@@ -350,7 +354,6 @@ def run_json_inference():
   # {
   # "inputs": ['\n\x1f\n\x0e\n\x01a\x12\t\n\x07\n\x05hello\n\r\n\x01b\x12\x08\x12\x06\n\x04\x00\x00\x00?']
   #}
-  #import ipdb;ipdb.set_trace()
   json_data_string = request.form["json_data"]
   json_data = json.loads(json_data_string)
   model_name = request.form["model_name"]
