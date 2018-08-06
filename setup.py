@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.4.8",
+    version="0.5.0",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
@@ -14,13 +14,12 @@ setup(
     "The simpler and easy-to-use serving service for TensorFlow models",
     packages=find_packages(),
     install_requires=[
-        #'pandas',
-        #'numpy',
-        #'flask',
-        #'jinja2',
-        #'pillow',
-        #'flask-cors',
-        #'requests',
+        'pandas',
+        'numpy',
+        'flask',
+        'jinja2',
+        'flask-cors',
+        'requests',
         #'tensorflow',
         #'scikit-learn',
         #'xgboost',
