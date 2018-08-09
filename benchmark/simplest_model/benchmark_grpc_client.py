@@ -16,7 +16,7 @@ def main():
   request_timeout = 10.0
 
   # Generate inference data
-  keys = numpy.asarray([1])
+  keys = numpy.asarray([[1]])
   keys_tensor_proto = tf.contrib.util.make_tensor_proto(keys, dtype=tf.int32)
   features = numpy.asarray([[1, 2, 3, 4, 5, 6, 7, 8, 9]])
   features_tensor_proto = tf.contrib.util.make_tensor_proto(
@@ -32,13 +32,14 @@ def main():
   if signature_name != "":
     request.model_spec.signature_name = signature_name
   request.inputs["keys"].CopyFrom(keys_tensor_proto)
-  request.inputs["features"].CopyFrom(features_tensor_proto)
+  #request.inputs["features"].CopyFrom(features_tensor_proto)
 
   # Send request
   start_time = time.time()
-  for i in range(1):
+  for i in range(100):
     result = stub.Predict(request, request_timeout)
-  print("Cost time: {}".format(time.time() - start_time))
+  end_time = time.time()
+  print("Cost time: {}".format(end_time - start_time))
 
   print(result)
 
