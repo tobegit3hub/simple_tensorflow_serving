@@ -18,32 +18,31 @@ def main():
 def benchmark(benchmark_type):
   print("Start benchmark for {}".format(benchmark_type))
 
+  batch_size = 16
+  image_b64_string = base64.urlsafe_b64encode(open("./0.jpg", "rb").read())
+  image_b64_strings = [image_b64_string for i in range(batch_size)]
+
   if benchmark_type == "simple_tensorflow_serving_flask":
     endpoint = "http://127.0.0.1:8500"
-    image_b64_string = base64.urlsafe_b64encode(open("./0.jpg", "rb").read())
     input_data = {
       "data": {
-        "images": [image_b64_string]
+        "images": image_b64_strings
       }
     }
-    import ipdb;ipdb.set_trace()
 
   elif benchmark_type == "simple_tensorflow_serving_uwsgi":
     endpoint = "http://127.0.0.1:8501"
-    image_b64_string = base64.urlsafe_b64encode(open("./0.jpg", "rb").read())
     input_data = {
       "data": {
-        "images": [image_b64_string]
+        "images": image_b64_strings
       }
     }
 
   elif benchmark_type == "tensorflow_serving_restful":
     endpoint = "http://127.0.0.1:8503/v1/models/default/versions/1:predict"
-    image_b64_string = base64.urlsafe_b64encode(open("./0.jpg", "rb").read())
+    image_b64_strings = [{"images": image_b64_string} for i in range(batch_size)]
     input_data = {
-      "instances": [
-        {"images": image_b64_string}
-      ]
+      "instances": image_b64_strings
     }
 
   start_time = time.time()
