@@ -545,6 +545,20 @@ Here is the example with Postman.
 
 ![](./images/postman.png)
 
+
+## Performance
+
+You can run SimpleTensorFlowServing with any WSGI server for better performance. We have benchmarked and compare with `TensorFlow Serving`. Find more details in [./benchmark](./benchmark/).
+
+STFS(Simple TensorFlow Serving) and TFS(TensorFlow Serving) have similar performances for different models. Vertical coordinate is inference latency and the less is better.
+
+![](./images/benchmark_latency.jpeg)
+
+Then we test with `ab` with concurrent clients in CPU and GPU. `TensorFlow Serving` should work better especially with GPUs.
+
+![](./images/benchmark_concurrency.jpeg)
+
+
 ## How It Works
 
 1. `simple_tensorflow_serving` starts the HTTP server with `flask` application.
@@ -555,8 +569,8 @@ Here is the example with Postman.
    {
      "model_version": 1, // Optional
      "data": {
-       "keys": [[1.0], [2.0]],
-       "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]
+       "keys": [[1], [2]],
+       "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]]
      }
    }
    ```
