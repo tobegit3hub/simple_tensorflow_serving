@@ -3,11 +3,11 @@ jinja2
 pillow
 flask-cors
 requests
-#uwsgi
-#Flask-Babel
+uwsgi
 tensorflow>=1.0.0
 scikit-learn
 xgboost
 mxnet
 h2o
 onnx
+#git+https://github.com/openscoring/openscoring-python.git
