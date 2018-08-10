@@ -558,8 +558,9 @@ Then we test with `ab` with concurrent clients in CPU and GPU. `TensorFlow Servi
 
 ![](./images/benchmark_concurrency.jpeg)
 
-For [simplest model](./benchmark/simplest_model/), per request only costs ~1.9 microseconds and one instance of Simple TensorFlow Serving can achieve 5000+ QPS.
+For [simplest model](./benchmark/simplest_model/), each request only costs ~1.9 microseconds and one instance of Simple TensorFlow Serving can achieve 5000+ QPS. With larger batch size, it can inference more than 1M instances per second.
 
+![](./images/benchmark_batch_size.jpeg)
 
 ## How It Works
 
