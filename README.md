@@ -550,13 +550,15 @@ Here is the example with Postman.
 
 You can run SimpleTensorFlowServing with any WSGI server for better performance. We have benchmarked and compare with `TensorFlow Serving`. Find more details in [./benchmark](./benchmark/).
 
-STFS(Simple TensorFlow Serving) and TFS(TensorFlow Serving) have similar performances for different models. Vertical coordinate is inference latency and the less is better.
+STFS(Simple TensorFlow Serving) and TFS(TensorFlow Serving) have similar performances for different models. Vertical coordinate is inference latency(microsecond) and the less is better.
 
 ![](./images/benchmark_latency.jpeg)
 
-Then we test with `ab` with concurrent clients in CPU and GPU. `TensorFlow Serving` should work better especially with GPUs.
+Then we test with `ab` with concurrent clients in CPU and GPU. `TensorFlow Serving` works better especially with GPUs.
 
 ![](./images/benchmark_concurrency.jpeg)
+
+For [simplest model](./benchmark/simplest_model/), per request only costs ~1.9 microseconds and one instance of Simple TensorFlow Serving can achieve 5000+ QPS.
 
 
 ## How It Works
