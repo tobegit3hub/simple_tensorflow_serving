@@ -277,44 +277,63 @@ def index():
 @application.route("/", methods=["POST"])
 @requires_auth
 def inference():
-  result = do_inference()
+  json_result, status_code = do_inference()
   # TODO: Change the decoder for numpy data
-  return jsonify(json.loads(json.dumps(result, cls=NumpyEncoder)))
+  response = jsonify(json.loads(json.dumps(json_result, cls=NumpyEncoder)))
+  response.status_code = status_code
+  return response
 
 
 def do_inference(save_file_dir=None):
+  """
+  Args:
+    save_file_dir: Path to save data.
+
+  Return:
+    json_data: The inference result or error message.
+    status code: The HTTP response code.
+  """
 
   if request.content_type.startswith("application/json"):
     # Process requests with json data
-    json_data = json.loads(request.data)
-
+    try:
+      json_data = json.loads(request.data)
+    except Exception as e:
+      result = {"error": "Invalid json data: {}".format(request.data)}
+      return result, 400
   elif request.content_type.startswith("multipart/form-data"):
     # Process requests with raw image
-    json_data = request_util.create_json_from_formdata_request(
-        request, args.download_inference_images, save_file_dir=save_file_dir)
-
+    try:
+      json_data = request_util.create_json_from_formdata_request(
+          request, args.download_inference_images, save_file_dir=save_file_dir)
+    except Exception as e:
+      result = {"error": "Invalid form-data: {}".format(e)}
+      return result, 400
   else:
     logging.error("Unsupported content type: {}".format(request.content_type))
-    return "Error, unsupported content type"
+    return {"error": "Error, unsupported content type"}, 400
 
   if "model_name" in json_data:
-    model_name = json_data.get("model_name", "")
-    if model_name == "":
-      logging.error("The model does not exist: {}".format(model_name))
+    model_name = json_data.get("model_name")
   else:
     model_name = "default"
 
-  inferenceService = model_name_service_map[model_name]
-
-  try:
-    # Decode base64 string and modify request json data
-    base64_util.replace_b64_in_dict(json_data)
-
-    result = inferenceService.inference(json_data)
-  except Exception as e:
-    result = {"error": "Inference error {}: {}".format(type(e), e)}
-
-  return result
+  if model_name in model_name_service_map:
+    try:
+      inferenceService = model_name_service_map[model_name]
+      # Decode base64 string and modify request json data
+      base64_util.replace_b64_in_dict(json_data)
+      result = inferenceService.inference(json_data)
+      return result, 200
+    except Exception as e:
+      result = {"error": "Inference error {}: {}".format(type(e), e)}
+      return result, 400
+  else:
+    return {
+        "error":
+        "Invalid model name: {}, available models: {}".format(
+            model_name, model_name_service_map.keys())
+    }, 400
 
 
 @application.route('/health', methods=["GET"])
