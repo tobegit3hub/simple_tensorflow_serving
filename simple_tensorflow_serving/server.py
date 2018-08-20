@@ -298,6 +298,9 @@ def do_inference(save_file_dir=None):
     # Process requests with json data
     try:
       json_data = json.loads(request.data)
+      if not isinstance(json_data, dict):
+        result = {"error": "Invalid json data: {}".format(request.data)}
+        return result, 400
     except Exception as e:
       result = {"error": "Invalid json data: {}".format(request.data)}
       return result, 400
