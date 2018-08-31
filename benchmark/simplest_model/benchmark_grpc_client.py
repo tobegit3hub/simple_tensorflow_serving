@@ -9,7 +9,7 @@ from tensorflow_serving.apis import predict_pb2, prediction_service_pb2
 
 def main():
   host = "0.0.0.0"
-  port = 8502
+  port = 8501
   model_name = "default"
   model_version = -1
   signature_name = ""
