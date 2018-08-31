@@ -17,11 +17,7 @@ import tensorflow as tf
 
 from .abstract_inference_service import AbstractInferenceService
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
-
+logger = logging.getLogger('simple_tensorflow_serving')
 
 
 class TensorFlowInferenceService(AbstractInferenceService):
@@ -81,11 +77,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
           if filename.endswith(".so"):
 
             op_filepath = os.path.join(custom_op_path, filename)
-            logging.info("Load the so file from: {}".format(op_filepath))
+            logger.info("Load the so file from: {}".format(op_filepath))
             tf.load_op_library(op_filepath)
 
       else:
-        logging.error("The path does not exist: {}".format(custom_op_path))
+        logger.error("The path does not exist: {}".format(custom_op_path))
 
   def dynamically_reload_models(self):
     """
@@ -95,14 +91,14 @@ class TensorFlowInferenceService(AbstractInferenceService):
       None
     """
 
-    logging.info("Start the new thread to periodically reload model versions")
+    logger.info("Start the new thread to periodically reload model versions")
     load_savedmodels_thread = threading.Thread(
         target=self.load_savedmodels_thread, args=())
     load_savedmodels_thread.start()
     # dynamically_load_savedmodels_thread.join()
 
   def stop_all_threads(self, signum, frame):
-    logging.info("Catch signal {} and exit all threads".format(signum))
+    logger.info("Catch signal {} and exit all threads".format(signum))
     self.should_stop_all_threads = True
     exit(0)
 
@@ -130,20 +126,20 @@ class TensorFlowInferenceService(AbstractInferenceService):
       if current_model_versions == old_model_versions:
         # No version change, just sleep
         if self.verbose:
-          logging.debug("Watch the model path: {} and sleep {} seconds".format(
+          logger.debug("Watch the model path: {} and sleep {} seconds".format(
               self.model_base_path, 10))
         time.sleep(10)
 
       else:
         # Versions change, load the new models and offline the deprecated ones
-        logging.info(
+        logger.info(
             "Model path updated, change model versions from: {} to: {}".format(
                 old_model_versions, current_model_versions))
 
         # Put old model versions offline
         offline_model_versions = old_model_versions - current_model_versions
         for model_version in offline_model_versions:
-          logging.info(
+          logger.info(
               "Put the model version: {} offline".format(str(model_version)))
           del self.version_session_map[str(model_version)]
           self.version_session_map.remove(model_version)
@@ -159,7 +155,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.model_version_list.append(model_version)
 
     model_file_path = os.path.join(self.model_base_path, str(model_version))
-    logging.info("Put the model version: {} online, path: {}".format(
+    logger.info("Put the model version: {} online, path: {}".format(
         model_version, model_file_path))
     meta_graph = tf.saved_model.loader.load(
         session, [tf.saved_model.tag_constants.SERVING], model_file_path)
@@ -197,7 +193,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     if len(all_model_versions) > 0:
       return all_model_versions[0]
     else:
-      logging.error("No model version found")
+      logger.error("No model version found")
 
   def get_all_model_versions(self):
 
@@ -218,7 +214,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
         hadoop_kinit_command = os.environ.get(
             "HDFS_KINIT_COMMAND",
             "kinit {} -k -t /etc/user.keytab".format(hadoop_user_name))
-        logging.info(
+        logger.info(
             "Try to run the command to kinit: {}".format(hadoop_kinit_command))
         subprocess.call(hadoop_kinit_command, shell=True)
 
@@ -277,13 +273,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
         ]
         return model_versions
       else:
-        logging.error("No model version found")
+        logger.error("No model version found")
         return []
 
   def run_with_profiler(self, session, version, output_tensors, feed_dict):
     if version not in self.profiler_map:
       if len(self.profiler_map) > 0:
-        logging.warn(
+        logger.warn(
             "Only support one profiler per process, run without profiler")
         return session.run(output_tensors, feed_dict), None
       profiler = tf.profiler.Profiler(session.graph)
@@ -307,7 +303,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       with open(profiler_out_file) as f:
         profile_result = f.read()
     except Exception as e:
-      logging.error(e.message)
+      logger.error(e.message)
     return result, profile_result
 
   def inference(self, json_data):
@@ -331,15 +327,15 @@ class TensorFlowInferenceService(AbstractInferenceService):
           model_version = int(model_version_string)
 
     if str(model_version) not in self.version_session_map or input_data == "":
-      logging.error("No model version: {} to serve".format(model_version))
+      logger.error("No model version: {} to serve".format(model_version))
       return "Fail to request the model version: {} with data: {}".format(
           model_version, input_data)
     """
     if self.verbose:
-      logging.debug("Inference model_version: {}, data: {}".format(
+      logger.debug("Inference model_version: {}, data: {}".format(
           model_version, input_data))
     """
-    logging.debug("Inference with json data: {}".format(json_data))
+    logger.debug("Inference with json data: {}".format(json_data))
 
     signature_name = json_data.get("signature_name", "")
     if signature_name == "":
@@ -393,33 +389,34 @@ class TensorFlowInferenceService(AbstractInferenceService):
     sess = self.version_session_map[str(model_version)]
     result_profile = None
     if json_data.get("run_profile", "") == "true":
-      logging.info("run_profile=true, running with tfprof")
+      logger.info("run_profile=true, running with tfprof")
       result_ndarrays, result_profile = self.run_with_profiler(
           sess, str(model_version), output_tensor_names, feed_dict_map)
     else:
 
       # TODO: Update input data by decoding base64 string for esitmator model
       should_decode_base64 = False
-      if feed_dict_map.has_key("input_example_tensor:0") and should_decode_base64:
+      if feed_dict_map.has_key(
+          "input_example_tensor:0") and should_decode_base64:
         final_example_strings = []
         base64_example_strings = feed_dict_map["input_example_tensor:0"]
         for base64_example_string in base64_example_strings:
-          final_example_string = base64.urlsafe_b64decode(base64_example_string.encode("utf-8"))
+          final_example_string = base64.urlsafe_b64decode(
+              base64_example_string.encode("utf-8"))
           final_example_strings.append(final_example_string)
         feed_dict_map["input_example_tensor:0"] = final_example_strings
 
       result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
 
-
     if self.verbose:
-      logging.debug("Inference time: {} s".format(time.time() - start_time))
+      logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     # 4. Build return result
     result = {}
     for i in range(len(output_op_names)):
       result[output_op_names[i]] = result_ndarrays[i]
     if self.verbose:
-      logging.debug("Inference result: {}".format(result))
+      logger.debug("Inference result: {}".format(result))
 
     # 5. Build extra return information
     if result_profile is not None and "__PROFILE__" not in output_tensor_names:

@@ -27,10 +27,7 @@ from .service_utils import request_util
 from . import python_predict_client
 from . import base64_util
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger("simple_tensorflow_serving")
 
 # Define parameters
 parser = argparse.ArgumentParser()
@@ -73,6 +70,13 @@ parser.add_argument(
     help="Enable verbose log or not(eg. True)",
     type=bool)
 parser.add_argument(
+    "--debug",
+    default=False,
+    help="Enable debug for flask or not(eg. False)",
+    type=bool)
+parser.add_argument(
+    "--log_level", default="info", help="The log level(eg. info)")
+parser.add_argument(
     "--gen_client", default="", help="Generate the client code(eg. python)")
 parser.add_argument(
     "--enable_auth",
@@ -110,11 +114,22 @@ else:
   args = parser.parse_args(sys.argv[1:])
 
   for arg in vars(args):
-    logging.info("{}: {}".format(arg, getattr(args, arg)))
+    logger.info("{}: {}".format(arg, getattr(args, arg)))
 
   if args.enable_colored_log:
     import coloredlogs
     coloredlogs.install()
+
+if args.log_level == "info" or args.log_level == "INFO":
+  logger.setLevel(logging.INFO)
+elif args.log_level == "debug" or args.log_level == "DEBUG":
+  logger.setLevel(logging.DEBUG)
+elif args.log_level == "error" or args.log_level == "ERROR":
+  logger.setLevel(logging.ERROR)
+elif args.log_level == "warning" or args.log_level == "WARNING":
+  logger.setLevel(logging.WARNING)
+elif args.log_level == "critical" or args.log_level == "CRITICAL":
+  logger.setLevel(logging.CRITICAL)
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -313,7 +328,7 @@ def do_inference(save_file_dir=None):
       result = {"error": "Invalid form-data: {}".format(e)}
       return result, 400
   else:
-    logging.error("Unsupported content type: {}".format(request.content_type))
+    logger.error("Unsupported content type: {}".format(request.content_type))
     return {"error": "Error, unsupported content type"}, 400
 
   if "model_name" in json_data:
@@ -463,7 +478,8 @@ def run_generate_clients():
 def main():
   # Start the HTTP server
   # Support multi-thread for json inference and image inference in same process
-  application.run(host=args.host, port=args.port, threaded=True)
+  application.run(
+      host=args.host, port=args.port, threaded=True, debug=args.debug)
 
 
 if __name__ == "__main__":
