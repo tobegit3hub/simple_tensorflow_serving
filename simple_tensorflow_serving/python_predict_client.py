@@ -17,6 +17,10 @@ logging.basicConfig(
         level=logging.INFO,
         datefmt='%Y-%m-%d %H:%M:%S')
 
+# TODO: Remove logging make debug log level not work
+#logger = logging.getLogger("simple_tensorflow_serving")
+
+
 def predict_image(image_file_path, channel_layout="RGB", run_profile="", port=8500):
   endpoint = "http://127.0.0.1:" + str(port)
 

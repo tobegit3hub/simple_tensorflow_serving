@@ -18,7 +18,7 @@ class OnnxInferenceService(AbstractInferenceService):
   The service to load ONNX model and make inference.
   """
 
-  def __init__(self, model_name, model_base_path, verbose=False):
+  def __init__(self, model_name, model_base_path):
     """
     Initialize the service.
         
@@ -96,8 +96,6 @@ class OnnxInferenceService(AbstractInferenceService):
     else:
       self.model_graph_signature = "{}".format(self.mod.symbol.tojson())
 
-    self.verbose = verbose
-
   def inference(self, json_data):
     """
     Make inference with the current Session object and JSON request data.
@@ -141,13 +139,9 @@ class OnnxInferenceService(AbstractInferenceService):
       batch_data = Batch(request_mxnet_ndarray_data)
 
     # 2. Do inference
-    if self.verbose:
-      start_time = time.time()
-
+    start_time = time.time()
     self.mod.forward(batch_data)
-
-    if self.verbose:
-      logging.debug("Inference time: {} s".format(time.time() - start_time))
+    ogging.debug("Inference time: {} s".format(time.time() - start_time))
 
     model_outputs = self.mod.get_outputs()
 
@@ -160,7 +154,6 @@ class OnnxInferenceService(AbstractInferenceService):
       # TODO: Get the real output name from ONNX model
       #result[self.signature_output_names[i]] = model_output.asnumpy()
       result["output_{}".format(i)] = model_output.asnumpy()
+    logging.debug("Inference result: {}".format(result))
 
-    if self.verbose:
-      logging.debug("Inference result: {}".format(result))
     return result

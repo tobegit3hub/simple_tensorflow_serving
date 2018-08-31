@@ -28,8 +28,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
   def __init__(self,
                model_name,
                model_base_path,
-               custom_op_paths="",
-               verbose=False):
+               custom_op_paths=""):
     """
     Initialize the TensorFlow service by loading SavedModel to the Session.
         
@@ -56,7 +55,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.version_session_map = {}
     self.profiler_map = {}
 
-    self.verbose = verbose
     self.should_stop_all_threads = False
 
     # Register the signals to exist
@@ -125,8 +123,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
       if current_model_versions == old_model_versions:
         # No version change, just sleep
-        if self.verbose:
-          logger.debug("Watch the model path: {} and sleep {} seconds".format(
+        logger.debug("Watch the model path: {} and sleep {} seconds".format(
               self.model_base_path, 10))
         time.sleep(10)
 
@@ -330,11 +327,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       logger.error("No model version: {} to serve".format(model_version))
       return "Fail to request the model version: {} with data: {}".format(
           model_version, input_data)
-    """
-    if self.verbose:
-      logger.debug("Inference model_version: {}, data: {}".format(
-          model_version, input_data))
-    """
+
     logger.debug("Inference with json data: {}".format(json_data))
 
     signature_name = json_data.get("signature_name", "")
@@ -384,8 +377,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
         output_tensor_names.append(dense_shape_tensor_name)
 
     # 3. Inference with Session run
-    if self.verbose:
-      start_time = time.time()
+    start_time = time.time()
+
     sess = self.version_session_map[str(model_version)]
     result_profile = None
     if json_data.get("run_profile", "") == "true":
@@ -408,15 +401,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
       result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
 
-    if self.verbose:
-      logger.debug("Inference time: {} s".format(time.time() - start_time))
+    logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     # 4. Build return result
     result = {}
     for i in range(len(output_op_names)):
       result[output_op_names[i]] = result_ndarrays[i]
-    if self.verbose:
-      logger.debug("Inference result: {}".format(result))
+    logger.debug("Inference result: {}".format(result))
 
     # 5. Build extra return information
     if result_profile is not None and "__PROFILE__" not in output_tensor_names:

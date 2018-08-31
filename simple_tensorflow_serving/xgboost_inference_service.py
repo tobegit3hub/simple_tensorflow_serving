@@ -9,13 +9,15 @@ import pickle
 
 from .abstract_inference_service import AbstractInferenceService
 
+logger = logging.getLogger("simple_tensorflow_serving")
+
 
 class XgboostInferenceService(AbstractInferenceService):
   """
   The service to load XGBoost model and make inference.
   """
 
-  def __init__(self, model_name, model_base_path, verbose=False):
+  def __init__(self, model_name, model_base_path):
     """
     Initialize the service.
         
@@ -51,13 +53,12 @@ class XgboostInferenceService(AbstractInferenceService):
         ".bst") or self.model_base_path.endswith(".bin"):
       self.bst.load_model(self.model_base_path)
     else:
-      logging.error(
+      logger.error(
           "Unsupported model file format: {}".format(self.model_base_path))
 
     self.model_graph_signature = "score: {}\nfscore: {}".format(
         self.bst.get_score(), self.bst.get_fscore())
 
-    self.verbose = verbose
 
   def inference(self, json_data):
     """
@@ -76,20 +77,14 @@ class XgboostInferenceService(AbstractInferenceService):
     request_ndarray_data = xgb.DMatrix(np.array(json_data["data"]))
 
     # 2. Do inference
-    if self.verbose:
-      start_time = time.time()
-
+    start_time = time.time()
     predict_result = self.bst.predict(request_ndarray_data)
-
-    if self.verbose:
-      logging.debug("Inference time: {} s".format(time.time() - start_time))
+    logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     # 3. Build return data
     result = {
         "result": predict_result,
     }
-
-    if self.verbose:
-      logging.debug("Inference result: {}".format(result))
+    logger.debug("Inference result: {}".format(result))
 
     return result

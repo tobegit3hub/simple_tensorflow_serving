@@ -11,6 +11,8 @@ from . import gen_golang
 from . import gen_javascript
 from . import gen_python
 
+logger = logging.getLogger("simple_tensorflow_serving")
+
 
 def gen_tensorflow_client(tensorflow_inference_service, language, model_name):
   """
@@ -26,7 +28,7 @@ def gen_tensorflow_client(tensorflow_inference_service, language, model_name):
   """
 
   if language not in ["json", "bash", "python", "golang", "javascript"]:
-    logging.error(
+    logger.error(
         "Language: {} is not supported to gen client".format(language))
     return
 
@@ -47,7 +49,7 @@ def gen_tensorflow_client(tensorflow_inference_service, language, model_name):
     for dim in shape_dims:
       input_opname_shape_map[input_opname].append(int(dim.size))
 
-  logging.debug(
+  logger.debug(
       "The input operator and shape: {}".format(input_opname_shape_map))
 
   # Example: {"keys": [[1.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}

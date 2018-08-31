@@ -4,13 +4,12 @@ from __future__ import division
 from __future__ import print_function
 
 import logging
-import os
 import time
 import json
-import numpy as np
-from collections import namedtuple
 
 from .abstract_inference_service import AbstractInferenceService
+
+logger = logging.getLogger("simple_tensorflow_serving")
 
 
 class H2oInferenceService(AbstractInferenceService):
@@ -18,7 +17,7 @@ class H2oInferenceService(AbstractInferenceService):
   The H2O service to load H2O model and make inference.
   """
 
-  def __init__(self, model_name, model_base_path, verbose=False):
+  def __init__(self, model_name, model_base_path):
     """
     Initialize the service.
         
@@ -35,14 +34,13 @@ class H2oInferenceService(AbstractInferenceService):
     self.model_version_list = [1]
     self.model_graph_signature = ""
     self.platform = "H2o"
-    self.verbose = verbose
 
     import h2o
 
-    logging.info("Try to initialize and connect the h2o server")
+    logger.info("Try to initialize and connect the h2o server")
     h2o.init()
 
-    logging.info("Try to load the h2o model")
+    logger.info("Try to load the h2o model")
     model = h2o.load_model(model_base_path)
 
     self.model = model
@@ -68,8 +66,7 @@ class H2oInferenceService(AbstractInferenceService):
     # 2. Do inference
     request_ndarray_data = json_data["data"]["data"]
 
-    if self.verbose:
-      start_time = time.time()
+    start_time = time.time()
 
     df = pd.read_json(json.dumps(request_ndarray_data), orient="index")
 
@@ -82,15 +79,13 @@ class H2oInferenceService(AbstractInferenceService):
     #performance = self.model.model_performance(test)
     #performance.show()
 
-    if self.verbose:
-      logging.debug("Inference time: {} s".format(time.time() - start_time))
+    logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     result_df = predictions.as_data_frame()
     result_string = result_df.to_json(orient='index')
 
     # 3. Build return data
     result = json.loads(result_string)
+    logger.debug("Inference result: {}".format(result))
 
-    if self.verbose:
-      logging.debug("Inference result: {}".format(result))
     return result
