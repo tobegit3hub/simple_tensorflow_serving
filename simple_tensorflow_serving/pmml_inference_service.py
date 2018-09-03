@@ -2,8 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import logging
 import time
+import subprocess
 
 from .abstract_inference_service import AbstractInferenceService
 from . import filesystem_util
@@ -28,6 +30,14 @@ class PmmlInferenceService(AbstractInferenceService):
     """
 
     super(PmmlInferenceService, self).__init__()
+
+    # Start the pmml server
+    if os.path.isfile("/tmp/openscoring-server-executable-1.4-SNAPSHOT.jar"):
+      logging.info("Run to run command 'java -jar /tmp/openscoring-server-executable-1.4-SNAPSHOT.jar'")
+      subprocess.Popen(["java", "-jar", "/tmp/openscoring-server-executable-1.4-SNAPSHOT.jar"])
+
+      logging.info("Sleep 10s to wait for pmml server")
+      time.sleep(10)
 
     local_model_base_path = filesystem_util.download_hdfs_moels(
         model_base_path)

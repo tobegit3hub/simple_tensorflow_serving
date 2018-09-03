@@ -2,9 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import logging
 import time
 import json
+import subprocess
 
 from .abstract_inference_service import AbstractInferenceService
 from . import filesystem_util
@@ -28,6 +30,14 @@ class H2oInferenceService(AbstractInferenceService):
       None
     """
     super(H2oInferenceService, self).__init__()
+
+    # Start the h2o server
+    if os.path.isfile("/tmp/h2o.jar"):
+      logging.info("Run to run command 'java -jar /tmp/h2o.jar'")
+      subprocess.Popen(["java", "-jar", "/tmp/h2o.jar"])
+
+      logging.info("Sleep 10s to wait for h2o server")
+      time.sleep(10)
 
     local_model_base_path = filesystem_util.download_hdfs_moels(
         model_base_path)
