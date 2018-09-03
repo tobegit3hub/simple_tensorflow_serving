@@ -23,10 +23,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
   The TensorFlow service to load TensorFlow SavedModel and make inference.
   """
 
-  def __init__(self,
-               model_name,
-               model_base_path,
-               custom_op_paths=""):
+  def __init__(self, model_name, model_base_path, custom_op_paths=""):
     """
     Initialize the TensorFlow service by loading SavedModel to the Session.
         
@@ -40,7 +37,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
     super(TensorFlowInferenceService, self).__init__()
 
     self.model_name = model_name
-    libhdfs_model_base_path = filesystem_util.update_hdfs_prefix_for_libhdfs(model_base_path)
+    libhdfs_model_base_path = filesystem_util.update_hdfs_prefix_for_libhdfs(
+        model_base_path)
     self.model_base_path = libhdfs_model_base_path
     self.model_version_list = []
     self.model_graph_signature = None
@@ -123,7 +121,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       if current_model_versions == old_model_versions:
         # No version change, just sleep
         logger.debug("Watch the model path: {} and sleep {} seconds".format(
-              self.model_base_path, 10))
+            self.model_base_path, 10))
         time.sleep(10)
 
       else:

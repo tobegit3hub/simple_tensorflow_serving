@@ -8,6 +8,7 @@ import numpy as np
 import pickle
 
 from .abstract_inference_service import AbstractInferenceService
+from . import filesystem_util
 
 logger = logging.getLogger("simple_tensorflow_serving")
 
@@ -30,8 +31,11 @@ class XgboostInferenceService(AbstractInferenceService):
 
     super(XgboostInferenceService, self).__init__()
 
+    local_model_base_path = filesystem_util.download_hdfs_moels(
+        model_base_path)
+
     self.model_name = model_name
-    self.model_base_path = model_base_path
+    self.model_base_path = local_model_base_path
     self.model_version_list = [1]
     self.model_graph_signature = ""
     self.platform = "XGBoost"
@@ -58,7 +62,6 @@ class XgboostInferenceService(AbstractInferenceService):
 
     self.model_graph_signature = "score: {}\nfscore: {}".format(
         self.bst.get_score(), self.bst.get_fscore())
-
 
   def inference(self, json_data):
     """

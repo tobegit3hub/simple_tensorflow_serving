@@ -316,7 +316,7 @@ result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### Scikit-learn Model
+### XGBoost Model
 
 Now it supports loading and serving the general XGBoost models in bst, joblib or pickle format.
 

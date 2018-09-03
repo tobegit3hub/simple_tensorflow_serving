@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -7,10 +6,12 @@ import logging
 import os
 import time
 import json
-import numpy as np
 from collections import namedtuple
 
 from .abstract_inference_service import AbstractInferenceService
+from . import filesystem_util
+
+logger = logging.getLogger("simple_tensorflow_serving")
 
 
 class MxnetInferenceService(AbstractInferenceService):
@@ -31,8 +32,11 @@ class MxnetInferenceService(AbstractInferenceService):
 
     super(MxnetInferenceService, self).__init__()
 
+    local_model_base_path = filesystem_util.down_mxnet_model_from_hdfs(
+        model_base_path)
+
     self.model_name = model_name
-    self.model_base_path = model_base_path
+    self.model_base_path = local_model_base_path
     self.model_version_list = [1]
     self.model_graph_signature = ""
     self.platform = "MXNet"
@@ -87,7 +91,6 @@ class MxnetInferenceService(AbstractInferenceService):
           self.mod.symbol.tojson())
     else:
       self.model_graph_signature = "{}".format(self.mod.symbol.tojson())
-
 
   def inference(self, json_data):
     """
