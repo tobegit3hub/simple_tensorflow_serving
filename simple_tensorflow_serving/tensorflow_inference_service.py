@@ -9,13 +9,11 @@ import os
 import signal
 import threading
 import time
-import subprocess
-#import pyarrow as pa
 import base64
-
 import tensorflow as tf
 
 from .abstract_inference_service import AbstractInferenceService
+from . import filesystem_util
 
 logger = logging.getLogger('simple_tensorflow_serving')
 
@@ -42,7 +40,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
     super(TensorFlowInferenceService, self).__init__()
 
     self.model_name = model_name
-    self.model_base_path = model_base_path
+    libhdfs_model_base_path = filesystem_util.update_hdfs_prefix_for_libhdfs(model_base_path)
+    self.model_base_path = libhdfs_model_base_path
     self.model_version_list = []
     self.model_graph_signature = None
     self.platform = "TensorFlow"
