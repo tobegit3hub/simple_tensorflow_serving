@@ -1,12 +1,12 @@
 # Update the code and upload the package to pypi
 # 1. python ./setup.py bdist_wheel --universal
-# 2. twine upload dist/simple_tensorflow_serving-0.4.x-py2.py3-none-any.whl
+# 2. twine upload dist/simple_tensorflow_serving-x.x.x-py2.py3-none-any.whl
 
 from setuptools import setup, find_packages
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.5.0",
+    version="0.6.0",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
@@ -20,12 +20,7 @@ setup(
         'jinja2',
         'flask-cors',
         'requests',
-        #'tensorflow',
-        #'scikit-learn',
-        #'xgboost',
-        #'mxnet',
-        #'h2o',
-        #'onnx',
+        'tensorflow'
     ],
     #package_data={
     #    "simple_tensorflow_serving/static": ['simple_tensorflow_serving/templates/*.html',
