@@ -436,8 +436,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
     logger.debug("Inference result: {}".format(result))
 
     if json_data.get("postprocess", "false") != "false":
-      import ipdb
-      ipdb.set_trace()
       if self.postprocess_function != None:
         result = self.postprocess_function(result)
         logger.debug("Postprocess to generate data: {}".format(result))
