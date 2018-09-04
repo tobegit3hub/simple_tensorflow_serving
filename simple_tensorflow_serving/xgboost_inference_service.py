@@ -9,6 +9,7 @@ import pickle
 
 from .abstract_inference_service import AbstractInferenceService
 from . import filesystem_util
+from . import preprocess_util
 
 logger = logging.getLogger("simple_tensorflow_serving")
 
@@ -39,6 +40,9 @@ class XgboostInferenceService(AbstractInferenceService):
     self.model_version_list = [1]
     self.model_graph_signature = ""
     self.platform = "XGBoost"
+
+    self.preprocess_function, self.postprocess_function = preprocess_util.get_preprocess_postprocess_function_from_model_path(
+        self.model_base_path)
 
     # TODO: Import as needed and only once
     import xgboost as xgb
@@ -77,12 +81,28 @@ class XgboostInferenceService(AbstractInferenceService):
 
     # 1. Build inference data
     import xgboost as xgb
-    request_ndarray_data = xgb.DMatrix(np.array(json_data["data"]))
+
+    input_data = json_data["data"]
+    if json_data.get("preprocess", "false") != "false":
+      if self.preprocess_function != None:
+        input_data = self.preprocess_function(input_data)
+        logger.debug("Preprocess to generate data: {}".format(input_data))
+      else:
+        logger.warning("No preprocess function in model")
+
+    request_ndarray_data = xgb.DMatrix(np.array(input_data))
 
     # 2. Do inference
     start_time = time.time()
     predict_result = self.bst.predict(request_ndarray_data)
     logger.debug("Inference time: {} s".format(time.time() - start_time))
+
+    if json_data.get("postprocess", "false") != "false":
+      if self.postprocess_function != None:
+        predict_result = self.postprocess_function(predict_result)
+        logger.debug("Postprocess to generate data: {}".format(predict_result))
+      else:
+        logger.warning("No postprocess function in model")
 
     # 3. Build return data
     result = {

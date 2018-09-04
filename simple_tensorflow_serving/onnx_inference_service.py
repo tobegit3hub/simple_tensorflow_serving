@@ -11,6 +11,9 @@ from collections import namedtuple
 
 from .abstract_inference_service import AbstractInferenceService
 from . import filesystem_util
+from . import preprocess_util
+
+logger = logging.getLogger("simple_tensorflow_serving")
 
 
 class OnnxInferenceService(AbstractInferenceService):
@@ -39,6 +42,9 @@ class OnnxInferenceService(AbstractInferenceService):
     self.model_version_list = [1]
     self.model_graph_signature = ""
     self.platform = "ONNX"
+
+    self.preprocess_function, self.postprocess_function = preprocess_util.get_preprocess_postprocess_function_from_model_path(
+        self.model_base_path)
 
     # TODO: Import as needed and only once
     import mxnet as mx
@@ -141,10 +147,17 @@ class OnnxInferenceService(AbstractInferenceService):
       request_mxnet_ndarray_data = [mx.nd.array(request_ndarray_data)]
       batch_data = Batch(request_mxnet_ndarray_data)
 
+    if json_data.get("preprocess", "false") != "false":
+      if self.preprocess_function != None:
+        batch_data = self.preprocess_function(batch_data)
+        logger.debug("Preprocess to generate data: {}".format(batch_data))
+      else:
+        logger.warning("No preprocess function in model")
+
     # 2. Do inference
     start_time = time.time()
     self.mod.forward(batch_data)
-    ogging.debug("Inference time: {} s".format(time.time() - start_time))
+    logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     model_outputs = self.mod.get_outputs()
 
@@ -157,6 +170,13 @@ class OnnxInferenceService(AbstractInferenceService):
       # TODO: Get the real output name from ONNX model
       #result[self.signature_output_names[i]] = model_output.asnumpy()
       result["output_{}".format(i)] = model_output.asnumpy()
-    logging.debug("Inference result: {}".format(result))
+    logger.debug("Inference result: {}".format(result))
+
+    if json_data.get("postprocess", "false") != "false":
+      if self.postprocess_function != None:
+        result = self.postprocess_function(result)
+        logger.debug("Postprocess to generate data: {}".format(result))
+      else:
+        logger.warning("No postprocess function in model")
 
     return result

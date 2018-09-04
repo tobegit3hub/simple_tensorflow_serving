@@ -10,6 +10,7 @@ import subprocess
 
 from .abstract_inference_service import AbstractInferenceService
 from . import filesystem_util
+from . import preprocess_util
 
 logger = logging.getLogger("simple_tensorflow_serving")
 
@@ -48,6 +49,9 @@ class H2oInferenceService(AbstractInferenceService):
     self.model_graph_signature = ""
     self.platform = "H2o"
 
+    self.preprocess_function, self.postprocess_function = preprocess_util.get_preprocess_postprocess_function_from_model_path(
+        self.model_base_path)
+
     import h2o
 
     logger.info("Try to initialize and connect the h2o server")
@@ -79,6 +83,14 @@ class H2oInferenceService(AbstractInferenceService):
     # 2. Do inference
     request_ndarray_data = json_data["data"]["data"]
 
+    if json_data.get("preprocess", "false") != "false":
+      if self.preprocess_function != None:
+        request_ndarray_data = self.preprocess_function(request_ndarray_data)
+        logger.debug(
+            "Preprocess to generate data: {}".format(request_ndarray_data))
+      else:
+        logger.warning("No preprocess function in model")
+
     start_time = time.time()
 
     df = pd.read_json(json.dumps(request_ndarray_data), orient="index")
@@ -100,5 +112,12 @@ class H2oInferenceService(AbstractInferenceService):
     # 3. Build return data
     result = json.loads(result_string)
     logger.debug("Inference result: {}".format(result))
+
+    if json_data.get("postprocess", "false") != "false":
+      if self.postprocess_function != None:
+        result = self.postprocess_function(result)
+        logger.debug("Postprocess to generate data: {}".format(result))
+      else:
+        logger.warning("No postprocess function in model")
 
     return result

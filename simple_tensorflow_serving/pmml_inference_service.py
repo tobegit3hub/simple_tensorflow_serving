@@ -9,6 +9,7 @@ import subprocess
 
 from .abstract_inference_service import AbstractInferenceService
 from . import filesystem_util
+from . import preprocess_util
 
 logger = logging.getLogger("simple_tensorflow_serving")
 
@@ -33,8 +34,12 @@ class PmmlInferenceService(AbstractInferenceService):
 
     # Start the pmml server
     if os.path.isfile("/tmp/openscoring-server-executable-1.4-SNAPSHOT.jar"):
-      logging.info("Run to run command 'java -jar /tmp/openscoring-server-executable-1.4-SNAPSHOT.jar'")
-      subprocess.Popen(["java", "-jar", "/tmp/openscoring-server-executable-1.4-SNAPSHOT.jar"])
+      logging.info(
+          "Run to run command 'java -jar /tmp/openscoring-server-executable-1.4-SNAPSHOT.jar'"
+      )
+      subprocess.Popen([
+          "java", "-jar", "/tmp/openscoring-server-executable-1.4-SNAPSHOT.jar"
+      ])
 
       logging.info("Sleep 10s to wait for pmml server")
       time.sleep(10)
@@ -81,6 +86,13 @@ class PmmlInferenceService(AbstractInferenceService):
     predict_result = self.openscoring.evaluate(self.model_name,
                                                request_json_data)
     logger.debug("Inference time: {} s".format(time.time() - start_time))
+
+    if json_data.get("postprocess", "false") != "false":
+      if self.postprocess_function != None:
+        predict_result = self.postprocess_function(predict_result)
+        logger.debug("Postprocess to generate data: {}".format(predict_result))
+      else:
+        logger.warning("No postprocess function in model")
 
     # 3. Build return data
     result = {
