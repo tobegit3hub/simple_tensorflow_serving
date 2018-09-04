@@ -11,6 +11,8 @@ import threading
 import time
 import base64
 import tensorflow as tf
+import marshal
+import types
 
 from .abstract_inference_service import AbstractInferenceService
 from . import filesystem_util
@@ -45,6 +47,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.platform = "TensorFlow"
 
     self.name_signature_map = {}
+    self.preprocess_function = None
+    self.postprocess_function = None
 
     if custom_op_paths != "":
       self.load_custom_op(custom_op_paths)
@@ -154,6 +158,23 @@ class TensorFlowInferenceService(AbstractInferenceService):
     meta_graph = tf.saved_model.loader.load(
         session, [tf.saved_model.tag_constants.SERVING], model_file_path)
 
+    # Get preprocess and postprocess function from collection_def
+    if "preprocess_function" in meta_graph.collection_def:
+      preprocess_function_string = meta_graph.collection_def[
+          "preprocess_function"].bytes_list.value[0]
+      loaded_function = marshal.loads(preprocess_function_string)
+      self.preprocess_function = types.FunctionType(loaded_function,
+                                                    globals(),
+                                                    "preprocess_function")
+
+    if "postprocess_function" in meta_graph.collection_def:
+      postrocess_function_string = meta_graph.collection_def[
+          "postprocess_function"].bytes_list.value[0]
+      loaded_function = marshal.loads(postrocess_function_string)
+      self.postprocess_function = types.FunctionType(loaded_function,
+                                                     globals(),
+                                                     "postprocess_function")
+
     # Update ItemsView to list for Python 3
     if len(list(meta_graph.signature_def.items())) == 1:
       signature_name = list(meta_graph.signature_def.items())[0][0]
@@ -255,6 +276,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       ]
       """
 
+      # TODO: Support only integer model version or not
       model_versions = tf.gfile.ListDirectory(self.model_base_path)
       return model_versions
 
@@ -326,6 +348,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
           model_version, input_data)
 
     logger.debug("Inference with json data: {}".format(json_data))
+
+    if json_data.get("preprocess", "false") != "false":
+      if self.preprocess_function != None:
+        input_data = self.preprocess_function(input_data)
+        logger.debug("Preprocess to generate data: {}".format(input_data))
+      else:
+        logger.debug("No preprocess function in model")
 
     signature_name = json_data.get("signature_name", "")
     if signature_name == "":
@@ -405,6 +434,15 @@ class TensorFlowInferenceService(AbstractInferenceService):
     for i in range(len(output_op_names)):
       result[output_op_names[i]] = result_ndarrays[i]
     logger.debug("Inference result: {}".format(result))
+
+    if json_data.get("postprocess", "false") != "false":
+      import ipdb
+      ipdb.set_trace()
+      if self.postprocess_function != None:
+        result = self.postprocess_function(result)
+        logger.debug("Postprocess to generate data: {}".format(result))
+      else:
+        logger.debug("No postprocess function in model")
 
     # 5. Build extra return information
     if result_profile is not None and "__PROFILE__" not in output_tensor_names:
