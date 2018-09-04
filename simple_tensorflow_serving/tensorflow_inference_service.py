@@ -354,7 +354,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
         input_data = self.preprocess_function(input_data)
         logger.debug("Preprocess to generate data: {}".format(input_data))
       else:
-        logger.debug("No preprocess function in model")
+        logger.warning("No preprocess function in model")
 
     signature_name = json_data.get("signature_name", "")
     if signature_name == "":
@@ -440,7 +440,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
         result = self.postprocess_function(result)
         logger.debug("Postprocess to generate data: {}".format(result))
       else:
-        logger.debug("No postprocess function in model")
+        logger.warning("No postprocess function in model")
 
     # 5. Build extra return information
     if result_profile is not None and "__PROFILE__" not in output_tensor_names:

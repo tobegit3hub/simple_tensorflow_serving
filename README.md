@@ -259,7 +259,7 @@ input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
@@ -284,7 +284,7 @@ input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
@@ -309,7 +309,7 @@ input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
@@ -336,7 +336,7 @@ input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
@@ -364,7 +364,7 @@ input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
