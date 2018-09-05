@@ -6,6 +6,7 @@ import os
 import logging
 import time
 import subprocess
+import requests
 
 from .abstract_inference_service import AbstractInferenceService
 from . import filesystem_util
@@ -53,14 +54,35 @@ class PmmlInferenceService(AbstractInferenceService):
     self.model_graph_signature = ""
     self.platform = "PMML"
 
+    self.preprocess_function, self.postprocess_function = preprocess_util.get_preprocess_postprocess_function_from_model_path(
+        self.model_base_path)
+
     # Load model
+    """
     from openscoring import Openscoring
+    # TODO: Support to config the port of Openscoring server
     openscoring_server_endpoint = "localhost:8080"
     kwargs = {"auth": ("admin", "adminadmin")}
     self.openscoring = Openscoring(
         "http://{}/openscoring".format(openscoring_server_endpoint))
     self.openscoring.deployFile(self.model_name, self.model_base_path,
                                 **kwargs)
+    """
+
+    endpoint = "http://localhost:8080/openscoring/model/{}".format(
+        self.model_name)
+
+    with open(self.model_base_path, "rb") as f:
+      kwargs = {
+          'headers': {
+              'content-type': 'application/xml'
+          },
+          'json': None,
+          'data': f,
+          'auth': ('admin', 'adminadmin')
+      }
+      result = requests.put(endpoint, **kwargs)
+      logging.info("Deploy the model to Openscoring: {}".format(result.text))
 
     self.model_graph_signature = "No signature for PMML models"
 
@@ -80,12 +102,27 @@ class PmmlInferenceService(AbstractInferenceService):
     # Example: arguments = {"Sepal_Length" : 5.1, "Sepal_Width" : 3.5, "Petal_Length" : 1.4, "Petal_Width" : 0.2}
     request_json_data = json_data["data"]
 
+    if json_data.get("preprocess", "false") != "false":
+      if self.preprocess_function != None:
+        request_json_data = self.preprocess_function(request_json_data)
+        logger.debug(
+            "Preprocess to generate data: {}".format(request_json_data))
+      else:
+        logger.warning("No preprocess function in model")
+
     # 2. Do inference
     start_time = time.time()
     # Example: {'Probability_setosa': 1.0, 'Probability_versicolor': 0.0, 'Node_Id': '2', 'Species': 'setosa', 'Probability_virginica': 0.0}
-    predict_result = self.openscoring.evaluate(self.model_name,
-                                               request_json_data)
+    #predict_result = self.openscoring.evaluate(self.model_name, request_json_data)
+
+    endpoint = "http://localhost:8080/openscoring/model/{}".format(
+        self.model_name)
+    input_data = {"id": None, "arguments": request_json_data}
+    result = requests.post(endpoint, json=input_data)
+    predict_result = result.json()
+
     logger.debug("Inference time: {} s".format(time.time() - start_time))
+    logger.debug("Inference result: {}".format(predict_result))
 
     if json_data.get("postprocess", "false") != "false":
       if self.postprocess_function != None:
@@ -94,10 +131,4 @@ class PmmlInferenceService(AbstractInferenceService):
       else:
         logger.warning("No postprocess function in model")
 
-    # 3. Build return data
-    result = {
-        "result": predict_result,
-    }
-    logger.debug("Inference result: {}".format(result))
-
-    return result
+    return predict_result
