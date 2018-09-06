@@ -1,0 +1,49 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: simple-tensorflow-serving
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: simple-tensorflow-serving
+    spec:
+      volumes:
+      - hostPath:
+          path: /usr/cuda_files
+        name: cuda-files
+      containers:
+      - name: simple-tensorflow-serving
+        image: tobegit3hub/simple_tensorflow_serving
+        ports:
+        - containerPort: 8500
+        resources:
+          requests:
+            alpha.kubernetes.io/nvidia-gpu: 0
+            cpu: 1000m
+            memory: 1000Mi
+          limits:
+            alpha.kubernetes.io/nvidia-gpu: 0
+            cpu: 1000m
+            memory: 1000Mi
+        volumeMounts:
+        - mountPath: /usr/cuda_files
+          name: cuda-files
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: simple-tensorflow-serving-service
+  labels:
+    app: simple-tensorflow-serving
+spec:
+  selector:
+    app: simple-tensorflow-serving
+  ports:
+  - port: 8500
+    protocol: TCP
+    nodePort: 30010
+  type: NodePort
+---
