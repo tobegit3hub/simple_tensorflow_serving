@@ -10,4 +10,5 @@ xgboost
 mxnet
 h2o==3.18.0.8
 onnx
+onnx_mxnet
 #git+https://github.com/openscoring/openscoring-python.git

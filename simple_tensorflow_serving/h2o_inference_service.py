@@ -58,7 +58,7 @@ class H2oInferenceService(AbstractInferenceService):
     h2o.init()
 
     logger.info("Try to load the h2o model")
-    model = h2o.load_model(model_base_path)
+    model = h2o.load_model(self.model_base_path)
 
     self.model = model
     # TODO: Update the signature with readable string
