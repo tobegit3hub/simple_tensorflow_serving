@@ -27,8 +27,8 @@ def download_hdfs_moels(model_base_path):
     new_model_base_path = os.path.join("/tmp/",
                                        libhdfs_model_base_path.split("/")[-1])
     logging.info("Copy model file from {} to {}".format(
-        model_base_path, new_model_base_path))
-    tf.gfile.Copy(model_base_path, new_model_base_path, overwrite=True)
+            libhdfs_model_base_path, new_model_base_path))
+    tf.gfile.Copy(libhdfs_model_base_path, new_model_base_path, overwrite=True)
 
     return new_model_base_path
 
