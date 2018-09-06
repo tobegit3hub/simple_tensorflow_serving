@@ -60,10 +60,10 @@ Check out the dashboard in [http://127.0.0.1:8500](http://127.0.0.1:8500) in web
  
 ![dashboard](./images/dashboard.png)
 
-Generate Python client and access the model with the test dataset.
+Generate Python client and access the model with test data without coding.
 
 ```
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --gen_client="python"
+curl http://localhost:8500/v1/models/default/gen_client?language=python > client.py
 ```
 
 ```
