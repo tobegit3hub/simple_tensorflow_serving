@@ -8,8 +8,8 @@ RUN wget http://h2o-release.s3.amazonaws.com/h2o/rel-wolpert/8/h2o-3.18.0.8.zip
 RUN unzip ./h2o-3.18.0.8.zip
 RUN mv h2o-3.18.0.8/h2o.jar /tmp/
 
-ADD ./requirements.txt /
-RUN pip install -r /requirements.txt
+ADD ./requirements-gpu.txt /
+RUN pip install -r /requirements-gpu.txt
 
 ADD . /simple_tensorflow_serving/
 WORKDIR /simple_tensorflow_serving/

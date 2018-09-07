@@ -1,0 +1,13 @@
+flask
+jinja2
+pillow
+flask-cors
+requests
+uwsgi
+tensorflow-gpu>=1.0.0
+scikit-learn
+xgboost
+mxnet
+h2o==3.18.0.8
+onnx
+onnx_mxnet
