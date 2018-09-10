@@ -48,19 +48,22 @@ class OnnxInferenceService(AbstractInferenceService):
 
     # TODO: Import as needed and only once
     import mxnet as mx
-    import onnx_mxnet
+    #import onnx_mxnet
 
     # TODO: Select the available version
     epoch_number = 1
 
     # Load model
     #sym, arg_params, aux_params = mx.model.load_checkpoint(self.model_base_path, epoch_number)
-    sym, params = onnx_mxnet.import_model(self.model_base_path)
+    #sym, params = onnx_mxnet.import_model(self.model_base_path)
+    sym, arg_params, aux_params = mx.contrib.onnx.import_model(
+        self.model_base_path)
 
     # TODO: Support other inputs
     # self.mod = mx.mod.Module(symbol=sym, context=mx.cpu(), label_names=None)
+    #self.mod = mx.mod.Module(symbol=sym, data_names=['input_0'], context=mx.cpu(), label_names=None)
     self.mod = mx.mod.Module(
-        symbol=sym, data_names=['input_0'], context=mx.cpu(), label_names=None)
+        symbol=sym, data_names=['1'], context=mx.cpu(), label_names=None)
 
     self.has_signature_file = False
     self.signature_input_names = []
@@ -94,10 +97,11 @@ class OnnxInferenceService(AbstractInferenceService):
     else:
       data_shapes = [('data', (1, 2))]
       test_image = np.random.randn(1, 1, 28, 28)
-      data_shapes = [('input_0', test_image.shape)]
+      data_shapes = [('1', test_image.shape)]
 
     self.mod.bind(for_training=False, data_shapes=data_shapes)
-    self.mod.set_params(params, params, allow_missing=True, allow_extra=True)
+    self.mod.set_params(
+        arg_params, aux_params, allow_missing=True, allow_extra=True)
     if self.has_signature_file:
       self.model_graph_signature = "Inputs: {}\nOutputs: {}\n{}".format(
           self.signature_input_names, self.signature_output_names,

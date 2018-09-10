@@ -38,7 +38,7 @@ Train from <https://github.com/tobegit3hub/xgboost_examples> .
 
 ## ONNX MNIST Model
 
-Train from <https://github.com/tobegit3hub/mxnet_examples> .
+Train from <https://github.com/tobegit3hub/onnx_examples> .
 
 ## PMML IRIS
 
