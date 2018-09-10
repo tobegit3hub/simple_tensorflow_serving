@@ -130,6 +130,18 @@ input_data = {
 result = requests.post(endpoint, json=input_data)
 ```
 
+### GPU Acceleration
+
+If you want to use GPU, try with the docker image with GPU tag and put cuda files in `/usr/cuda_files/`.
+
+```
+export CUDA_SO="-v /usr/cuda_files/:/usr/cuda_files/"
+export DEVICES=$(\ls /dev/nvidia* | xargs -I{} echo '--device {}:{}')
+export LIBRARY_ENV="-e LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/cuda_files"
+
+docker run -it -p 8500:8500 $CUDA_SO $DEVICES $LIBRARY_ENV tobegit3hub/simple_tensorflow_serving:latest-gpu
+```
+
 ### Generated Client
 
 You can generate the test json data for the online models.
