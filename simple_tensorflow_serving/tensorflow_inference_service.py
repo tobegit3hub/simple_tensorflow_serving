@@ -415,8 +415,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
       # TODO: Update input data by decoding base64 string for esitmator model
       should_decode_base64 = False
-      if feed_dict_map.has_key(
-          "input_example_tensor:0") and should_decode_base64:
+      # Should not use have_key for Python 3
+      if "input_example_tensor:0" in feed_dict_map and should_decode_base64:
         final_example_strings = []
         base64_example_strings = feed_dict_map["input_example_tensor:0"]
         for base64_example_string in base64_example_strings:

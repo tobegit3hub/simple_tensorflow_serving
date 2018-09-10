@@ -301,7 +301,9 @@ def do_inference(save_file_dir=None):
   if request.content_type.startswith("application/json"):
     # Process requests with json data
     try:
-      json_data = json.loads(request.data)
+      # Get the json for Python 3 instead of get the data
+      json_data = request.json
+
       if not isinstance(json_data, dict):
         result = {"error": "Invalid json data: {}".format(request.data)}
         return result, 400

@@ -9,9 +9,11 @@ def replace_b64_in_dict(item):
   """
 
   if isinstance(item, dict):
-    for key, value in item.iteritems():
-      if isinstance(value, dict) and value.keys()[0] == "b64":
-        b64_string = value.values()[0]
+    # Use items for Python 3 instead of iteritems
+    for key, value in item.items():
+      if isinstance(value, dict) and list(value.keys())[0] == "b64":
+        # Use list to wrap .keys() and .values() for Python 3
+        b64_string = list(value.values())[0]
         # TODO: unicode string to string
         b64_string = str(b64_string)
         bytearray_string = base64.urlsafe_b64decode(b64_string)
@@ -21,8 +23,8 @@ def replace_b64_in_dict(item):
 
   elif isinstance(item, list):
     for index, value in enumerate(item):
-      if isinstance(value, dict) and value.keys()[0] == "b64":
-        b64_string = value.values()[0]
+      if isinstance(value, dict) and list(value.keys())[0] == "b64":
+        b64_string = list(value.values())[0]
         b64_string = str(b64_string)
         bytearray_string = base64.urlsafe_b64decode(b64_string)
         item[index] = bytearray_string
