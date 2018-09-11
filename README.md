@@ -142,6 +142,30 @@ export LIBRARY_ENV="-e LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64:/usr/l
 docker run -it -p 8500:8500 $CUDA_SO $DEVICES $LIBRARY_ENV tobegit3hub/simple_tensorflow_serving:latest-gpu
 ```
 
+You can set session config and gpu options in command-line parameter or the model config file.
+
+```
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --session_config='{"log_device_placement": true, "allow_soft_placement": true, "allow_growth": true, "per_process_gpu_memory_fraction": 0.5}'
+```
+
+```
+{
+  "model_config_list": [
+    {
+      "name": "default",
+      "base_path": "./models/tensorflow_template_application_model/",
+      "platform": "tensorflow",
+      "session_config": {
+        "log_device_placement": true,
+        "allow_soft_placement": true,
+        "allow_growth": true,
+        "per_process_gpu_memory_fraction": 0.5
+      }
+    }
+  ]
+}
+```
+
 ### Generated Client
 
 You can generate the test json data for the online models.

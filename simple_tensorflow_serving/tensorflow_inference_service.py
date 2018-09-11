@@ -25,7 +25,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
   The TensorFlow service to load TensorFlow SavedModel and make inference.
   """
 
-  def __init__(self, model_name, model_base_path, custom_op_paths=""):
+  def __init__(self,
+               model_name,
+               model_base_path,
+               custom_op_paths="",
+               session_config={}):
     """
     Initialize the TensorFlow service by loading SavedModel to the Session.
         
@@ -45,6 +49,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.model_version_list = []
     self.model_graph_signature = None
     self.platform = "TensorFlow"
+    self.session_config = session_config
 
     self.name_signature_map = {}
     self.preprocess_function = None
@@ -113,15 +118,12 @@ class TensorFlowInferenceService(AbstractInferenceService):
       # TODO: Add lock if needed
       # TODO: Support HDFS with TensorFlow API
       current_model_versions_string = os.listdir(self.model_base_path)
-      current_model_versions = set([
-          version_string
-          for version_string in current_model_versions_string
-      ])
+      current_model_versions = set(
+          [version_string for version_string in current_model_versions_string])
 
       old_model_versions_string = self.version_session_map.keys()
-      old_model_versions = set([
-          version_string for version_string in old_model_versions_string
-      ])
+      old_model_versions = set(
+          [version_string for version_string in old_model_versions_string])
 
       if current_model_versions == old_model_versions:
         # No version change, just sleep
@@ -149,7 +151,20 @@ class TensorFlowInferenceService(AbstractInferenceService):
           self.load_saved_model_version(model_version)
 
   def load_saved_model_version(self, model_version):
-    session = tf.Session(graph=tf.Graph())
+
+    config = tf.ConfigProto()
+    if "log_device_placement" in self.session_config:
+      config.log_device_placement = self.session_config["log_device_placement"]
+    if "allow_soft_placement" in self.session_config:
+      config.allow_soft_placement = self.session_config["allow_soft_placement"]
+    if "allow_growth" in self.session_config:
+      config.gpu_options.allow_growth = self.session_config["allow_growth"]
+    if "per_process_gpu_memory_fraction" in self.session_config:
+      config.gpu_options.per_process_gpu_memory_fraction = self.session_config[
+          "per_process_gpu_memory_fraction"]
+
+    session = tf.Session(graph=tf.Graph(), config=config)
+
     self.version_session_map[str(model_version)] = session
     self.model_version_list.append(model_version)
 
@@ -161,6 +176,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     # Get preprocess and postprocess function from collection_def
     if "preprocess_function" in meta_graph.collection_def:
+      logging.info("Load the preprocess function in graph")
       preprocess_function_string = meta_graph.collection_def[
           "preprocess_function"].bytes_list.value[0]
       loaded_function = marshal.loads(preprocess_function_string)
@@ -169,6 +185,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
                                                     "preprocess_function")
 
     if "postprocess_function" in meta_graph.collection_def:
+      logging.info("Load the postprocess function in graph")
       postrocess_function_string = meta_graph.collection_def[
           "postprocess_function"].bytes_list.value[0]
       loaded_function = marshal.loads(postrocess_function_string)
@@ -212,7 +229,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
       logger.error("No model version found")
 
   def get_all_model_versions(self):
-
     """
     if self.model_base_path.startswith("hdfs://"):
       # TODO: Support getting sub-directory from HDFS

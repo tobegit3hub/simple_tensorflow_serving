@@ -1,0 +1,15 @@
+{
+  "model_config_list": [
+    {
+      "name": "default",
+      "base_path": "./models/tensorflow_template_application_model/",
+      "platform": "tensorflow",
+      "session_config": {
+        "log_device_placement": true,
+        "allow_soft_placement": true,
+        "allow_growth": true,
+        "per_process_gpu_memory_fraction": 0.5
+      }
+    }
+  ]
+}

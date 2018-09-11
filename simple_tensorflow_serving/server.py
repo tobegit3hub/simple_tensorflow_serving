@@ -65,6 +65,8 @@ parser.add_argument(
     default="",
     help="The path of custom op so files(eg. ./)")
 parser.add_argument(
+    "--session_config", default="{}", help="The json of session config")
+parser.add_argument(
     "--debug",
     default=False,
     help="Enable debug for flask or not(eg. False)",
@@ -208,10 +210,11 @@ if args.model_config_file != "":
       model_base_path = model_config["base_path"]
       model_platform = model_config.get("platform", "tensorflow")
       custom_op_paths = model_config.get("custom_op_paths", "")
+      session_config = model_config.get("session_config", {})
 
       if model_platform == "tensorflow":
         inference_service = TensorFlowInferenceService(
-            model_name, model_base_path, custom_op_paths)
+            model_name, model_base_path, custom_op_paths, session_config)
       elif model_platform == "mxnet":
         inference_service = MxnetInferenceService(model_name, model_base_path)
       elif model_platform == "onnx":
@@ -222,8 +225,8 @@ if args.model_config_file != "":
         inference_service = ScikitlearnInferenceService(
             model_name, model_base_path)
       elif model_platform == "xgboost":
-        inference_service = XgboostInferenceService(
-            model_name, model_base_path)
+        inference_service = XgboostInferenceService(model_name,
+                                                    model_base_path)
       elif model_platform == "pmml":
         inference_service = PmmlInferenceService(model_name, model_base_path)
 
@@ -231,25 +234,28 @@ if args.model_config_file != "":
 else:
   # Read from command-line parameter
   if args.model_platform == "tensorflow":
+    session_config = json.loads(args.session_config)
     inference_service = TensorFlowInferenceService(
-        args.model_name, args.model_base_path, args.custom_op_paths)
+        args.model_name, args.model_base_path, args.custom_op_paths,
+        session_config)
   elif args.model_platform == "mxnet":
-    inference_service = MxnetInferenceService(
-        args.model_name, args.model_base_path)
+    inference_service = MxnetInferenceService(args.model_name,
+                                              args.model_base_path)
   elif args.model_platform == "h2o":
-    inference_service = H2oInferenceService(args.model_name, args.model_base_path)
+    inference_service = H2oInferenceService(args.model_name,
+                                            args.model_base_path)
   elif args.model_platform == "onnx":
-    inference_service = OnnxInferenceService(
-        args.model_name, args.model_base_path)
+    inference_service = OnnxInferenceService(args.model_name,
+                                             args.model_base_path)
   elif args.model_platform == "scikitlearn":
-    inference_service = ScikitlearnInferenceService(
-        args.model_name, args.model_base_path)
+    inference_service = ScikitlearnInferenceService(args.model_name,
+                                                    args.model_base_path)
   elif args.model_platform == "xgboost":
-    inference_service = XgboostInferenceService(
-        args.model_name, args.model_base_path)
+    inference_service = XgboostInferenceService(args.model_name,
+                                                args.model_base_path)
   elif args.model_platform == "pmml":
-    inference_service = PmmlInferenceService(
-        args.model_name, args.model_base_path)
+    inference_service = PmmlInferenceService(args.model_name,
+                                             args.model_base_path)
 
   model_name_service_map[args.model_name] = inference_service
 
