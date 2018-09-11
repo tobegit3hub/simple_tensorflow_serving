@@ -111,15 +111,16 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     while self.should_stop_all_threads == False:
       # TODO: Add lock if needed
+      # TODO: Support HDFS with TensorFlow API
       current_model_versions_string = os.listdir(self.model_base_path)
       current_model_versions = set([
-          int(version_string)
+          version_string
           for version_string in current_model_versions_string
       ])
 
       old_model_versions_string = self.version_session_map.keys()
       old_model_versions = set([
-          int(version_string) for version_string in old_model_versions_string
+          version_string for version_string in old_model_versions_string
       ])
 
       if current_model_versions == old_model_versions:
@@ -341,12 +342,12 @@ class TensorFlowInferenceService(AbstractInferenceService):
     """
 
     # Use the latest model version if not specified
-    model_version = int(json_data.get("model_version", -1))
+    model_version = json_data.get("model_version", "-1")
     input_data = json_data.get("data", "")
-    if model_version == -1:
-      for model_version_string in self.version_session_map.keys():
-        if int(model_version_string) > model_version:
-          model_version = int(model_version_string)
+
+    if model_version == "-1":
+      # TODO: Make sure it use the latest model version
+      model_version = list(self.version_session_map.keys())[-1]
 
     if str(model_version) not in self.version_session_map or input_data == "":
       logger.error("No model version: {} to serve".format(model_version))
