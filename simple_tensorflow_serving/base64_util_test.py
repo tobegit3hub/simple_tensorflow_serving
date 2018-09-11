@@ -1,6 +1,6 @@
 import base64
 
-import base64_util
+from . import base64_util
 
 test_data1 = {"inputs": {"images": {"b64": "YWJjZGVmZ2hpMTIz"}, "foo": "bar"}}
 print(test_data1)

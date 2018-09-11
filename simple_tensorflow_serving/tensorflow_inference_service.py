@@ -212,6 +212,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
   def get_all_model_versions(self):
 
+    """
     if self.model_base_path.startswith("hdfs://"):
       # TODO: Support getting sub-directory from HDFS
       #return [0]
@@ -219,7 +220,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       # hdfs://172.27.128.31:8020/user/chendihao/tensorflow_template_application/model/
       # hdfs://default/user/chendihao/tensorflow_template_application/model/
       # hdfs:///user/chendihao/tensorflow_template_application/model/
-      """
+      "
       hadoop_user_name = os.environ.get("HDFS_USER_NAME", "work")
       hadoop_enable_kerberos = os.environ.get("HDFS_ENABLE_KERBEROS", "false")
 
@@ -274,13 +275,14 @@ class TensorFlowInferenceService(AbstractInferenceService):
           model_version_path.split("/")[-1]
           for model_version_path in model_version_paths
       ]
-      """
+      "
 
       # TODO: Support only integer model version or not
       model_versions = tf.gfile.ListDirectory(self.model_base_path)
       return model_versions
 
     else:
+
       current_model_versions_string = os.listdir(self.model_base_path)
       if len(current_model_versions_string) > 0:
         model_versions = [
@@ -291,6 +293,10 @@ class TensorFlowInferenceService(AbstractInferenceService):
       else:
         logger.error("No model version found")
         return []
+    """
+
+    model_versions = tf.gfile.ListDirectory(self.model_base_path)
+    return model_versions
 
   def run_with_profiler(self, session, version, output_tensors, feed_dict):
     if version not in self.profiler_map:
