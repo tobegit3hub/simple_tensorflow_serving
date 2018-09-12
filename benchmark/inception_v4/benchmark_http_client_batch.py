@@ -21,29 +21,17 @@ def benchmark(benchmark_type):
   if benchmark_type == "simple_tensorflow_serving_flask":
     endpoint = "http://127.0.0.1:8500"
     image_b64_string = base64.urlsafe_b64encode(open("./0.jpg", "rb").read())
-    input_data = {
-      "data": {
-        "images": [image_b64_string]
-      }
-    }
+    input_data = {"data": {"images": [image_b64_string]}}
 
   elif benchmark_type == "simple_tensorflow_serving_uwsgi":
     endpoint = "http://127.0.0.1:8501"
     image_b64_string = base64.urlsafe_b64encode(open("./0.jpg", "rb").read())
-    input_data = {
-      "data": {
-        "images": [image_b64_string]
-      }
-    }
+    input_data = {"data": {"images": [image_b64_string]}}
 
   elif benchmark_type == "tensorflow_serving_restful":
     endpoint = "http://127.0.0.1:8503/v1/models/default/versions/1:predict"
     image_b64_string = base64.urlsafe_b64encode(open("./0.jpg", "rb").read())
-    input_data = {
-      "instances": [
-        {"images": image_b64_string}
-      ]
-    }
+    input_data = {"instances": [{"images": image_b64_string}]}
 
   start_time = time.time()
   for i in range(10):

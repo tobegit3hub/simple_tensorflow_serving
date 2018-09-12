@@ -7,8 +7,8 @@ def main():
 
   endpoint = "http://127.0.0.1:8500"
   input_data = {
-      "model_name": "onnx_mnist_model",
-      "model_version": 1,
+      #"model_name": "onnx_mnist_model",
+      #"model_version": 1,
       "data": {
           "data": [[[[
               1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,

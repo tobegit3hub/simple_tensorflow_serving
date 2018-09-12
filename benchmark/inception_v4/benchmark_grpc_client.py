@@ -18,7 +18,8 @@ def main():
 
   # Generate inference data
   image_b64_string = base64.urlsafe_b64encode(open("./0.jpg", "rb").read())
-  images_tensor_proto = tf.contrib.util.make_tensor_proto([image_b64_string], dtype=tf.string)
+  images_tensor_proto = tf.contrib.util.make_tensor_proto(
+      [image_b64_string], dtype=tf.string)
 
   # Create gRPC client
   channel = implementations.insecure_channel(host, port)
@@ -30,7 +31,6 @@ def main():
   if signature_name != "":
     request.model_spec.signature_name = signature_name
   request.inputs["images"].CopyFrom(images_tensor_proto)
-
 
   # Send request
   start_time = time.time()
