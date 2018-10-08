@@ -482,6 +482,7 @@ def main():
   # Start the HTTP server
   # Support multi-thread for json inference and image inference in same process
   if args.enable_ssl:
+    # Can pass ssl_context="adhoc" for auto-sign certification
     application.run(
         host=args.host, port=args.port, threaded=True, debug=args.debug, ssl_context=(args.secret_pem, args.secret_key))
   else:

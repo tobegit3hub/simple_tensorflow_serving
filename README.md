@@ -270,15 +270,27 @@ auth = requests.auth.HTTPBasicAuth("admin", "admin")
 result = requests.post(endpoint, json=input_data, auth=auth)
 ```
 
-### MXNet Model
+### TSL/SSL
 
-In addiction, it supports loading and serving the general MXNet models in standard checkpoint format. You can load the models with commands or configuration as well.
+It supports TSL/SSL and you can generate the self-sign secret files for testing.
+
+```bash
+openssl req -x509 -newkey rsa:4096 -nodes -out /tmp/secret.pem -keyout /tmp/secret.key -days 365
+```
+
+Then run the server with certification files.
+
+```bash
+simple_tensorflow_serving --enable_ssl=True --secret_pem=/tmp/secret.pem --secret_key=/tmp/secret.key --model_base_path="./models/tensorflow_template_application_model"
+```
+
+### Supported Models
+
+For MXNet models, you can load with commands and configuration like these.
 
 ```
 simple_tensorflow_serving --model_base_path="./models/mxnet_mlp/mx_mlp" --model_platform="mxnet"
 ```
-
-The clients are similar and you can implement in your favourite programming language. 
 
 ```python
 endpoint = "http://127.0.0.1:8500"
@@ -293,15 +305,11 @@ result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### ONNX Model
-
-Now it supports loading and serving the general ONNX models.
+For ONNX models, you can load with commands and configuration like these.
 
 ```
 simple_tensorflow_serving --model_base_path="./models/onnx_mnist_model/onnx_model.proto" --model_platform="onnx"
 ```
-
-The clients are similar and you can implement in your favourite programming language. 
 
 ```python
 endpoint = "http://127.0.0.1:8500"
@@ -316,9 +324,7 @@ result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### H2o Model
-
-Now it supports loading and serving the general H2o models.
+For H2o models, you can load with commands and configuration like these.
 
 ```
 # Start H2o server with "java -jar h2o.jar"
@@ -326,8 +332,6 @@ Now it supports loading and serving the general H2o models.
 simple_tensorflow_serving --model_base_path="./models/h2o_prostate_model/GLM_model_python_1525255083960_17" --model_platform="h2o"
 ```
 
-The clients are similar and you can implement in your favourite programming language. 
-
 ```python
 endpoint = "http://127.0.0.1:8500"
 input_data = {
@@ -341,9 +345,7 @@ result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### Scikit-learn Model
-
-Now it supports loading and serving the general Scikit-learn models in joblib or pickle format.
+For Scikit-learn models, you can load with commands and configuration like these.
 
 ```
 simple_tensorflow_serving --model_base_path="./models/scikitlearn_iris/model.joblib" --model_platform="scikitlearn"
@@ -351,8 +353,6 @@ simple_tensorflow_serving --model_base_path="./models/scikitlearn_iris/model.job
 simple_tensorflow_serving --model_base_path="./models/scikitlearn_iris/model.pkl" --model_platform="scikitlearn"
 ```
 
-The clients are similar and you can implement in your favourite programming language. 
-
 ```python
 endpoint = "http://127.0.0.1:8500"
 input_data = {
@@ -366,9 +366,7 @@ result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### XGBoost Model
-
-Now it supports loading and serving the general XGBoost models in bst, joblib or pickle format.
+For XGBoost models, you can load with commands and configuration like these.
 
 ```
 simple_tensorflow_serving --model_base_path="./models/xgboost_iris/model.bst" --model_platform="xgboost"
@@ -378,8 +376,6 @@ simple_tensorflow_serving --model_base_path="./models/xgboost_iris/model.joblib"
 simple_tensorflow_serving --model_base_path="./models/xgboost_iris/model.pkl" --model_platform="xgboost"
 ```
 
-The clients are similar and you can implement in your favourite programming language. 
-
 ```python
 endpoint = "http://127.0.0.1:8500"
 input_data = {
@@ -393,20 +389,13 @@ result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-
-### PMML Model
-
-Now it supports loading and serving the general PMML models.
-
-This relies on [Openscoring](https://github.com/openscoring/openscoring) and [Openscoring-Python](https://github.com/openscoring/openscoring-python) to load the models.
+For PMML models, you can load with commands and configuration like these. This relies on [Openscoring](https://github.com/openscoring/openscoring) and [Openscoring-Python](https://github.com/openscoring/openscoring-python) to load the models.
 
 ```
 java -jar ./third_party/openscoring/openscoring-server-executable-1.4-SNAPSHOT.jar
 
 simple_tensorflow_serving --model_base_path="./models/pmml_iris/DecisionTreeIris.pmml" --model_platform="pmml"
 ```
-
-The clients are similar and you can implement in your favourite programming language. 
 
 ```python
 endpoint = "http://127.0.0.1:8500"
@@ -634,7 +623,5 @@ For [simplest model](./benchmark/simplest_model/), each request only costs ~1.9 
 ![](./images/architecture.jpeg)
 
 ## Contribution
-
-Check out the C++ implementation of TensorFlow Serving in [tensorflow/serving](https://github.com/tensorflow/serving).
 
 Feel free to open an issue or send pull request for this project. It is warmly welcome to add more clients in your languages to access TensorFlow models.
