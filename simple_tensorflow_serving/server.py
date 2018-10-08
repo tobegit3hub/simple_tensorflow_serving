@@ -42,6 +42,12 @@ parser.add_argument(
 parser.add_argument(
     "--port", default=8500, help="The port of the server(eg. 8500)", type=int)
 parser.add_argument(
+    "--enable_ssl", default=False, help="If enable RESTfull API over https")
+parser.add_argument(
+    "--secret_pem", default="secret.pem", help="pem file")
+parser.add_argument(
+    "--secret_key", default="secret.key", help="key file")
+parser.add_argument(
     "--model_name",
     default="default",
     help="The name of the model(eg. default)")
@@ -475,8 +481,12 @@ def run_generate_clients():
 def main():
   # Start the HTTP server
   # Support multi-thread for json inference and image inference in same process
-  application.run(
-      host=args.host, port=args.port, threaded=True, debug=args.debug)
+  if args.enable_ssl:
+    application.run(
+        host=args.host, port=args.port, threaded=True, debug=args.debug, ssl_context=(args.secret_pem, args.secret_key))
+  else:
+    application.run(
+        host=args.host, port=args.port, threaded=True, debug=args.debug)
 
 
 if __name__ == "__main__":
