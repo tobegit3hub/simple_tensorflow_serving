@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.6.4",
+    version="0.6.5",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
