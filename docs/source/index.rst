@@ -11,10 +11,11 @@ Welcome to simple-tensorflow-serving's documentation!
    :caption: Contents:
 
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   introduction.md
+   installation.md
+   quick_start.md
+   usage.md
+   models/tensorflow.md
+   clients/python.md
+   performance
+   development.md

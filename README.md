@@ -272,7 +272,7 @@ result = requests.post(endpoint, json=input_data, auth=auth)
 
 ### TSL/SSL
 
-It supports TSL/SSL and you can generate the self-sign secret files for testing.
+It supports TSL/SSL and you can generate the self-signed secret files for testing.
 
 ```bash
 openssl req -x509 -newkey rsa:4096 -nodes -out /tmp/secret.pem -keyout /tmp/secret.key -days 365
@@ -284,7 +284,7 @@ Then run the server with certification files.
 simple_tensorflow_serving --enable_ssl=True --secret_pem=/tmp/secret.pem --secret_key=/tmp/secret.key --model_base_path="./models/tensorflow_template_application_model"
 ```
 
-### Supported Models
+## Supported Models
 
 For MXNet models, you can load with commands and configuration like these.
 

@@ -182,6 +182,7 @@ epub_title = project
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
 
+github_doc_root = 'https://github.com/tobegit3hub/simple_tensorflow_serving/tree/master/docs/'
 def setup(app):
     app.add_config_value('recommonmark_config', {
             'url_resolver': lambda url: github_doc_root + url,
