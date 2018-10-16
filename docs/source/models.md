@@ -2,6 +2,24 @@
 
 ## TensorFlow
 
+For TensorFlow models, you can load with commands and configuration like these.
+
+```
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --model_platform="tensorflow"
+```
+
+```python
+endpoint = "http://127.0.0.1:8500"
+input_data = {
+  "model_name": "default",
+  "model_version": 1,
+  "data": {
+      "data": [[12.0, 2.0]]
+  }
+}
+result = requests.post(endpoint, json=input_data)
+print(result.text)
+```
 
 ## MXNET
 

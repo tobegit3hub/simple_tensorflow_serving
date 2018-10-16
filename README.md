@@ -4,7 +4,7 @@
 
 ## Introduction
 
-Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
+Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models. Read more in <https://stfs.readthedocs.io/en/latest/>.
 
 It is the bridge for TensorFlow models and bring machine learning to any programming language, such as [Bash](./bash_client/), [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/).
 
