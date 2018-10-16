@@ -24,7 +24,7 @@ def main():
   endpoint = "http://127.0.0.1:8500"
   json_data = {"model_name": "{{ model_name }}", "data": {{ tensor_data }} }
   result = requests.post(endpoint, json=json_data)
-  print(result.text)
+  print(result.json())
 
 if __name__ == "__main__":
   main()
