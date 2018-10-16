@@ -14,8 +14,9 @@ Welcome to simple-tensorflow-serving's documentation!
    introduction.md
    installation.md
    quick_start.md
-   usage.md
-   models/tensorflow.md
-   clients/python.md
+   advanced_usage.md
+   api.md
+   models.md
+   clients.md
    performance
    development.md

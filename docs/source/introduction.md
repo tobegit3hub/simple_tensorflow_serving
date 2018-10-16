@@ -1,9 +1,8 @@
-
 # Introduction
 
-Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
+![](../../images/simple_tensorflow_serving_introduction.jpeg)
 
-It is the bridge for TensorFlow models and bring machine learning to any programming language, such as [Bash](./bash_client/), [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/).
+Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
 
 * [x] Support distributed TensorFlow models
 * [x] Support the general RESTful/HTTP APIs
@@ -18,3 +17,5 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support loading new custom op for TensorFlow models
 * [x] Support secure authentication with configurable basic auth
 * [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX/H2o/Scikit-learn/XGBoost/PMML
+
+![](../../images/dashboard.png)

@@ -1,10 +1,14 @@
-## Clients
+# Clients
+
+## Bash
 
 Here is the example client in [Bash](./bash_client/).
 
 ```
 curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
 ```
+
+## Python
 
 Here is the example client in [Python](./python_client/).
 
@@ -15,13 +19,9 @@ payload = {"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 
 result = requests.post(endpoint, json=payload)
 ```
 
-Here is the example client in [C++](./cpp_client/).
 
-Here is the example client in [Java](./java_client/).
 
-Here is the example client in [Scala](./scala_client/).
-
-Here is the example client in [Go](./go_client/).
+## Golang
 
 ```go
 endpoint := "http://127.0.0.1:8500"
@@ -32,6 +32,8 @@ dataJson, _ := json.Marshal(dataInterface)
 
 resp, err := http.Post(endpoint, "application/json", bytes.NewBuffer(dataJson))
 ```
+
+## Ruby
 
 Here is the example client in [Ruby](./ruby_client/).
 
@@ -47,6 +49,8 @@ request.body = input_data.to_json
 response = http.request(request)
 ```
 
+## JavaScript
+
 Here is the example client in [JavaScript](./javascript_client/).
 
 ```javascript
@@ -58,6 +62,8 @@ var options = {
 
 request(options, function (error, response, body) {});
 ```
+
+## PHP
 
 Here is the example client in [PHP](./php_client/).
 
@@ -83,6 +89,8 @@ curl_setopt_array($ch, array(
 $response = curl_exec($ch);
 ```
 
+## Erlang
+
 Here is the example client in [Erlang](./erlang_client/).
 
 ```erlang
@@ -94,6 +102,8 @@ httpc:request(post,
   "{\"data\": {\"keys\": [[11.0], [2.0]], \"features\": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}"
   }, [], []).
 ```
+
+## Lua
 
 Here is the example client in [Lua](./lua_client/).
 
@@ -128,9 +138,7 @@ local res, code, response_headers = http.request{
 }
 ```
 
-Here is the example client in [Rust](./swift_client/).
-
-Here is the example client in [Swift](./swift_client/).
+## Perl
 
 Here is the example client in [Perl](./perl_client/).
 
@@ -145,11 +153,7 @@ $ua = LWP::UserAgent->new;
 $response = $ua->request($req);
 ```
 
-Here is the example client in [Lisp](./swift_client/).
-
-Here is the example client in [Haskell](./swift_client/).
-
-Here is the example client in [Clojure](./clojure_client/).
+## R
 
 Here is the example client in [R](./r_client/).
 
@@ -166,7 +170,8 @@ r <- POST(endpoint, body = json_data, encode = "json")
 stop_for_status(r)
 content(r, "parsed", "text/html")
 ```
+## Postman
 
 Here is the example with Postman.
 
-![](./images/postman.png)
+![](../../images/postman.png)
