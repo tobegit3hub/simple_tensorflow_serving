@@ -23,6 +23,7 @@ from .h2o_inference_service import H2oInferenceService
 from .scikitlearn_inference_service import ScikitlearnInferenceService
 from .xgboost_inference_service import XgboostInferenceService
 from .pmml_inference_service import PmmlInferenceService
+from .spark_inference_service import SparkInferenceService
 from .service_utils import request_util
 from . import python_predict_client
 from . import base64_util
@@ -235,6 +236,8 @@ if args.model_config_file != "":
                                                     model_base_path)
       elif model_platform == "pmml":
         inference_service = PmmlInferenceService(model_name, model_base_path)
+      elif model_platform == "spark":
+        inference_service = SparkInferenceService(model_name, model_base_path)
 
       model_name_service_map[model_name] = inference_service
 else:
@@ -262,6 +265,9 @@ else:
   elif args.model_platform == "pmml":
     inference_service = PmmlInferenceService(args.model_name,
                                              args.model_base_path)
+  elif args.model_platform == "spark":
+    inference_service = SparkInferenceService(args.model_name,
+                                              args.model_base_path)
 
   model_name_service_map[args.model_name] = inference_service
 
