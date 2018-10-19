@@ -18,7 +18,7 @@ Simple TensorFlow Serving is the generic and easy-to-use serving service for mac
 * [x] Support dynamic online and offline for model versions
 * [x] Support loading new custom op for TensorFlow models
 * [x] Support secure authentication with configurable basic auth
-* [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX/H2o/Scikit-learn/XGBoost/PMML
+* [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX/H2o/Scikit-learn/XGBoost/PMML/Spark MLlib
 
 ## Installation
 
