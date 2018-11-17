@@ -19,6 +19,7 @@ from tensorflow_inference_service import TensorFlowInferenceService
 from gen_client import gen_client
 from mxnet_inference_service import MxnetInferenceService
 from onnx_inference_service import OnnxInferenceService
+from pytorch_onnx_inference_service import PytorchOnnxInferenceService
 from h2o_inference_service import H2oInferenceService
 from scikitlearn_inference_service import ScikitlearnInferenceService
 from xgboost_inference_service import XgboostInferenceService
@@ -206,6 +207,9 @@ if args.model_config_file != "":
       elif model_platform == "onnx":
         inference_service = OnnxInferenceService(model_name, model_base_path,
                                                  args.verbose)
+      elif model_platform == "pytorch_onnx":
+        inference_service = PytorchOnnxInferenceService(model_name, model_base_path,
+                                                        args.verbose)
       elif model_platform == "h2o":
         inference_service = H2oInferenceService(model_name, model_base_path,
                                                 args.verbose)
@@ -231,6 +235,9 @@ else:
                                             args.model_base_path, args.verbose)
   elif args.model_platform == "onnx":
     inference_service = OnnxInferenceService(
+        args.model_name, args.model_base_path, args.verbose)
+  elif args.model_platform == "pytorch_onnx":
+    inference_service = PytorchOnnxInferenceService(
         args.model_name, args.model_base_path, args.verbose)
   elif args.model_platform == "scikitlearn":
     inference_service = ScikitlearnInferenceService(
