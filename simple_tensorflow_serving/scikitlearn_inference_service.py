@@ -7,7 +7,11 @@ import time
 import numpy as np
 import pickle
 
-from abstract_inference_service import AbstractInferenceService
+from .abstract_inference_service import AbstractInferenceService
+from . import filesystem_util
+from . import preprocess_util
+
+logger = logging.getLogger("simple_tensorflow_serving")
 
 
 class ScikitlearnInferenceService(AbstractInferenceService):
@@ -15,7 +19,7 @@ class ScikitlearnInferenceService(AbstractInferenceService):
   The service to load Scikit-learn model and make inference.
   """
 
-  def __init__(self, model_name, model_base_path, verbose=False):
+  def __init__(self, model_name, model_base_path):
     """
     Initialize the service.
         
@@ -28,14 +32,20 @@ class ScikitlearnInferenceService(AbstractInferenceService):
 
     super(ScikitlearnInferenceService, self).__init__()
 
+    local_model_base_path = filesystem_util.download_hdfs_moels(
+        model_base_path)
+
     self.model_name = model_name
-    self.model_base_path = model_base_path
+    self.model_base_path = local_model_base_path
     self.model_version_list = [1]
     self.model_graph_signature = ""
     self.platform = "Scikit-learn"
 
+    # TODO: Download function files from HDFS if needed
+    self.preprocess_function, self.postprocess_function = preprocess_util.get_preprocess_postprocess_function_from_model_path(
+        self.model_base_path)
+
     # TODO: Import as needed and only once
-    from sklearn.pipeline import Pipeline
     from sklearn.externals import joblib
 
     # Load model
@@ -46,12 +56,10 @@ class ScikitlearnInferenceService(AbstractInferenceService):
       with open(self.model_base_path, 'r') as f:
         self.pipeline = pickle.load(f)
     else:
-      logging.error(
+      logger.error(
           "Unsupported model file format: {}".format(self.model_base_path))
 
     self.model_graph_signature = str(self.pipeline.get_params())
-
-    self.verbose = verbose
 
   def inference(self, json_data):
     """
@@ -66,19 +74,26 @@ class ScikitlearnInferenceService(AbstractInferenceService):
     """
 
     # 1. Build inference data
-    request_ndarray_data = np.array(json_data["data"])
+    input_data = json_data["data"]
+
+    if json_data.get("preprocess", "false") != "false":
+      if self.preprocess_function != None:
+        input_data = self.preprocess_function(input_data)
+        logger.debug("Preprocess to generate data: {}".format(input_data))
+      else:
+        logger.warning("No preprocess function in model")
+
+    request_ndarray_data = np.array(input_data)
 
     # 2. Do inference
-    if self.verbose:
-      start_time = time.time()
+    start_time = time.time()
 
     predict_result = self.pipeline.predict(request_ndarray_data)
     predict_proba_result = self.pipeline.predict_proba(request_ndarray_data)
     predict_log_proba_result = self.pipeline.predict_log_proba(
         request_ndarray_data)
 
-    if self.verbose:
-      logging.debug("Inference time: {} s".format(time.time() - start_time))
+    logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     # 3. Build return data
     result = {
@@ -86,8 +101,13 @@ class ScikitlearnInferenceService(AbstractInferenceService):
         "predict_proba": predict_proba_result,
         "predict_log_proba": predict_log_proba_result
     }
+    logger.debug("Inference result: {}".format(result))
 
-    if self.verbose:
-      logging.debug("Inference result: {}".format(result))
+    if json_data.get("postprocess", "false") != "false":
+      if self.postprocess_function != None:
+        result = self.postprocess_function(result)
+        logger.debug("Postprocess to generate data: {}".format(result))
+      else:
+        logger.warning("No postprocess function in model")
 
     return result

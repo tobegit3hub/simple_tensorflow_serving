@@ -1,3 +1,9 @@
+# -*- coding: utf-8 -*-
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import sys
 import io
 import os
@@ -5,6 +11,8 @@ import logging
 import base64
 import numpy as np
 from PIL import Image
+
+logger = logging.getLogger("simple_tensorflow_serving")
 
 
 def get_image_channel_layout(request_layout, support_signatures=None):
@@ -58,11 +66,11 @@ def get_image_request_data_and_options(request,
   channel_layout = get_image_channel_layout(channel_layout, support_signatures)
   if channel_layout in ["RGB", "RGBA"]:
     if channel_layout != str(image_file.mode):
-      logging.info("Convert image from %s to %s" % (image_file.mode,
+      logger.info("Convert image from %s to %s" % (image_file.mode,
                                                     channel_layout))
       image_file = image_file.convert(channel_layout)
   else:
-    logging.error("Illegal image_layout: {}".format(channel_layout))
+    logger.error("Illegal image_layout: {}".format(channel_layout))
 
   image_array = np.array(image_file)
 
@@ -91,7 +99,7 @@ def create_json_from_formdata_request(request,
     json_data["run_profile"] = request.form["run_profile"]
 
   if "image" not in request.files and "images" not in request.files:
-    logging.error("Need to set image or images for form-data")
+    logger.error("Need to set image or images for form-data")
     return None
 
   image_b64_strings = []

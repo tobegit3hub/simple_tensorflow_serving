@@ -1,4 +1,3 @@
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
@@ -10,7 +9,11 @@ import json
 import numpy as np
 from collections import namedtuple
 
-from abstract_inference_service import AbstractInferenceService
+from .abstract_inference_service import AbstractInferenceService
+from . import filesystem_util
+from . import preprocess_util
+
+logger = logging.getLogger("simple_tensorflow_serving")
 
 
 class OnnxInferenceService(AbstractInferenceService):
@@ -18,7 +21,7 @@ class OnnxInferenceService(AbstractInferenceService):
   The service to load ONNX model and make inference.
   """
 
-  def __init__(self, model_name, model_base_path, verbose=False):
+  def __init__(self, model_name, model_base_path):
     """
     Initialize the service.
         
@@ -31,27 +34,36 @@ class OnnxInferenceService(AbstractInferenceService):
 
     super(OnnxInferenceService, self).__init__()
 
+    local_model_base_path = filesystem_util.download_hdfs_moels(
+        model_base_path)
+
     self.model_name = model_name
-    self.model_base_path = model_base_path
+    self.model_base_path = local_model_base_path
     self.model_version_list = [1]
     self.model_graph_signature = ""
     self.platform = "ONNX"
 
+    self.preprocess_function, self.postprocess_function = preprocess_util.get_preprocess_postprocess_function_from_model_path(
+        self.model_base_path)
+
     # TODO: Import as needed and only once
     import mxnet as mx
-    import onnx_mxnet
+    #import onnx_mxnet
 
     # TODO: Select the available version
     epoch_number = 1
 
     # Load model
     #sym, arg_params, aux_params = mx.model.load_checkpoint(self.model_base_path, epoch_number)
-    sym, params = onnx_mxnet.import_model(self.model_base_path)
+    #sym, params = onnx_mxnet.import_model(self.model_base_path)
+    sym, arg_params, aux_params = mx.contrib.onnx.import_model(
+        self.model_base_path)
 
     # TODO: Support other inputs
     # self.mod = mx.mod.Module(symbol=sym, context=mx.cpu(), label_names=None)
+    #self.mod = mx.mod.Module(symbol=sym, data_names=['input_0'], context=mx.cpu(), label_names=None)
     self.mod = mx.mod.Module(
-        symbol=sym, data_names=['input_0'], context=mx.cpu(), label_names=None)
+        symbol=sym, data_names=['1'], context=mx.cpu(), label_names=None)
 
     self.has_signature_file = False
     self.signature_input_names = []
@@ -85,18 +97,17 @@ class OnnxInferenceService(AbstractInferenceService):
     else:
       data_shapes = [('data', (1, 2))]
       test_image = np.random.randn(1, 1, 28, 28)
-      data_shapes = [('input_0', test_image.shape)]
+      data_shapes = [('1', test_image.shape)]
 
     self.mod.bind(for_training=False, data_shapes=data_shapes)
-    self.mod.set_params(params, params, allow_missing=True, allow_extra=True)
+    self.mod.set_params(
+        arg_params, aux_params, allow_missing=True, allow_extra=True)
     if self.has_signature_file:
       self.model_graph_signature = "Inputs: {}\nOutputs: {}\n{}".format(
           self.signature_input_names, self.signature_output_names,
           self.mod.symbol.tojson())
     else:
       self.model_graph_signature = "{}".format(self.mod.symbol.tojson())
-
-    self.verbose = verbose
 
   def inference(self, json_data):
     """
@@ -140,14 +151,17 @@ class OnnxInferenceService(AbstractInferenceService):
       request_mxnet_ndarray_data = [mx.nd.array(request_ndarray_data)]
       batch_data = Batch(request_mxnet_ndarray_data)
 
+    if json_data.get("preprocess", "false") != "false":
+      if self.preprocess_function != None:
+        batch_data = self.preprocess_function(batch_data)
+        logger.debug("Preprocess to generate data: {}".format(batch_data))
+      else:
+        logger.warning("No preprocess function in model")
+
     # 2. Do inference
-    if self.verbose:
-      start_time = time.time()
-
+    start_time = time.time()
     self.mod.forward(batch_data)
-
-    if self.verbose:
-      logging.debug("Inference time: {} s".format(time.time() - start_time))
+    logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     model_outputs = self.mod.get_outputs()
 
@@ -160,7 +174,13 @@ class OnnxInferenceService(AbstractInferenceService):
       # TODO: Get the real output name from ONNX model
       #result[self.signature_output_names[i]] = model_output.asnumpy()
       result["output_{}".format(i)] = model_output.asnumpy()
+    logger.debug("Inference result: {}".format(result))
 
-    if self.verbose:
-      logging.debug("Inference result: {}".format(result))
+    if json_data.get("postprocess", "false") != "false":
+      if self.postprocess_function != None:
+        result = self.postprocess_function(result)
+        logger.debug("Postprocess to generate data: {}".format(result))
+      else:
+        logger.warning("No postprocess function in model")
+
     return result

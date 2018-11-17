@@ -1,0 +1,9 @@
+{
+  "model_config_list": [
+    {
+      "name": "default",
+      "base_path": "./models/tensorflow_template_application_model/",
+      "platform": "tensorflow"
+    }
+  ]
+}

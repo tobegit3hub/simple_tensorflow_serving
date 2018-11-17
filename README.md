@@ -4,9 +4,7 @@
 
 ## Introduction
 
-Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models.
-
-It is the bridge for TensorFlow models and bring machine learning to any programming language, such as [Bash](./bash_client/), [Python](./python_client/), [C++](./cpp_client/), [Java](./java_client/), [Scala](./scala_client/), [Go](./go_client/), [Ruby](./ruby_client), [JavaScript](./javascript_client/), [PHP](./php_client/), [Erlang](./erlang_client/), [Lua](./lua_client/), [Rust](./rust_client/), [Swift](./swift_client/), [Perl](./perl_client/), [Lisp](./lisp_client/), [Haskell](./haskell_client/), [Clojure](./clojure_client/), [R](./r_client/).
+Simple TensorFlow Serving is the generic and easy-to-use serving service for machine learning models. Read more in <https://stfs.readthedocs.io>.
 
 * [x] Support distributed TensorFlow models
 * [x] Support the general RESTful/HTTP APIs
@@ -20,39 +18,53 @@ It is the bridge for TensorFlow models and bring machine learning to any program
 * [x] Support dynamic online and offline for model versions
 * [x] Support loading new custom op for TensorFlow models
 * [x] Support secure authentication with configurable basic auth
-* [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX/H2o/Scikit-learn/XGBoost
+* [x] Support multiple models of TensorFlow/MXNet/PyTorch/Caffe2/CNTK/ONNX/H2o/Scikit-learn/XGBoost/PMML/Spark MLlib
 
 ## Installation
 
 Install the server with [pip](https://pypi.python.org/pypi/simple-tensorflow-serving).
 
-```
+```bash
 pip install simple_tensorflow_serving
-```
-
-Or install with [bazel](https://bazel.build/).
-
-```
-bazel build simple_tensorflow_serving:server
 ```
 
 Or install from [source code](https://github.com/tobegit3hub/simple_tensorflow_serving).
 
-```
+```bash
 python ./setup.py install
+
+python ./setup.py develop
+
+bazel build simple_tensorflow_serving:server
 ```
 
-Or use [docker image](https://hub.docker.com/r/tobegit3hub/simple_tensorflow_serving/).
+Or use the [docker image](https://hub.docker.com/r/tobegit3hub/simple_tensorflow_serving/).
 
-```
+```bash
 docker run -d -p 8500:8500 tobegit3hub/simple_tensorflow_serving
+
+docker run -d -p 8500:8500 tobegit3hub/simple_tensorflow_serving:latest-gpu
+
+docker run -d -p 8500:8500 tobegit3hub/simple_tensorflow_serving:latest-hdfs
+
+docker run -d -p 8500:8500 tobegit3hub/simple_tensorflow_serving:latest-py34
+```
+
+````bash
+docker-compose up -d
+````
+
+Or deploy in [Kubernetes](https://kubernetes.io/).
+
+```bash
+kubectl create -f ./simple_tensorflow_serving.yaml
 ```
 
 ## Quick Start
 
 Start the server with the TensorFlow [SavedModel](https://www.tensorflow.org/programmers_guide/saved_model).
 
-```
+```bash
 simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model"
 ```
 
@@ -60,13 +72,13 @@ Check out the dashboard in [http://127.0.0.1:8500](http://127.0.0.1:8500) in web
  
 ![dashboard](./images/dashboard.png)
 
-Generate Python client and access the model with the test dataset.
+Generate Python client and access the model with test data without coding.
 
-```
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --gen_client="python"
+```bash
+curl http://localhost:8500/v1/models/default/gen_client?language=python > client.py
 ```
 
-```
+```bash
 python ./client.py
 ```
 
@@ -76,7 +88,7 @@ python ./client.py
 
 It supports serve multiple models and multiple versions of these models. You can run the server with this configuration.
 
-```
+```json
 {
   "model_config_list": [
     {
@@ -96,13 +108,13 @@ It supports serve multiple models and multiple versions of these models. You can
 }
 ```
 
-```
+```bash
 simple_tensorflow_serving --model_config_file="./examples/model_config_file.json"
 ```
 
 Adding or removing model versions will be detected automatically and re-load latest files in memory. You can easily choose the specified model and version for inference.
 
-```
+```json
 endpoint = "http://127.0.0.1:8500"
 input_data = {
   "model_name": "default",
@@ -116,24 +128,74 @@ input_data = {
 result = requests.post(endpoint, json=input_data)
 ```
 
+### GPU Acceleration
+
+If you want to use GPU, try with the docker image with GPU tag and put cuda files in `/usr/cuda_files/`.
+
+```bash
+export CUDA_SO="-v /usr/cuda_files/:/usr/cuda_files/"
+export DEVICES=$(\ls /dev/nvidia* | xargs -I{} echo '--device {}:{}')
+export LIBRARY_ENV="-e LD_LIBRARY_PATH=/usr/local/cuda/extras/CUPTI/lib64:/usr/local/nvidia/lib:/usr/local/nvidia/lib64:/usr/cuda_files"
+
+docker run -it -p 8500:8500 $CUDA_SO $DEVICES $LIBRARY_ENV tobegit3hub/simple_tensorflow_serving:latest-gpu
+```
+
+You can set session config and gpu options in command-line parameter or the model config file.
+
+```bash
+simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model" --session_config='{"log_device_placement": true, "allow_soft_placement": true, "allow_growth": true, "per_process_gpu_memory_fraction": 0.5}'
+```
+
+```json
+{
+  "model_config_list": [
+    {
+      "name": "default",
+      "base_path": "./models/tensorflow_template_application_model/",
+      "platform": "tensorflow",
+      "session_config": {
+        "log_device_placement": true,
+        "allow_soft_placement": true,
+        "allow_growth": true,
+        "per_process_gpu_memory_fraction": 0.5
+      }
+    }
+  ]
+}
+```
+
 ### Generated Client
 
-You can generate clients in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
+You can generate the test json data for the online models.
 
-```
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client bash
+```bash
+curl http://localhost:8500/v1/models/default/gen_json
 ```
 
-```
-simple_tensorflow_serving --model_base_path="./models/tensorflow_template_application_model/" --gen_client python
+Or generate clients in different languages(Bash, Python, Golang, JavaScript etc.) for your model without writing any code.
+
+```bash
+curl http://localhost:8500/v1/models/default/gen_client?language=python > client.py
+curl http://localhost:8500/v1/models/default/gen_client?language=bash > client.sh
+curl http://localhost:8500/v1/models/default/gen_client?language=golang > client.go
+curl http://localhost:8500/v1/models/default/gen_client?language=javascript > client.js
 ```
 
 The generated code should look like these which can be test immediately.
 
-```
-#!/bin/bash
+```python
+#!/usr/bin/env python
 
-curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [1.0]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]} }' http://127.0.0.1:8500
+import requests
+
+def main():
+  endpoint = "http://127.0.0.1:8500"
+  json_data = {"model_name": "default", "data": {"keys": [[1], [1]], "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]]} }
+  result = requests.post(endpoint, json=json_data)
+  print(result.text)
+
+if __name__ == "__main__":
+  main()
 ```
 
 ```python
@@ -158,13 +220,13 @@ For image models, we can request with the raw image files instead of constructin
 
 Now start serving the image model like [deep_image_model](https://github.com/tobegit3hub/deep_image_model).
 
-```
+```bash
 simple_tensorflow_serving --model_base_path="./models/deep_image_model/"
 ```
 
 Then request with the raw image file which has the same shape of your model.
 
-```
+```bash
 curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
 ```
 
@@ -172,7 +234,7 @@ curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
 
 If your models rely on new TensorFlow [custom op](https://www.tensorflow.org/extend/adding_an_op), you can run the server while loading the so files.
 
-```
+```bash
 simple_tensorflow_serving --model_base_path="./model/" --custom_op_paths="./foo_op/"
 ```
 
@@ -184,13 +246,13 @@ For enterprises, we can enable basic auth for all the APIs and any anonymous req
 
 Now start the server with the configured username and password.
 
-```
+```bash
 ./server.py --model_base_path="./models/tensorflow_template_application_model/" --enable_auth=True --auth_username="admin" --auth_password="admin"
 ```
 
 If you are using the Web dashboard, just type your certification. If you are using clients, give the username and password within the request.
 
-```
+```bash
 curl -u admin:admin -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[11.0], [2.0]], "features": [[1, 1, 1, 1, 1, 1, 1, 1, 1], [1, 1, 1, 1, 1, 1, 1, 1, 1]]}}' http://127.0.0.1:8500
 ```
 
@@ -206,15 +268,27 @@ auth = requests.auth.HTTPBasicAuth("admin", "admin")
 result = requests.post(endpoint, json=input_data, auth=auth)
 ```
 
-### MXNet Model
+### TSL/SSL
 
-In addiction, it supports loading and serving the general MXNet models in standard checkpoint format. You can load the models with commands or configuration as well.
+It supports TSL/SSL and you can generate the self-signed secret files for testing.
 
+```bash
+openssl req -x509 -newkey rsa:4096 -nodes -out /tmp/secret.pem -keyout /tmp/secret.key -days 365
 ```
+
+Then run the server with certification files.
+
+```bash
+simple_tensorflow_serving --enable_ssl=True --secret_pem=/tmp/secret.pem --secret_key=/tmp/secret.key --model_base_path="./models/tensorflow_template_application_model"
+```
+
+## Supported Models
+
+For MXNet models, you can load with commands and configuration like these.
+
+```bash
 simple_tensorflow_serving --model_base_path="./models/mxnet_mlp/mx_mlp" --model_platform="mxnet"
 ```
-
-The clients are similar and you can implement in your favourite programming language. 
 
 ```python
 endpoint = "http://127.0.0.1:8500"
@@ -229,15 +303,11 @@ result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### ONNX Model
+For ONNX models, you can load with commands and configuration like these.
 
-Now it supports loading and serving the general ONNX models.
-
-```
+```bash
 simple_tensorflow_serving --model_base_path="./models/onnx_mnist_model/onnx_model.proto" --model_platform="onnx"
 ```
-
-The clients are similar and you can implement in your favourite programming language. 
 
 ```python
 endpoint = "http://127.0.0.1:8500"
@@ -245,68 +315,58 @@ input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### H2o Model
+For H2o models, you can load with commands and configuration like these.
 
-Now it supports loading and serving the general H2o models.
-
-```
+```bash
 # Start H2o server with "java -jar h2o.jar"
 
 simple_tensorflow_serving --model_base_path="./models/h2o_prostate_model/GLM_model_python_1525255083960_17" --model_platform="h2o"
 ```
 
-The clients are similar and you can implement in your favourite programming language. 
-
 ```python
 endpoint = "http://127.0.0.1:8500"
 input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### Scikit-learn Model
+For Scikit-learn models, you can load with commands and configuration like these.
 
-Now it supports loading and serving the general Scikit-learn models in joblib or pickle format.
-
-```
+```bash
 simple_tensorflow_serving --model_base_path="./models/scikitlearn_iris/model.joblib" --model_platform="scikitlearn"
 
 simple_tensorflow_serving --model_base_path="./models/scikitlearn_iris/model.pkl" --model_platform="scikitlearn"
 ```
 
-The clients are similar and you can implement in your favourite programming language. 
-
 ```python
 endpoint = "http://127.0.0.1:8500"
 input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
-### Scikit-learn Model
+For XGBoost models, you can load with commands and configuration like these.
 
-Now it supports loading and serving the general XGBoost models in bst, joblib or pickle format.
-
-```
+```bash
 simple_tensorflow_serving --model_base_path="./models/xgboost_iris/model.bst" --model_platform="xgboost"
 
 simple_tensorflow_serving --model_base_path="./models/xgboost_iris/model.joblib" --model_platform="xgboost"
@@ -314,7 +374,26 @@ simple_tensorflow_serving --model_base_path="./models/xgboost_iris/model.joblib"
 simple_tensorflow_serving --model_base_path="./models/xgboost_iris/model.pkl" --model_platform="xgboost"
 ```
 
-The clients are similar and you can implement in your favourite programming language. 
+```python
+endpoint = "http://127.0.0.1:8500"
+input_data = {
+  "model_name": "default",
+  "model_version": 1,
+  "data": {
+      "data": [[...]]
+  }
+}
+result = requests.post(endpoint, json=input_data)
+print(result.text)
+```
+
+For PMML models, you can load with commands and configuration like these. This relies on [Openscoring](https://github.com/openscoring/openscoring) and [Openscoring-Python](https://github.com/openscoring/openscoring-python) to load the models.
+
+```bash
+java -jar ./third_party/openscoring/openscoring-server-executable-1.4-SNAPSHOT.jar
+
+simple_tensorflow_serving --model_base_path="./models/pmml_iris/DecisionTreeIris.pmml" --model_platform="pmml"
+```
 
 ```python
 endpoint = "http://127.0.0.1:8500"
@@ -322,18 +401,19 @@ input_data = {
   "model_name": "default",
   "model_version": 1,
   "data": {
-      "data": [[[[...]]]]
+      "data": [[...]]
   }
 }
 result = requests.post(endpoint, json=input_data)
 print(result.text)
 ```
 
+
 ## Supported Client
 
 Here is the example client in [Bash](./bash_client/).
 
-```
+```bash
 curl -H "Content-Type: application/json" -X POST -d '{"data": {"keys": [[1.0], [2.0]], "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}}' http://127.0.0.1:8500
 ```
 
@@ -502,6 +582,23 @@ Here is the example with Postman.
 
 ![](./images/postman.png)
 
+
+## Performance
+
+You can run SimpleTensorFlowServing with any WSGI server for better performance. We have benchmarked and compare with `TensorFlow Serving`. Find more details in [benchmark](./benchmark/).
+
+STFS(Simple TensorFlow Serving) and TFS(TensorFlow Serving) have similar performances for different models. Vertical coordinate is inference latency(microsecond) and the less is better.
+
+![](./images/benchmark_latency.jpeg)
+
+Then we test with `ab` with concurrent clients in CPU and GPU. `TensorFlow Serving` works better especially with GPUs.
+
+![](./images/benchmark_concurrency.jpeg)
+
+For [simplest model](./benchmark/simplest_model/), each request only costs ~1.9 microseconds and one instance of Simple TensorFlow Serving can achieve 5000+ QPS. With larger batch size, it can inference more than 1M instances per second.
+
+![](./images/benchmark_batch_size.jpeg)
+
 ## How It Works
 
 1. `simple_tensorflow_serving` starts the HTTP server with `flask` application.
@@ -512,8 +609,8 @@ Here is the example with Postman.
    {
      "model_version": 1, // Optional
      "data": {
-       "keys": [[1.0], [2.0]],
-       "features": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]
+       "keys": [[1], [2]],
+       "features": [[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0], [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0]]
      }
    }
    ```
@@ -524,7 +621,5 @@ Here is the example with Postman.
 ![](./images/architecture.jpeg)
 
 ## Contribution
-
-Check out the C++ implementation of TensorFlow Serving in [tensorflow/serving](https://github.com/tensorflow/serving).
 
 Feel free to open an issue or send pull request for this project. It is warmly welcome to add more clients in your languages to access TensorFlow models.

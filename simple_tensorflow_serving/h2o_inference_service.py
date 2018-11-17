@@ -1,16 +1,18 @@
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import logging
 import os
+import logging
 import time
 import json
-import numpy as np
-from collections import namedtuple
+import subprocess
 
-from abstract_inference_service import AbstractInferenceService
+from .abstract_inference_service import AbstractInferenceService
+from . import filesystem_util
+from . import preprocess_util
+
+logger = logging.getLogger("simple_tensorflow_serving")
 
 
 class H2oInferenceService(AbstractInferenceService):
@@ -18,7 +20,7 @@ class H2oInferenceService(AbstractInferenceService):
   The H2O service to load H2O model and make inference.
   """
 
-  def __init__(self, model_name, model_base_path, verbose=False):
+  def __init__(self, model_name, model_base_path):
     """
     Initialize the service.
         
@@ -30,20 +32,33 @@ class H2oInferenceService(AbstractInferenceService):
     """
     super(H2oInferenceService, self).__init__()
 
+    # Start the h2o server
+    if os.path.isfile("/tmp/h2o.jar"):
+      logging.info("Run to run command 'java -jar /tmp/h2o.jar'")
+      subprocess.Popen(["java", "-jar", "/tmp/h2o.jar"])
+
+      logging.info("Sleep 10s to wait for h2o server")
+      time.sleep(10)
+
+    local_model_base_path = filesystem_util.download_hdfs_moels(
+        model_base_path)
+
     self.model_name = model_name
-    self.model_base_path = model_base_path
+    self.model_base_path = local_model_base_path
     self.model_version_list = [1]
     self.model_graph_signature = ""
     self.platform = "H2o"
-    self.verbose = verbose
+
+    self.preprocess_function, self.postprocess_function = preprocess_util.get_preprocess_postprocess_function_from_model_path(
+        self.model_base_path)
 
     import h2o
 
-    logging.info("Try to initialize and connect the h2o server")
+    logger.info("Try to initialize and connect the h2o server")
     h2o.init()
 
-    logging.info("Try to load the h2o model")
-    model = h2o.load_model(model_base_path)
+    logger.info("Try to load the h2o model")
+    model = h2o.load_model(self.model_base_path)
 
     self.model = model
     # TODO: Update the signature with readable string
@@ -68,8 +83,15 @@ class H2oInferenceService(AbstractInferenceService):
     # 2. Do inference
     request_ndarray_data = json_data["data"]["data"]
 
-    if self.verbose:
-      start_time = time.time()
+    if json_data.get("preprocess", "false") != "false":
+      if self.preprocess_function != None:
+        request_ndarray_data = self.preprocess_function(request_ndarray_data)
+        logger.debug(
+            "Preprocess to generate data: {}".format(request_ndarray_data))
+      else:
+        logger.warning("No preprocess function in model")
+
+    start_time = time.time()
 
     df = pd.read_json(json.dumps(request_ndarray_data), orient="index")
 
@@ -82,15 +104,20 @@ class H2oInferenceService(AbstractInferenceService):
     #performance = self.model.model_performance(test)
     #performance.show()
 
-    if self.verbose:
-      logging.debug("Inference time: {} s".format(time.time() - start_time))
+    logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     result_df = predictions.as_data_frame()
     result_string = result_df.to_json(orient='index')
 
     # 3. Build return data
     result = json.loads(result_string)
+    logger.debug("Inference result: {}".format(result))
 
-    if self.verbose:
-      logging.debug("Inference result: {}".format(result))
+    if json_data.get("postprocess", "false") != "false":
+      if self.postprocess_function != None:
+        result = self.postprocess_function(result)
+        logger.debug("Postprocess to generate data: {}".format(result))
+      else:
+        logger.warning("No postprocess function in model")
+
     return result

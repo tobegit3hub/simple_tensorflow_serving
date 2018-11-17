@@ -15,21 +15,21 @@ import numpy as np
 from flask import Flask, Response, jsonify, render_template, request
 from flask_cors import CORS
 
-from tensorflow_inference_service import TensorFlowInferenceService
-from gen_client import gen_client
-from mxnet_inference_service import MxnetInferenceService
-from onnx_inference_service import OnnxInferenceService
-from pytorch_onnx_inference_service import PytorchOnnxInferenceService
-from h2o_inference_service import H2oInferenceService
-from scikitlearn_inference_service import ScikitlearnInferenceService
-from xgboost_inference_service import XgboostInferenceService
-from service_utils import request_util
-import python_predict_client
+from .tensorflow_inference_service import TensorFlowInferenceService
+from .gen_client import gen_client
+from .mxnet_inference_service import MxnetInferenceService
+from .onnx_inference_service import OnnxInferenceService
+from .pytorch_onnx_inference_service import PytorchOnnxInferenceService
+from .h2o_inference_service import H2oInferenceService
+from .scikitlearn_inference_service import ScikitlearnInferenceService
+from .xgboost_inference_service import XgboostInferenceService
+from .pmml_inference_service import PmmlInferenceService
+from .spark_inference_service import SparkInferenceService
+from .service_utils import request_util
+from . import python_predict_client
+from . import base64_util
 
-logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
-    level=logging.INFO,
-    datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger("simple_tensorflow_serving")
 
 # Define parameters
 parser = argparse.ArgumentParser()
@@ -43,6 +43,12 @@ parser.add_argument(
     "--host", default="0.0.0.0", help="The host of the server(eg. 0.0.0.0)")
 parser.add_argument(
     "--port", default=8500, help="The port of the server(eg. 8500)", type=int)
+parser.add_argument(
+    "--enable_ssl", default=False, help="If enable RESTfull API over https")
+parser.add_argument(
+    "--secret_pem", default="secret.pem", help="pem file")
+parser.add_argument(
+    "--secret_key", default="secret.key", help="key file")
 parser.add_argument(
     "--model_name",
     default="default",
@@ -67,10 +73,14 @@ parser.add_argument(
     default="",
     help="The path of custom op so files(eg. ./)")
 parser.add_argument(
-    "--verbose",
-    default=True,
-    help="Enable verbose log or not(eg. True)",
+    "--session_config", default="{}", help="The json of session config")
+parser.add_argument(
+    "--debug",
+    default=False,
+    help="Enable debug for flask or not(eg. False)",
     type=bool)
+parser.add_argument(
+    "--log_level", default="info", help="The log level(eg. info)")
 parser.add_argument(
     "--gen_client", default="", help="Generate the client code(eg. python)")
 parser.add_argument(
@@ -109,11 +119,22 @@ else:
   args = parser.parse_args(sys.argv[1:])
 
   for arg in vars(args):
-    logging.info("{}: {}".format(arg, getattr(args, arg)))
+    logger.info("{}: {}".format(arg, getattr(args, arg)))
 
   if args.enable_colored_log:
     import coloredlogs
     coloredlogs.install()
+
+if args.log_level == "info" or args.log_level == "INFO":
+  logger.setLevel(logging.INFO)
+elif args.log_level == "debug" or args.log_level == "DEBUG":
+  logger.setLevel(logging.DEBUG)
+elif args.log_level == "error" or args.log_level == "ERROR":
+  logger.setLevel(logging.ERROR)
+elif args.log_level == "warning" or args.log_level == "WARNING":
+  logger.setLevel(logging.WARNING)
+elif args.log_level == "critical" or args.log_level == "CRITICAL":
+  logger.setLevel(logging.CRITICAL)
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -197,58 +218,66 @@ if args.model_config_file != "":
       model_base_path = model_config["base_path"]
       model_platform = model_config.get("platform", "tensorflow")
       custom_op_paths = model_config.get("custom_op_paths", "")
+      session_config = model_config.get("session_config", {})
 
       if model_platform == "tensorflow":
         inference_service = TensorFlowInferenceService(
-            model_name, model_base_path, custom_op_paths, args.verbose)
+            model_name, model_base_path, custom_op_paths, session_config)
       elif model_platform == "mxnet":
-        inference_service = MxnetInferenceService(model_name, model_base_path,
-                                                  args.verbose)
+        inference_service = MxnetInferenceService(model_name, model_base_path)
       elif model_platform == "onnx":
-        inference_service = OnnxInferenceService(model_name, model_base_path,
-                                                 args.verbose)
+        inference_service = OnnxInferenceService(model_name, model_base_path)
       elif model_platform == "pytorch_onnx":
-        inference_service = PytorchOnnxInferenceService(model_name, model_base_path,
-                                                        args.verbose)
+        inference_service = PytorchOnnxInferenceService(model_name, model_base_path)
       elif model_platform == "h2o":
-        inference_service = H2oInferenceService(model_name, model_base_path,
-                                                args.verbose)
+        inference_service = H2oInferenceService(model_name, model_base_path)
       elif model_platform == "scikitlearn":
         inference_service = ScikitlearnInferenceService(
-            model_name, model_base_path, arg.verbose)
+            model_name, model_base_path)
       elif model_platform == "xgboost":
-        inference_service = XgboostInferenceService(
-            model_name, model_base_path, arg.verbose)
+        inference_service = XgboostInferenceService(model_name,
+                                                    model_base_path)
+      elif model_platform == "pmml":
+        inference_service = PmmlInferenceService(model_name, model_base_path)
+      elif model_platform == "spark":
+        inference_service = SparkInferenceService(model_name, model_base_path)
 
       model_name_service_map[model_name] = inference_service
 else:
   # Read from command-line parameter
   if args.model_platform == "tensorflow":
+    session_config = json.loads(args.session_config)
     inference_service = TensorFlowInferenceService(
         args.model_name, args.model_base_path, args.custom_op_paths,
-        args.verbose)
+        session_config)
   elif args.model_platform == "mxnet":
-    inference_service = MxnetInferenceService(
-        args.model_name, args.model_base_path, args.verbose)
+    inference_service = MxnetInferenceService(args.model_name,
+                                              args.model_base_path)
   elif args.model_platform == "h2o":
     inference_service = H2oInferenceService(args.model_name,
-                                            args.model_base_path, args.verbose)
+                                            args.model_base_path)
   elif args.model_platform == "onnx":
-    inference_service = OnnxInferenceService(
-        args.model_name, args.model_base_path, args.verbose)
+    inference_service = OnnxInferenceService(args.model_name,
+                                             args.model_base_path)
   elif args.model_platform == "pytorch_onnx":
-    inference_service = PytorchOnnxInferenceService(
-        args.model_name, args.model_base_path, args.verbose)
+    inference_service = PytorchOnnxInferenceService(args.model_name,
+                                                    args.model_base_path)
   elif args.model_platform == "scikitlearn":
-    inference_service = ScikitlearnInferenceService(
-        args.model_name, args.model_base_path, args.verbose)
+    inference_service = ScikitlearnInferenceService(args.model_name,
+                                                    args.model_base_path)
   elif args.model_platform == "xgboost":
-    inference_service = XgboostInferenceService(
-        args.model_name, args.model_base_path, args.verbose)
+    inference_service = XgboostInferenceService(args.model_name,
+                                                args.model_base_path)
+  elif args.model_platform == "pmml":
+    inference_service = PmmlInferenceService(args.model_name,
+                                             args.model_base_path)
+  elif args.model_platform == "spark":
+    inference_service = SparkInferenceService(args.model_name,
+                                              args.model_base_path)
 
   model_name_service_map[args.model_name] = inference_service
 
-# Generate client code and exit or not
+# TODO(Deprecated): Generate client code and exit or not
 if args.gen_client != "":
   if args.model_platform == "tensorflow":
     inference_service = model_name_service_map[args.model_name]
@@ -261,7 +290,7 @@ if args.gen_client != "":
 if args.reload_models == "True" or args.reload_models == "true":
   for model_name, inference_service in model_name_service_map.items():
     if inference_service.platform == "tensorflow":
-      inference_service.dynmaically_reload_models()
+      inference_service.dynamically_reload_models()
 
 
 # The API to render the dashboard page
@@ -276,36 +305,68 @@ def index():
 @application.route("/", methods=["POST"])
 @requires_auth
 def inference():
-  result = do_inference()
+  json_result, status_code = do_inference()
   # TODO: Change the decoder for numpy data
-  return jsonify(json.loads(json.dumps(result, cls=NumpyEncoder)))
+  response = jsonify(json.loads(json.dumps(json_result, cls=NumpyEncoder)))
+  response.status_code = status_code
+  return response
 
 
 def do_inference(save_file_dir=None):
+  """
+  Args:
+    save_file_dir: Path to save data.
+
+  Return:
+    json_data: The inference result or error message.
+    status code: The HTTP response code.
+  """
 
   if request.content_type.startswith("application/json"):
     # Process requests with json data
-    json_data = json.loads(request.data)
+    try:
+      # Get the json for Python 3 instead of get the data
+      json_data = request.json
 
+      if not isinstance(json_data, dict):
+        result = {"error": "Invalid json data: {}".format(request.data)}
+        return result, 400
+    except Exception as e:
+      result = {"error": "Invalid json data: {}".format(request.data)}
+      return result, 400
   elif request.content_type.startswith("multipart/form-data"):
     # Process requests with raw image
-    json_data = request_util.create_json_from_formdata_request(
-        request, args.download_inference_images, save_file_dir=save_file_dir)
-
+    try:
+      json_data = request_util.create_json_from_formdata_request(
+          request, args.download_inference_images, save_file_dir=save_file_dir)
+    except Exception as e:
+      result = {"error": "Invalid form-data: {}".format(e)}
+      return result, 400
   else:
-    logging.error("Unsupported content type: {}".format(request.content_type))
-    return "Error, unsupported content type"
+    logger.error("Unsupported content type: {}".format(request.content_type))
+    return {"error": "Error, unsupported content type"}, 400
 
   if "model_name" in json_data:
-    model_name = json_data.get("model_name", "")
-    if model_name == "":
-      logging.error("The model does not exist: {}".format(model_name))
+    model_name = json_data.get("model_name")
   else:
     model_name = "default"
 
-  inferenceService = model_name_service_map[model_name]
-  result = inferenceService.inference(json_data)
-  return result
+  if model_name in model_name_service_map:
+    try:
+      inferenceService = model_name_service_map[model_name]
+      # Decode base64 string and modify request json data
+      base64_util.replace_b64_in_dict(json_data)
+      result = inferenceService.inference(json_data)
+      return result, 200
+    except Exception as e:
+      result = {"error": "Inference error {}: {}".format(type(e), e)}
+      return result, 400
+  else:
+    return {
+        "error":
+        "Invalid model name: {}, available models: {}".format(
+            model_name, model_name_service_map.keys())
+    }, 400
 
 
 @application.route('/health', methods=["GET"])
@@ -327,7 +388,7 @@ def run_image_inference():
   file = request.files['image']
   image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
                                  file.filename)
-   
+
   return render_template(
       'image_inference.html',
       image_file_path=image_file_path,
@@ -341,6 +402,10 @@ def json_inference():
 
 @application.route('/run_json_inference', methods=['POST'])
 def run_json_inference():
+  # TODO: Fail to parse u'{\r\n  "inputs": [\'\\n\\x1f\\n\\x0e\\n\\x01a\\x12\\t\\n\\x07\\n\\x05hello\\n\\r\\n\\x01b\\x12\\x08\\x12\\x06\\n\\x04\\x00\\x00\\x00?\']\r\n}\r\n          '
+  # {
+  # "inputs": ['\n\x1f\n\x0e\n\x01a\x12\t\n\x07\n\x05hello\n\r\n\x01b\x12\x08\x12\x06\n\x04\x00\x00\x00?']
+  #}
   json_data_string = request.form["json_data"]
   json_data = json.loads(json_data_string)
   model_name = request.form["model_name"]
@@ -408,10 +473,33 @@ def gen_example_client(model_name):
   return example_client_string
 
 
+@application.route("/generate_clients", methods=["GET"])
+def generate_clients():
+  return render_template('generate_clients.html')
+
+
+@application.route("/run_generate_clients", methods=['POST'])
+def run_generate_clients():
+  model_name = request.form["model_name"]
+  signature_name = request.form["signature_name"]
+  language = request.form["language"]
+
+  result = python_predict_client.get_gen_json_and_clients(
+      model_name, signature_name, language, port=args.port)
+
+  return render_template("generate_clients.html", result=result)
+
+
 def main():
   # Start the HTTP server
   # Support multi-thread for json inference and image inference in same process
-  application.run(host=args.host, port=args.port, threaded=True)
+  if args.enable_ssl:
+    # Can pass ssl_context="adhoc" for auto-sign certification
+    application.run(
+        host=args.host, port=args.port, threaded=True, debug=args.debug, ssl_context=(args.secret_pem, args.secret_key))
+  else:
+    application.run(
+        host=args.host, port=args.port, threaded=True, debug=args.debug)
 
 
 if __name__ == "__main__":
