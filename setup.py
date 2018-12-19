@@ -20,6 +20,7 @@ setup(
         'jinja2',
         'flask-cors',
         'requests',
+        'pillow',
         'tensorflow'
     ],
     #package_data={
