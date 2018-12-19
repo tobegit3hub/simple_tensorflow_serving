@@ -16,6 +16,8 @@ setup(
     install_requires=[
         'pandas',
         'numpy',
+        'protobuf',
+        'onnx',
         'flask',
         'jinja2',
         'flask-cors',
