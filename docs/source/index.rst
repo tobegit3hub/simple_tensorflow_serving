@@ -18,5 +18,6 @@ Welcome to simple-tensorflow-serving's documentation!
    api.md
    models.md
    clients.md
+   image_model.md
    performance
    development.md
