@@ -397,6 +397,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
       input_tensor_name = input_item[1].name
 
       # Example: {"Placeholder_0": [[1.0], [2.0]], "Placeholder_1:0": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}
+      if input_op_name not in input_data:
+        raise Exception("Input op name '{}' does not in input data: {}".format(input_op_name, input_data))
       feed_dict_map[input_tensor_name] = input_data[input_op_name]
 
     # 2. Build inference operators
@@ -448,7 +450,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
           final_example_strings.append(final_example_string)
         feed_dict_map["input_example_tensor:0"] = final_example_strings
 
-      result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
+      try:
+        result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
+      except Exception as e:
+        logging.warn("Fail to run with output_tensor_names: {}, feed_dict_map: {}".format(output_tensor_names, feed_dict_map))
+        raise Exception("Sess.run() fail because of {}, please check shape of input".format(e.message))
 
     logger.debug("Inference time: {} s".format(time.time() - start_time))
 

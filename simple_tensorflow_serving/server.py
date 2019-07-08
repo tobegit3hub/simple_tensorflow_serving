@@ -354,12 +354,15 @@ def do_inference(save_file_dir=None):
   if model_name in model_name_service_map:
     try:
       inferenceService = model_name_service_map[model_name]
+
       # Decode base64 string and modify request json data
       base64_util.replace_b64_in_dict(json_data)
+
       result = inferenceService.inference(json_data)
       return result, 200
     except Exception as e:
-      result = {"error": "Inference error {}: {}".format(type(e), e)}
+      result = {"error": e.message}
+      logging.warn("Inference error: {}".format(e.message))
       return result, 400
   else:
     return {
