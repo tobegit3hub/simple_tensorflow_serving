@@ -14,6 +14,7 @@ setup(
     "The simpler and easy-to-use serving service for TensorFlow models",
     packages=find_packages(),
     install_requires=[
+        'configparser',
         'pandas',
         'protobuf',
         'flask',
