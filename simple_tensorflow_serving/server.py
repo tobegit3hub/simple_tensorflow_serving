@@ -10,10 +10,12 @@ import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 import argparse
+import configparser
 import json
 import logging
 from functools import wraps
 import numpy as np
+import subprocess
 from flask import Flask, Response, jsonify, render_template, request
 from flask_cors import CORS
 
@@ -36,11 +38,6 @@ logger = logging.getLogger("simple_tensorflow_serving")
 # Define parameters
 parser = argparse.ArgumentParser()
 
-# TODO: Remove if it does not need gunicorn
-parser.add_argument(
-    "--bind",
-    default=os.environ.get("STFS_BIND", "0.0.0.0:8500"),
-    help="Bind address of the server(eg. 0.0.0.0:8500)")
 parser.add_argument(
     "--host",
     default=os.environ.get("STFS_HOST", "0.0.0.0"),
@@ -133,16 +130,13 @@ parser.add_argument(
     default=os.environ.get("STFS_DOWNLOAD_INFERENCE_IMAGES", "True"),
     help="Download inference images(eg. True)",
     type=bool)
+parser.add_argument(
+    "--server_backend",
+    default=os.environ.get("STFS_SERVER_BACKEND", "uwsgi"),
+    help="The web server backend(eg. uwsgi)")
 
 # TODO: Support auto-complete
 #argcomplete.autocomplete(parser)
-
-"""
-if len(sys.argv) == 1:
-  #args = parser.parse_args(["-h"])
-  #args.func(args)
-else:
-"""
 
 args = parser.parse_args(sys.argv[1:])
 
@@ -227,7 +221,7 @@ application.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 if (os.path.isdir(UPLOAD_FOLDER)):
   pass
 else:
-  print("Create path to host static files: {}".format(UPLOAD_FOLDER))
+  logging.warn("Create path to host static files: {}".format(UPLOAD_FOLDER))
   os.mkdir(UPLOAD_FOLDER)
 
 # Example: {"default": TensorFlowInferenceService}
@@ -520,7 +514,7 @@ def run_generate_clients():
   return render_template("generate_clients.html", result=result)
 
 
-def main():
+def start_wsgi_application():
   # Start the HTTP server
   # Support multi-thread for json inference and image inference in same process
   if args.enable_ssl:
@@ -535,6 +529,49 @@ def main():
     application.run(
         host=args.host, port=args.port, threaded=True, debug=args.debug)
 
+
+def start_uwsgi_process():
+  pyargv_string = ""
+  for arg in vars(args):
+    if getattr(args, arg) == False:
+      # TODO: Pass the empty string if the param is False
+      pyargv_string += "--{}={} ".format(arg, "")
+    else:
+      pyargv_string += "--{}={} ".format(arg, getattr(args, arg))
+
+  uwsgi_conf_dict = {
+    "uwsgi": {
+      "module": "simple_tensorflow_serving.server",
+      "pyargv": pyargv_string,
+      "http": "{}:{}".format(args.host, args.port),
+      "socket": "/tmp/uwsgi.sock",
+      "close-on-exec": True,
+      "enable-threads": True,
+      "http-keepalive": 1,
+      "http-auto-chunked": 1
+    }
+  }
+
+  uwsgi_ini_file = "/tmp/uwsgi.ini"
+  with open(uwsgi_ini_file, "w") as f:
+    uwsgi_conf = configparser.ConfigParser()
+    uwsgi_conf.read_dict(uwsgi_conf_dict)
+    uwsgi_conf.write(f)
+
+  uwsgi_command = "uwsgi --ini {}".format(uwsgi_ini_file)
+  logging.info("Try to run command: {}".format(uwsgi_command))
+  subprocess.call(uwsgi_command, shell=True)
+
+
+def main():
+
+  if args.server_backend == "flask":
+    start_wsgi_application()
+  elif args.server_backend == "uwsgi":
+    start_uwsgi_process()
+  else:
+    logging.error("Unknown server backend: {}, only support uwsgi, flask".format(args.server_backend))
+    exit(1)
 
 if __name__ == "__main__":
   main()

@@ -63,7 +63,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     if self.model_base_path == "":
       raise Exception("The model base path is empty")
-    if self.model_base_path.startswith("/"):
+    if self.model_base_path.startswith("/") or self.model_base_path.startswith("./"):
       if not os.path.exists(self.model_base_path):
         raise Exception("Local model path does not exist: {}".format(self.model_base_path))
 
