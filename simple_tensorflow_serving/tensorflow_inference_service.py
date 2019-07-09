@@ -315,6 +315,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
         return []
     """
 
+    # TODO: Change to tf.io.gfile for TensorFlow 2.x
     model_versions = tf.gfile.ListDirectory(self.model_base_path)
     return model_versions
 
@@ -360,11 +361,10 @@ class TensorFlowInferenceService(AbstractInferenceService):
       Example is {"keys": [[11], [2]], "softmax": [[0.61554497, 0.38445505], [0.61554497, 0.38445505]], "prediction": [0, 0]}.
     """
 
-    # Use the latest model version if not specified
-    model_version = json_data.get("model_version", "-1")
-
-
-    if model_version == "-1":
+    if "model_version" in json_data:
+      model_version = json_data.get("model_version")
+    else:
+      # Use the latest model version if not specified
       if len(self.version_session_map) > 0:
         # TODO: Make sure it use the latest model version
         model_version = list(self.version_session_map.keys())[-1]
@@ -373,7 +373,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     if "data" not in json_data:
       raise Exception("Inference with empty data, please check the request JSON")
-
     input_data = json_data.get("data")
     logger.debug("Inference with json data: {}".format(json_data))
 
@@ -384,15 +383,17 @@ class TensorFlowInferenceService(AbstractInferenceService):
       else:
         logger.warning("No preprocess function in model")
 
-    current_model_graph_signature = self.model_graph_signature
     if "signature_name" in json_data:
       signature_name = json_data.get("signature_name")
       if signature_name in self.name_signature_map:
         current_model_graph_signature = self.name_signature_map[signature_name]
       else:
         raise Exception("Fail to request the signature name: {}, please check the request JSON".format(signature_name))
+    else:
+      current_model_graph_signature = self.model_graph_signature
 
     # 1. Build feed dict for input data
+    # TODO: Build this before every request
     feed_dict_map = {}
     for input_item in current_model_graph_signature.inputs.items():
       # Example: "keys"
@@ -408,7 +409,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
     # 2. Build inference operators
     output_tensor_names = []
     output_op_names = []
-
 
     for output_item in current_model_graph_signature.outputs.items():
 
@@ -433,20 +433,19 @@ class TensorFlowInferenceService(AbstractInferenceService):
         output_tensor_names.append(dense_shape_tensor_name)
 
     # 3. Inference with Session run
-    start_time = time.time()
-
     sess = self.version_session_map[str(model_version)]
-    result_profile = None
-    if json_data.get("run_profile", "") == "true":
-      logger.info("run_profile=true, running with tfprof")
-      result_ndarrays, result_profile = self.run_with_profiler(
+
+    if "run_profile" in json_data:
+      if json_data.get("run_profile") == "true":
+        logger.info("run_profile=true, running with tfprof")
+        result_ndarrays, result_profile = self.run_with_profiler(
           sess, str(model_version), output_tensor_names, feed_dict_map)
     else:
-
+      """
       # TODO: Update input data by decoding base64 string for esitmator model
       should_decode_base64 = False
       # Should not use have_key for Python 3
-      if "input_example_tensor:0" in feed_dict_map and should_decode_base64:
+      if should_decode_base64 and "input_example_tensor:0" in feed_dict_map:
         final_example_strings = []
         base64_example_strings = feed_dict_map["input_example_tensor:0"]
         for base64_example_string in base64_example_strings:
@@ -454,14 +453,15 @@ class TensorFlowInferenceService(AbstractInferenceService):
               base64_example_string.encode("utf-8"))
           final_example_strings.append(final_example_string)
         feed_dict_map["input_example_tensor:0"] = final_example_strings
+      """
 
       try:
+        start_time = time.time()
         result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
+        logger.debug("Inference time: {} s".format(time.time() - start_time))
       except Exception as e:
         logging.warn("Fail to run with output_tensor_names: {}, feed_dict_map: {}".format(output_tensor_names, feed_dict_map))
         raise Exception("Sess.run() fail because of {}, please check shape of input".format(e.message))
-
-    logger.debug("Inference time: {} s".format(time.time() - start_time))
 
     # 4. Build return result
     result = {}
@@ -469,7 +469,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       result[output_op_names[i]] = result_ndarrays[i]
     logger.debug("Inference result: {}".format(result))
 
-    if json_data.get("postprocess", "false") != "false":
+    if "postprocess" in json_data:
       if self.postprocess_function != None:
         result = self.postprocess_function(result)
         logger.debug("Postprocess to generate data: {}".format(result))
@@ -477,8 +477,9 @@ class TensorFlowInferenceService(AbstractInferenceService):
         logger.warning("No postprocess function in model")
 
     # 5. Build extra return information
-    if result_profile is not None and "__PROFILE__" not in output_tensor_names:
-      result["__PROFILE__"] = result_profile
+    if "run_profile" in json_data:
+      if result_profile is not None and "__PROFILE__" not in output_tensor_names:
+        result["__PROFILE__"] = result_profile
 
     return result
 
@@ -552,6 +553,19 @@ def tensorflow_model_graph_to_dict(model_graph_signature):
 
   return model_graph_signature_dict
 
+
+def get_input_tensor_names_by_signature(model_graph_signature):
+  """
+  Get the input tensor/op names by the model signature.
+  """
+
+  for input_item in model_graph_signature.inputs.items():
+    # Example: "keys"
+    input_op_name = input_item[0]
+    # Example: "Placeholder_0"
+    input_tensor_name = input_item[1].name
+
+    return input_tensor_name, input_op_name
 
 
 def get_output_tensor_names_by_signature(model_graph_signature):
