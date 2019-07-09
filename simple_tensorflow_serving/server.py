@@ -538,6 +538,8 @@ def start_uwsgi_process():
     if getattr(args, arg) == False:
       # TODO: Pass the empty string if the param is False
       pyargv_string += "--{}={} ".format(arg, "")
+    elif str(arg) == "server_backend":
+      pyargv_string += "--{}={} ".format(arg, "flask")
     else:
       pyargv_string += "--{}={} ".format(arg, getattr(args, arg))
 
@@ -550,7 +552,9 @@ def start_uwsgi_process():
       "close-on-exec": True,
       "enable-threads": True,
       "http-keepalive": 1,
-      "http-auto-chunked": 1
+      "http-auto-chunked": 1,
+      # TODO: Log format refers to https://uwsgi-docs.readthedocs.io/en/latest/LogFormat.html
+      #"log-format": '%(ltime) "%(method) %(uri) %(proto)" %(status) %(size) "%(referer)" "%(uagent)"'
     }
   }
 
@@ -566,7 +570,6 @@ def start_uwsgi_process():
 
 
 def main():
-
   if args.server_backend == "flask":
     start_wsgi_application()
   elif args.server_backend == "uwsgi":
@@ -574,6 +577,7 @@ def main():
   else:
     logging.error("Unknown server backend: {}, only support uwsgi, flask".format(args.server_backend))
     exit(1)
+
 
 if __name__ == "__main__":
   main()
