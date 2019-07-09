@@ -462,7 +462,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
     # 4. Build return result
     result = {}
     for i in range(len(output_op_names)):
-      result[output_op_names[i]] = result_ndarrays[i]
+      result[output_op_names[i]] = result_ndarrays[i].tolist()
     logger.debug("Inference result: {}".format(result))
 
     if "postprocess" in json_data:

@@ -303,13 +303,15 @@ def index():
       "index.html", model_name_service_map=model_name_service_map)
 
 
-# The API to rocess inference request
+# The API to process inference request
 @application.route("/", methods=["POST"])
 @requires_auth
 def inference():
   json_result, status_code = do_inference()
-  # TODO: Change the decoder for numpy data
-  response = jsonify(json.loads(json.dumps(json_result, cls=NumpyEncoder)))
+
+  # Do not use encoder for json for performance
+  #response = jsonify(json.loads(json.dumps(json_result, cls=NumpyEncoder)))
+  response = jsonify(json_result)
   response.status_code = status_code
   return response
 
