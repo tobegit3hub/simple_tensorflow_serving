@@ -158,6 +158,8 @@ elif args.log_level == "warning" or args.log_level == "WARNING":
 elif args.log_level == "critical" or args.log_level == "CRITICAL":
   logger.setLevel(logging.CRITICAL)
 
+if args.debug == True:
+  logger.setLevel(logging.DEBUG)
 
 class NumpyEncoder(json.JSONEncoder):
   def default(self, obj):
