@@ -48,6 +48,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.model_base_path = libhdfs_model_base_path
     self.model_version_list = []
     self.model_graph_signature = None
+    self.model_graph_signature_dict = None
+
     self.platform = "TensorFlow"
     self.session_config = session_config
 
@@ -219,6 +221,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
         index += 1
 
+
   def get_one_model_version(self):
     all_model_versions = self.get_all_model_versions()
     # current_model_versions_string = os.listdir(self.model_base_path)
@@ -359,34 +362,35 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     # Use the latest model version if not specified
     model_version = json_data.get("model_version", "-1")
-    input_data = json_data.get("data", "")
+
 
     if model_version == "-1":
-      # TODO: Make sure it use the latest model version
-      model_version = list(self.version_session_map.keys())[-1]
+      if len(self.version_session_map) > 0:
+        # TODO: Make sure it use the latest model version
+        model_version = list(self.version_session_map.keys())[-1]
+      else:
+        raise Exception("No model version found, please check the TensorFlow model files")
 
-    if str(model_version) not in self.version_session_map or input_data == "":
-      logger.error("No model version: {} to serve".format(model_version))
-      return "Fail to request the model version: {} with data: {}".format(
-          model_version, input_data)
+    if "data" not in json_data:
+      raise Exception("Inference with empty data, please check the request JSON")
 
+    input_data = json_data.get("data")
     logger.debug("Inference with json data: {}".format(json_data))
 
-    if json_data.get("preprocess", "false") != "false":
+    if "preprocess" in json_data:
       if self.preprocess_function != None:
         input_data = self.preprocess_function(input_data)
         logger.debug("Preprocess to generate data: {}".format(input_data))
       else:
         logger.warning("No preprocess function in model")
 
-    signature_name = json_data.get("signature_name", "")
-    if signature_name == "":
-      current_model_graph_signature = self.model_graph_signature
-    else:
+    current_model_graph_signature = self.model_graph_signature
+    if "signature_name" in json_data:
+      signature_name = json_data.get("signature_name")
       if signature_name in self.name_signature_map:
         current_model_graph_signature = self.name_signature_map[signature_name]
       else:
-        return "Fail to request the signature name: {}".format(signature_name)
+        raise Exception("Fail to request the signature name: {}, please check the request JSON".format(signature_name))
 
     # 1. Build feed dict for input data
     feed_dict_map = {}
@@ -398,13 +402,14 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
       # Example: {"Placeholder_0": [[1.0], [2.0]], "Placeholder_1:0": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}
       if input_op_name not in input_data:
-        raise Exception("Input op name '{}' does not in input data: {}".format(input_op_name, input_data))
+        raise Exception("Input op name '{}' does not exist in input data: {}, please check the request JSON".format(input_op_name, input_data))
       feed_dict_map[input_tensor_name] = input_data[input_op_name]
 
     # 2. Build inference operators
-    # TODO: Optimize to pre-compute this before inference
     output_tensor_names = []
     output_op_names = []
+
+
     for output_item in current_model_graph_signature.outputs.items():
 
       if output_item[1].name != "":
@@ -546,3 +551,36 @@ def tensorflow_model_graph_to_dict(model_graph_signature):
       model_graph_signature_dict["outputs"].append(output_map3)
 
   return model_graph_signature_dict
+
+
+
+def get_output_tensor_names_by_signature(model_graph_signature):
+  """
+  Get the output tensor/op names by the model signature.
+  """
+
+  output_tensor_names = []
+  output_op_names = []
+
+  for output_item in model_graph_signature.outputs.items():
+    if output_item[1].name != "":
+      # Example: "keys"
+      output_op_name = output_item[0]
+      output_op_names.append(output_op_name)
+      # Example: "Identity:0"
+      output_tensor_name = output_item[1].name
+      output_tensor_names.append(output_tensor_name)
+    elif output_item[1].coo_sparse != None:
+      # For SparseTensor op, Example: values_tensor_name: "CTCBeamSearchDecoder_1:1", indices_tensor_name: "CTCBeamSearchDecoder_1:0", dense_shape_tensor_name: "CTCBeamSearchDecoder_1:2"
+      values_tensor_name = output_item[1].coo_sparse.values_tensor_name
+      indices_tensor_name = output_item[1].coo_sparse.indices_tensor_name
+      dense_shape_tensor_name = output_item[
+        1].coo_sparse.dense_shape_tensor_name
+      output_op_names.append("{}_{}".format(output_item[0], "values"))
+      output_op_names.append("{}_{}".format(output_item[0], "indices"))
+      output_op_names.append("{}_{}".format(output_item[0], "shape"))
+      output_tensor_names.append(values_tensor_name)
+      output_tensor_names.append(indices_tensor_name)
+      output_tensor_names.append(dense_shape_tensor_name)
+
+  return output_tensor_names, output_op_names
