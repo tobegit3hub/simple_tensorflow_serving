@@ -8,9 +8,9 @@ import time
 import subprocess
 import requests
 
-from .abstract_inference_service import AbstractInferenceService
-from . import filesystem_util
-from . import preprocess_util
+from abstract_inference_service import AbstractInferenceService
+import filesystem_util
+import preprocess_util
 
 logger = logging.getLogger("simple_tensorflow_serving")
 

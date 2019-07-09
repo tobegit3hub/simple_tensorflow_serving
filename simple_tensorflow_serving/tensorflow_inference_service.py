@@ -14,8 +14,8 @@ import tensorflow as tf
 import marshal
 import types
 
-from .abstract_inference_service import AbstractInferenceService
-from . import filesystem_util
+from abstract_inference_service import AbstractInferenceService
+import filesystem_util
 
 logger = logging.getLogger('simple_tensorflow_serving')
 

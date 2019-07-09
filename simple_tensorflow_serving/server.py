@@ -15,19 +15,21 @@ import numpy as np
 from flask import Flask, Response, jsonify, render_template, request
 from flask_cors import CORS
 
-from .tensorflow_inference_service import TensorFlowInferenceService
-from .gen_client import gen_client
-from .mxnet_inference_service import MxnetInferenceService
-from .onnx_inference_service import OnnxInferenceService
-from .pytorch_onnx_inference_service import PytorchOnnxInferenceService
-from .h2o_inference_service import H2oInferenceService
-from .scikitlearn_inference_service import ScikitlearnInferenceService
-from .xgboost_inference_service import XgboostInferenceService
-from .pmml_inference_service import PmmlInferenceService
-from .spark_inference_service import SparkInferenceService
-from .service_utils import request_util
-from . import python_predict_client
-from . import base64_util
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+
+from tensorflow_inference_service import TensorFlowInferenceService
+from gen_client import gen_client
+from mxnet_inference_service import MxnetInferenceService
+from onnx_inference_service import OnnxInferenceService
+from pytorch_onnx_inference_service import PytorchOnnxInferenceService
+from h2o_inference_service import H2oInferenceService
+from scikitlearn_inference_service import ScikitlearnInferenceService
+from xgboost_inference_service import XgboostInferenceService
+from pmml_inference_service import PmmlInferenceService
+from spark_inference_service import SparkInferenceService
+from service_utils import request_util
+import python_predict_client
+import base64_util
 
 logger = logging.getLogger("simple_tensorflow_serving")
 
@@ -135,18 +137,21 @@ parser.add_argument(
 # TODO: Support auto-complete
 #argcomplete.autocomplete(parser)
 
+"""
 if len(sys.argv) == 1:
-  args = parser.parse_args(["-h"])
-  args.func(args)
+  #args = parser.parse_args(["-h"])
+  #args.func(args)
 else:
-  args = parser.parse_args(sys.argv[1:])
+"""
 
-  for arg in vars(args):
-    logger.info("{}: {}".format(arg, getattr(args, arg)))
+args = parser.parse_args(sys.argv[1:])
 
-  if args.enable_colored_log:
-    import coloredlogs
-    coloredlogs.install()
+for arg in vars(args):
+  logger.info("{}: {}".format(arg, getattr(args, arg)))
+
+if args.enable_colored_log:
+  import coloredlogs
+  coloredlogs.install()
 
 if args.log_level == "info" or args.log_level == "INFO":
   logger.setLevel(logging.INFO)
