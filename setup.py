@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.7.1",
+    version="0.7.2",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
@@ -23,14 +23,8 @@ setup(
         'requests',
         'pillow',
         'uwsgi',
-        'numpy',
-        #'onnx',
         'tensorflow'
     ],
-    #package_data={
-    #    "simple_tensorflow_serving/static": ['simple_tensorflow_serving/templates/*.html',
-    #                                         'simple_tensorflow_serving/static/*']
-    #},
     include_package_data=True,
     zip_safe=False,
     entry_points={
