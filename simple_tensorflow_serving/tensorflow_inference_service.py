@@ -9,7 +9,6 @@ import os
 import signal
 import threading
 import time
-import base64
 import tensorflow as tf
 import marshal
 import types
@@ -61,6 +60,12 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.name_signature_map = {}
     self.preprocess_function = None
     self.postprocess_function = None
+
+    if self.model_base_path == "":
+      raise Exception("The model base path is empty")
+    if self.model_base_path.startswith("/"):
+      if not os.path.exists(self.model_base_path):
+        raise Exception("Local model path does not exist: {}".format(self.model_base_path))
 
     if custom_op_paths != "":
       self.load_custom_op(custom_op_paths)
