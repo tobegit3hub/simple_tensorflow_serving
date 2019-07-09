@@ -48,7 +48,12 @@ class TensorFlowInferenceService(AbstractInferenceService):
     self.model_base_path = libhdfs_model_base_path
     self.model_version_list = []
     self.model_graph_signature = None
-    self.model_graph_signature_dict = None
+    self.model_graph_signature_dict = {}
+
+    self.signature_input_tensor_names_map = {}
+    self.signature_input_op_names_map = {}
+    self.signature_output_tensor_names_map = {}
+    self.signature_output_op_names_map = {}
 
     self.platform = "TensorFlow"
     self.session_config = session_config
@@ -72,6 +77,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
     model_versions = self.get_all_model_versions()
     for model_version in model_versions:
       self.load_saved_model_version(model_version)
+
+    self.init_model_signature()
 
   def load_custom_op(self, custom_op_paths):
 
@@ -195,31 +202,43 @@ class TensorFlowInferenceService(AbstractInferenceService):
                                                      globals(),
                                                      "postprocess_function")
 
+
+  def init_model_signature(self):
+
+    latest_model_version = self.model_version_list[-1]
+    sess = self.version_session_map[str(latest_model_version)]
+
+    model_file_path = os.path.join(self.model_base_path, str(latest_model_version))
+
+    meta_graph = tf.saved_model.loader.load(
+            sess, [tf.saved_model.tag_constants.SERVING], model_file_path)
+
     # Update ItemsView to list for Python 3
-    if len(list(meta_graph.signature_def.items())) == 1:
-      signature_name = list(meta_graph.signature_def.items())[0][0]
-      self.model_graph_signature = list(meta_graph.signature_def.items())[0][1]
-      self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
-          self.model_graph_signature)
-      self.name_signature_map[signature_name] = self.model_graph_signature
-    else:
-      index = 0
-      for item in list(meta_graph.signature_def.items()):
-        signature_name = item[0]
-        self.name_signature_map[signature_name] = item[1]
+    signature_items = list(meta_graph.signature_def.items())
+    items_num = len(signature_items)
 
-        #if signature_name == tf.python.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-        if signature_name == "serving_default":
-          self.model_graph_signature = item[1]
-          self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
-              self.model_graph_signature)
-        elif self.model_graph_signature == None and index == (
-            len(list(meta_graph.signature_def.items())) - 1):
-          self.model_graph_signature = item[1]
-          self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
-              self.model_graph_signature)
+    for i in range(items_num):
+      item = signature_items[i]
+      signature_name = item[0]
+      self.name_signature_map[signature_name] = item[1]
 
-        index += 1
+      # tf.python.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
+      if signature_name == "serving_default":
+        self.model_graph_signature = item[1]
+        self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
+            self.model_graph_signature)
+      elif self.model_graph_signature == None and i == (items_num - 1):
+        self.model_graph_signature = item[1]
+        self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
+            self.model_graph_signature)
+
+      input_tensor_names, input_op_names = get_input_tensor_names_by_signature(self.model_graph_signature)
+      output_tensor_names, output_op_names = get_output_tensor_names_by_signature(self.model_graph_signature)
+
+      self.signature_input_tensor_names_map[signature_name] = input_tensor_names
+      self.signature_input_op_names_map[signature_name] = input_op_names
+      self.signature_output_tensor_names_map[signature_name] = output_tensor_names
+      self.signature_output_op_names_map[signature_name] = output_op_names
 
 
   def get_one_model_version(self):
@@ -385,21 +404,20 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     if "signature_name" in json_data:
       signature_name = json_data.get("signature_name")
-      if signature_name in self.name_signature_map:
-        current_model_graph_signature = self.name_signature_map[signature_name]
-      else:
+      if signature_name not in self.name_signature_map:
         raise Exception("Fail to request the signature name: {}, please check the request JSON".format(signature_name))
     else:
-      current_model_graph_signature = self.model_graph_signature
+      signature_name = "serving_default"
 
     # 1. Build feed dict for input data
-    # TODO: Build this before every request
     feed_dict_map = {}
-    for input_item in current_model_graph_signature.inputs.items():
-      # Example: "keys"
-      input_op_name = input_item[0]
-      # Example: "Placeholder_0"
-      input_tensor_name = input_item[1].name
+
+    input_op_names = self.signature_input_op_names_map[signature_name]
+    input_tensor_names = self.signature_input_tensor_names_map[signature_name]
+
+    for i in range(len(input_op_names)):
+      input_op_name = input_op_names[i]
+      input_tensor_name = input_tensor_names[i]
 
       # Example: {"Placeholder_0": [[1.0], [2.0]], "Placeholder_1:0": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}
       if input_op_name not in input_data:
@@ -407,30 +425,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
       feed_dict_map[input_tensor_name] = input_data[input_op_name]
 
     # 2. Build inference operators
-    output_tensor_names = []
-    output_op_names = []
-
-    for output_item in current_model_graph_signature.outputs.items():
-
-      if output_item[1].name != "":
-        # Example: "keys"
-        output_op_name = output_item[0]
-        output_op_names.append(output_op_name)
-        # Example: "Identity:0"
-        output_tensor_name = output_item[1].name
-        output_tensor_names.append(output_tensor_name)
-      elif output_item[1].coo_sparse != None:
-        # For SparseTensor op, Example: values_tensor_name: "CTCBeamSearchDecoder_1:1", indices_tensor_name: "CTCBeamSearchDecoder_1:0", dense_shape_tensor_name: "CTCBeamSearchDecoder_1:2"
-        values_tensor_name = output_item[1].coo_sparse.values_tensor_name
-        indices_tensor_name = output_item[1].coo_sparse.indices_tensor_name
-        dense_shape_tensor_name = output_item[
-            1].coo_sparse.dense_shape_tensor_name
-        output_op_names.append("{}_{}".format(output_item[0], "values"))
-        output_op_names.append("{}_{}".format(output_item[0], "indices"))
-        output_op_names.append("{}_{}".format(output_item[0], "shape"))
-        output_tensor_names.append(values_tensor_name)
-        output_tensor_names.append(indices_tensor_name)
-        output_tensor_names.append(dense_shape_tensor_name)
+    output_op_names = self.signature_output_op_names_map[signature_name]
+    output_tensor_names = self.signature_output_tensor_names_map[signature_name]
 
     # 3. Inference with Session run
     sess = self.version_session_map[str(model_version)]
@@ -558,14 +554,19 @@ def get_input_tensor_names_by_signature(model_graph_signature):
   """
   Get the input tensor/op names by the model signature.
   """
+  input_op_names = []
+  input_tensor_names = []
 
   for input_item in model_graph_signature.inputs.items():
     # Example: "keys"
     input_op_name = input_item[0]
+    input_op_names.append(input_op_name)
+
     # Example: "Placeholder_0"
     input_tensor_name = input_item[1].name
+    input_tensor_names.append(input_tensor_name)
 
-    return input_tensor_name, input_op_name
+    return input_tensor_names, input_op_names
 
 
 def get_output_tensor_names_by_signature(model_graph_signature):
