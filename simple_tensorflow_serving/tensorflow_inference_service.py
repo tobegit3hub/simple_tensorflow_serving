@@ -566,7 +566,7 @@ def get_input_tensor_names_by_signature(model_graph_signature):
     input_tensor_name = input_item[1].name
     input_tensor_names.append(input_tensor_name)
 
-    return input_tensor_names, input_op_names
+  return input_tensor_names, input_op_names
 
 
 def get_output_tensor_names_by_signature(model_graph_signature):
