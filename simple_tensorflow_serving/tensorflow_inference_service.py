@@ -166,7 +166,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
   def load_saved_model_version(self, model_version):
 
-    config = tf.ConfigProto()
+    if tf.__version__.startswith("1"):
+      config = tf.ConfigProto()
+    else:
+      config = tf.compat.v1.ConfigProto()
+
     if "log_device_placement" in self.session_config:
       config.log_device_placement = self.session_config["log_device_placement"]
     if "allow_soft_placement" in self.session_config:
@@ -177,7 +181,10 @@ class TensorFlowInferenceService(AbstractInferenceService):
       config.gpu_options.per_process_gpu_memory_fraction = self.session_config[
           "per_process_gpu_memory_fraction"]
 
-    session = tf.Session(graph=tf.Graph(), config=config)
+    if tf.__version__.startswith("1"):
+      session = tf.Session(graph=tf.Graph(), config=config)
+    else:
+      session = tf.compat.v1.Session(graph=tf.Graph(), config=config)
 
     self.version_session_map[str(model_version)] = session
     self.model_version_list.append(model_version)
@@ -185,8 +192,13 @@ class TensorFlowInferenceService(AbstractInferenceService):
     model_file_path = os.path.join(self.model_base_path, str(model_version))
     logger.info("Put the model version: {} online, path: {}".format(
         model_version, model_file_path))
-    meta_graph = tf.saved_model.loader.load(
+
+    if tf.__version__.startswith("1"):
+      meta_graph = tf.saved_model.loader.load(
         session, [tf.saved_model.tag_constants.SERVING], model_file_path)
+    else:
+      meta_graph = tf.compat.v1.saved_model.loader.load(
+              session, [tf.compat.v1.saved_model.tag_constants.SERVING], model_file_path)
 
     # Get preprocess and postprocess function from collection_def
     if "preprocess_function" in meta_graph.collection_def:
@@ -213,8 +225,12 @@ class TensorFlowInferenceService(AbstractInferenceService):
     model_file_path = os.path.join(self.model_base_path,
                                    str(latest_model_version))
 
-    meta_graph = tf.saved_model.loader.load(
+    if tf.__version__.startswith("1"):
+      meta_graph = tf.saved_model.loader.load(
         sess, [tf.saved_model.tag_constants.SERVING], model_file_path)
+    else:
+      meta_graph = tf.compat.v1.saved_model.loader.load(
+              sess, [tf.compat.v1.saved_model.tag_constants.SERVING], model_file_path)
 
     # Update ItemsView to list for Python 3
     signature_items = list(meta_graph.signature_def.items())
