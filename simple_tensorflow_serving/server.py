@@ -37,77 +37,75 @@ parser = argparse.ArgumentParser()
 # TODO: Remove if it does not need gunicorn
 parser.add_argument(
     "--bind",
-    default="0.0.0.0:8500",
+    default=os.environ.get("STFS_BIND", "0.0.0.0:8500"),
     help="Bind address of the server(eg. 0.0.0.0:8500)")
 parser.add_argument(
-    "--host", default="0.0.0.0", help="The host of the server(eg. 0.0.0.0)")
+    "--host", default=os.environ.get("STFS_HOST", "0.0.0.0"), help="The host of the server(eg. 0.0.0.0)")
 parser.add_argument(
-    "--port", default=8500, help="The port of the server(eg. 8500)", type=int)
+    "--port", default=int(os.environ.get("STFS_PORT", "8500")), help="The port of the server(eg. 8500)", type=int)
 parser.add_argument(
-    "--enable_ssl", default=False, help="If enable RESTfull API over https")
+    "--enable_ssl", default=bool(os.environ.get("STFS_ENABLE_SSL", "")), help="If enable RESTfull API over https")
 parser.add_argument(
-    "--secret_pem", default="secret.pem", help="pem file")
+    "--secret_pem", default=os.environ.get("STFS_SECRET_PEM", "secret.pem"), help="SSL pem file")
 parser.add_argument(
-    "--secret_key", default="secret.key", help="key file")
+    "--secret_key", default=os.environ.get("STFS_SECRET_KEY", "secret.key"), help="SSL key file")
 parser.add_argument(
     "--model_name",
-    default="default",
+    default=os.environ.get("STFS_MODEL_NAME", "default"),
     help="The name of the model(eg. default)")
 parser.add_argument(
     "--model_base_path",
-    default="./model",
+    default=os.environ.get("STFS_MODEL_BASE_PATH", "./model"),
     help="The file path of the model(eg. 8500)")
 parser.add_argument(
     "--model_platform",
-    default="tensorflow",
+    default=os.environ.get("STFS_MODEL_PLATFORM", "tensorflow"),
     help="The platform of model(eg. tensorflow)")
 parser.add_argument(
     "--model_config_file",
-    default="",
+    default=os.environ.get("STFS_MODEL_CONFIG_FILE", ""),
     help="The file of the model config(eg. '')")
 # TODO: type=bool not works, make it true by default if fixing exit bug
 parser.add_argument(
-    "--reload_models", default="False", help="Reload models or not(eg. True)")
+    "--reload_models", default=os.environ.get("STFS_RELOAD_MODELS", ""), help="Reload models or not(eg. True)")
 parser.add_argument(
     "--custom_op_paths",
-    default="",
+    default=os.environ.get("STFS_CUSTOM_OP_PATHS", ""),
     help="The path of custom op so files(eg. ./)")
 parser.add_argument(
-    "--session_config", default="{}", help="The json of session config")
+    "--session_config", default=os.environ.get("STFS_SESSION_CONFIG", "{}"), help="The json of session config")
 parser.add_argument(
     "--debug",
-    default=False,
+    default=os.environ.get("STFS_DEBUG", ""),
     help="Enable debug for flask or not(eg. False)",
     type=bool)
 parser.add_argument(
-    "--log_level", default="info", help="The log level(eg. info)")
-parser.add_argument(
-    "--gen_client", default="", help="Generate the client code(eg. python)")
+    "--log_level", default=os.environ.get("STFS_LOG_LEVEL", "info"), help="The log level(eg. info)")
 parser.add_argument(
     "--enable_auth",
-    default=False,
+    default=os.environ.get("STFS_ENABLE_AUTH", ""),
     help="Enable basic auth or not(eg. False)",
     type=bool)
 parser.add_argument(
     "--auth_username",
-    default="admin",
+    default=os.environ.get("STFS_AUTH_USERNAME", "admin"),
     help="The username of basic auth(eg. admin)")
 parser.add_argument(
     "--auth_password",
-    default="admin",
+    default=os.environ.get("STFS_AUTH_PASSWORD", "admin"),
     help="The password of basic auth(eg. admin)")
 parser.add_argument(
     "--enable_colored_log",
-    default=False,
+    default=os.environ.get("STFS_ENABLE_COLORED_LOG", ""),
     help="Enable colored log(eg. False)",
     type=bool)
 parser.add_argument(
-    "--enable_cors", default=True, help="Enable cors(eg. True)", type=bool)
+    "--enable_cors", default=os.environ.get("STFS_ENABLE_CORS", "True"), help="Enable cors(eg. True)", type=bool)
 parser.add_argument(
-        "--enable_b64_autoconvert", default=False, help="Enable auto convert b64 string(eg. False)", type=bool)
+        "--enable_b64_autoconvert", default=os.environ.get("STFS_B64_AUTOCONVERT", ""), help="Enable auto convert b64 string(eg. False)", type=bool)
 parser.add_argument(
     "--download_inference_images",
-    default=True,
+    default=os.environ.get("STFS_DOWNLOAD_INFERENCE_IMAGES", "True"),
     help="Download inference images(eg. True)",
     type=bool)
 
@@ -279,14 +277,6 @@ else:
 
   model_name_service_map[args.model_name] = inference_service
 
-# TODO(Deprecated): Generate client code and exit or not
-if args.gen_client != "":
-  if args.model_platform == "tensorflow":
-    inference_service = model_name_service_map[args.model_name]
-    gen_client.gen_tensorflow_client(inference_service, args.gen_client,
-                                     args.model_name)
-
-  sys.exit(0)
 
 # Start thread to periodically reload models or not
 if args.reload_models == "True" or args.reload_models == "true":
