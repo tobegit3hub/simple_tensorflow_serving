@@ -104,6 +104,8 @@ parser.add_argument(
 parser.add_argument(
     "--enable_cors", default=True, help="Enable cors(eg. True)", type=bool)
 parser.add_argument(
+        "--enable_b64_autoconvert", default=False, help="Enable auto convert b64 string(eg. False)", type=bool)
+parser.add_argument(
     "--download_inference_images",
     default=True,
     help="Download inference images(eg. True)",
@@ -351,25 +353,30 @@ def do_inference(save_file_dir=None):
   else:
     model_name = "default"
 
-  if model_name in model_name_service_map:
-    try:
-      inferenceService = model_name_service_map[model_name]
+  if model_name not in model_name_service_map:
+    return {
+             "error":
+               "Invalid model name: {}, available models: {}".format(
+                       model_name, model_name_service_map.keys())
+           }, 400
 
+  inferenceService = model_name_service_map[model_name]
+
+  if args.enable_b64_autoconvert:
+    try:
       # Decode base64 string and modify request json data
       base64_util.replace_b64_in_dict(json_data)
-
-      result = inferenceService.inference(json_data)
-      return result, 200
     except Exception as e:
       result = {"error": e.message}
-      logging.warn("Inference error: {}".format(e.message))
       return result, 400
-  else:
-    return {
-        "error":
-        "Invalid model name: {}, available models: {}".format(
-            model_name, model_name_service_map.keys())
-    }, 400
+
+  try:
+    result = inferenceService.inference(json_data)
+    return result, 200
+  except Exception as e:
+    logging.warn("Inference error: {}".format(e.message))
+    result = {"error": e.message}
+    return result, 400
 
 
 @application.route('/health', methods=["GET"])
