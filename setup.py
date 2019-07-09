@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.6.6",
+    version="0.7.0",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
@@ -15,14 +15,15 @@ setup(
     packages=find_packages(),
     install_requires=[
         'pandas',
-        'numpy',
         'protobuf',
-        'onnx',
         'flask',
         'jinja2',
         'flask-cors',
         'requests',
         'pillow',
+        'uwsgi',
+        'numpy',
+        #'onnx',
         'tensorflow'
     ],
     #package_data={
