@@ -257,91 +257,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
       logger.error("No model version found")
 
   def get_all_model_versions(self):
-    """
-    if self.model_base_path.startswith("hdfs://"):
-      # TODO: Support getting sub-directory from HDFS
-      #return [0]
-
-      # hdfs://172.27.128.31:8020/user/chendihao/tensorflow_template_application/model/
-      # hdfs://default/user/chendihao/tensorflow_template_application/model/
-      # hdfs:///user/chendihao/tensorflow_template_application/model/
-      "
-      hadoop_user_name = os.environ.get("HDFS_USER_NAME", "work")
-      hadoop_enable_kerberos = os.environ.get("HDFS_ENABLE_KERBEROS", "false")
-
-      if hadoop_enable_kerberos == "true" or hadoop_enable_kerberos == "True":
-        hadoop_kerberos_ticket_file = os.environ.get(
-            "HDFS_KERBEROS_TICKET_FILE", "/tmp/krb5cc_0")
-        hadoop_kinit_command = os.environ.get(
-            "HDFS_KINIT_COMMAND",
-            "kinit {} -k -t /etc/user.keytab".format(hadoop_user_name))
-        logger.info(
-            "Try to run the command to kinit: {}".format(hadoop_kinit_command))
-        subprocess.call(hadoop_kinit_command, shell=True)
-
-      if self.model_base_path.startswith("hdfs:///"):
-        hadoop_endpoint = os.environ.get("HDFS_ENDPOINT", "default")
-      else:
-        # 'hdfs://172.27.128.31:8020/user/chendihao/tensorflow_template_application/model/' -> ['hdfs:', '', '172.27.128.31:8020', 'user', 'chendihao', 'tensorflow_template_application', 'model', '']
-        hadoop_endpoint = self.model_base_path.split("/")[2]
-
-      if len(hadoop_endpoint.split(":")) == 2:
-        # 172.27.128.31:8020
-        hdfs_host_port_pair = hadoop_endpoint.split(":")
-        hdfs_host = hdfs_host_port_pair[0]
-        hdfs_port = int(hdfs_host_port_pair[1])
-      else:
-        # "default" or "hacluster" and so on
-        hdfs_host = hadoop_endpoint
-        hdfs_port = 0
-
-      
-      if hadoop_enable_kerberos == "true" or hadoop_enable_kerberos == "True":
-        client = pa.hdfs.connect(
-            host=hdfs_host,
-            port=hdfs_port,
-            user=hadoop_user_name,
-            kerb_ticket=hadoop_kerberos_ticket_file)
-      else:
-        client = pa.hdfs.connect(
-            host=hdfs_host, port=hdfs_port, user=hadoop_user_name)
-
-      if self.model_base_path.startswith("hdfs:///"):
-        model_version_paths = client.ls(self.model_base_path)
-      else:
-        if hdfs_host == "default":
-          # Remove the "default" for pyarrow
-          model_version_paths = client.ls(self.model_base_path[:7] +
-                                          self.model_base_path[14:])
-        else:
-          model_version_paths = client.ls(self.model_base_path)
-
-      model_versions = [
-          model_version_path.split("/")[-1]
-          for model_version_path in model_version_paths
-      ]
-      "
-
-      # TODO: Support only integer model version or not
+    # Be compatible for TensorFlow 1.x and 2.x
+    if tf.__version__.startswith("1"):
       model_versions = tf.gfile.ListDirectory(self.model_base_path)
-      return model_versions
-
     else:
-
-      current_model_versions_string = os.listdir(self.model_base_path)
-      if len(current_model_versions_string) > 0:
-        model_versions = [
-            int(model_version_string)
-            for model_version_string in current_model_versions_string
-        ]
-        return model_versions
-      else:
-        logger.error("No model version found")
-        return []
-    """
-
-    # TODO: Change to tf.io.gfile for TensorFlow 2.x
-    model_versions = tf.gfile.ListDirectory(self.model_base_path)
+      model_versions = tf.io.gfile.listdir(self.model_base_path)
     return model_versions
 
   def run_with_profiler(self, session, version, output_tensors, feed_dict):
