@@ -149,8 +149,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
         # Put old model versions offline
         offline_model_versions = old_model_versions - current_model_versions
         for model_version in offline_model_versions:
-          logger.info(
-              "Put the model version: {} offline".format(str(model_version)))
+          logger.info("Put the model version: {} offline".format(
+              str(model_version)))
           del self.version_session_map[str(model_version)]
           self.version_session_map.remove(model_version)
 
@@ -189,8 +189,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       preprocess_function_string = meta_graph.collection_def[
           "preprocess_function"].bytes_list.value[0]
       loaded_function = marshal.loads(preprocess_function_string)
-      self.preprocess_function = types.FunctionType(loaded_function,
-                                                    globals(),
+      self.preprocess_function = types.FunctionType(loaded_function, globals(),
                                                     "preprocess_function")
 
     if "postprocess_function" in meta_graph.collection_def:
@@ -198,20 +197,19 @@ class TensorFlowInferenceService(AbstractInferenceService):
       postrocess_function_string = meta_graph.collection_def[
           "postprocess_function"].bytes_list.value[0]
       loaded_function = marshal.loads(postrocess_function_string)
-      self.postprocess_function = types.FunctionType(loaded_function,
-                                                     globals(),
-                                                     "postprocess_function")
-
+      self.postprocess_function = types.FunctionType(
+          loaded_function, globals(), "postprocess_function")
 
   def init_model_signature(self):
 
     latest_model_version = self.model_version_list[-1]
     sess = self.version_session_map[str(latest_model_version)]
 
-    model_file_path = os.path.join(self.model_base_path, str(latest_model_version))
+    model_file_path = os.path.join(self.model_base_path,
+                                   str(latest_model_version))
 
     meta_graph = tf.saved_model.loader.load(
-            sess, [tf.saved_model.tag_constants.SERVING], model_file_path)
+        sess, [tf.saved_model.tag_constants.SERVING], model_file_path)
 
     # Update ItemsView to list for Python 3
     signature_items = list(meta_graph.signature_def.items())
@@ -232,14 +230,17 @@ class TensorFlowInferenceService(AbstractInferenceService):
         self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
             self.model_graph_signature)
 
-      input_tensor_names, input_op_names = get_input_tensor_names_by_signature(self.model_graph_signature)
-      output_tensor_names, output_op_names = get_output_tensor_names_by_signature(self.model_graph_signature)
+      input_tensor_names, input_op_names = get_input_tensor_names_by_signature(
+          self.model_graph_signature)
+      output_tensor_names, output_op_names = get_output_tensor_names_by_signature(
+          self.model_graph_signature)
 
-      self.signature_input_tensor_names_map[signature_name] = input_tensor_names
+      self.signature_input_tensor_names_map[
+          signature_name] = input_tensor_names
       self.signature_input_op_names_map[signature_name] = input_op_names
-      self.signature_output_tensor_names_map[signature_name] = output_tensor_names
+      self.signature_output_tensor_names_map[
+          signature_name] = output_tensor_names
       self.signature_output_op_names_map[signature_name] = output_op_names
-
 
   def get_one_model_version(self):
     all_model_versions = self.get_all_model_versions()
@@ -388,10 +389,12 @@ class TensorFlowInferenceService(AbstractInferenceService):
         # TODO: Make sure it use the latest model version
         model_version = list(self.version_session_map.keys())[-1]
       else:
-        raise Exception("No model version found, please check the TensorFlow model files")
+        raise Exception(
+            "No model version found, please check the TensorFlow model files")
 
     if "data" not in json_data:
-      raise Exception("Inference with empty data, please check the request JSON")
+      raise Exception(
+          "Inference with empty data, please check the request JSON")
     input_data = json_data.get("data")
     logger.debug("Inference with json data: {}".format(json_data))
 
@@ -405,7 +408,9 @@ class TensorFlowInferenceService(AbstractInferenceService):
     if "signature_name" in json_data:
       signature_name = json_data.get("signature_name")
       if signature_name not in self.name_signature_map:
-        raise Exception("Fail to request the signature name: {}, please check the request JSON".format(signature_name))
+        raise Exception(
+            "Fail to request the signature name: {}, please check the request JSON"
+            .format(signature_name))
     else:
       signature_name = "serving_default"
 
@@ -421,12 +426,15 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
       # Example: {"Placeholder_0": [[1.0], [2.0]], "Placeholder_1:0": [[10, 10, 10, 8, 6, 1, 8, 9, 1], [6, 2, 1, 1, 1, 1, 7, 1, 1]]}
       if input_op_name not in input_data:
-        raise Exception("Input op name '{}' does not exist in input data: {}, please check the request JSON".format(input_op_name, input_data))
+        raise Exception(
+            "Input op name '{}' does not exist in input data: {}, please check the request JSON"
+            .format(input_op_name, input_data))
       feed_dict_map[input_tensor_name] = input_data[input_op_name]
 
     # 2. Build inference operators
     output_op_names = self.signature_output_op_names_map[signature_name]
-    output_tensor_names = self.signature_output_tensor_names_map[signature_name]
+    output_tensor_names = self.signature_output_tensor_names_map[
+        signature_name]
 
     # 3. Inference with Session run
     sess = self.version_session_map[str(model_version)]
@@ -435,7 +443,7 @@ class TensorFlowInferenceService(AbstractInferenceService):
       if json_data.get("run_profile") == "true":
         logger.info("run_profile=true, running with tfprof")
         result_ndarrays, result_profile = self.run_with_profiler(
-          sess, str(model_version), output_tensor_names, feed_dict_map)
+            sess, str(model_version), output_tensor_names, feed_dict_map)
     else:
       """
       # TODO: Update input data by decoding base64 string for esitmator model
@@ -453,11 +461,16 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
       try:
         start_time = time.time()
-        result_ndarrays = sess.run(output_tensor_names, feed_dict=feed_dict_map)
+        result_ndarrays = sess.run(
+            output_tensor_names, feed_dict=feed_dict_map)
         logger.debug("Inference time: {} s".format(time.time() - start_time))
       except Exception as e:
-        logging.warn("Fail to run with output_tensor_names: {}, feed_dict_map: {}".format(output_tensor_names, feed_dict_map))
-        raise Exception("Sess.run() fail because of {}, please check shape of input".format(e.message))
+        logging.warn(
+            "Fail to run with output_tensor_names: {}, feed_dict_map: {}".
+            format(output_tensor_names, feed_dict_map))
+        raise Exception(
+            "Sess.run() fail because of {}, please check shape of input".
+            format(e.message))
 
     # 4. Build return result
     result = {}
@@ -590,7 +603,7 @@ def get_output_tensor_names_by_signature(model_graph_signature):
       values_tensor_name = output_item[1].coo_sparse.values_tensor_name
       indices_tensor_name = output_item[1].coo_sparse.indices_tensor_name
       dense_shape_tensor_name = output_item[
-        1].coo_sparse.dense_shape_tensor_name
+          1].coo_sparse.dense_shape_tensor_name
       output_op_names.append("{}_{}".format(output_item[0], "values"))
       output_op_names.append("{}_{}".format(output_item[0], "indices"))
       output_op_names.append("{}_{}".format(output_item[0], "shape"))

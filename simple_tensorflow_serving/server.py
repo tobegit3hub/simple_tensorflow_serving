@@ -40,15 +40,26 @@ parser.add_argument(
     default=os.environ.get("STFS_BIND", "0.0.0.0:8500"),
     help="Bind address of the server(eg. 0.0.0.0:8500)")
 parser.add_argument(
-    "--host", default=os.environ.get("STFS_HOST", "0.0.0.0"), help="The host of the server(eg. 0.0.0.0)")
+    "--host",
+    default=os.environ.get("STFS_HOST", "0.0.0.0"),
+    help="The host of the server(eg. 0.0.0.0)")
 parser.add_argument(
-    "--port", default=int(os.environ.get("STFS_PORT", "8500")), help="The port of the server(eg. 8500)", type=int)
+    "--port",
+    default=int(os.environ.get("STFS_PORT", "8500")),
+    help="The port of the server(eg. 8500)",
+    type=int)
 parser.add_argument(
-    "--enable_ssl", default=bool(os.environ.get("STFS_ENABLE_SSL", "")), help="If enable RESTfull API over https")
+    "--enable_ssl",
+    default=bool(os.environ.get("STFS_ENABLE_SSL", "")),
+    help="If enable RESTfull API over https")
 parser.add_argument(
-    "--secret_pem", default=os.environ.get("STFS_SECRET_PEM", "secret.pem"), help="SSL pem file")
+    "--secret_pem",
+    default=os.environ.get("STFS_SECRET_PEM", "secret.pem"),
+    help="SSL pem file")
 parser.add_argument(
-    "--secret_key", default=os.environ.get("STFS_SECRET_KEY", "secret.key"), help="SSL key file")
+    "--secret_key",
+    default=os.environ.get("STFS_SECRET_KEY", "secret.key"),
+    help="SSL key file")
 parser.add_argument(
     "--model_name",
     default=os.environ.get("STFS_MODEL_NAME", "default"),
@@ -67,20 +78,26 @@ parser.add_argument(
     help="The file of the model config(eg. '')")
 # TODO: type=bool not works, make it true by default if fixing exit bug
 parser.add_argument(
-    "--reload_models", default=os.environ.get("STFS_RELOAD_MODELS", ""), help="Reload models or not(eg. True)")
+    "--reload_models",
+    default=os.environ.get("STFS_RELOAD_MODELS", ""),
+    help="Reload models or not(eg. True)")
 parser.add_argument(
     "--custom_op_paths",
     default=os.environ.get("STFS_CUSTOM_OP_PATHS", ""),
     help="The path of custom op so files(eg. ./)")
 parser.add_argument(
-    "--session_config", default=os.environ.get("STFS_SESSION_CONFIG", "{}"), help="The json of session config")
+    "--session_config",
+    default=os.environ.get("STFS_SESSION_CONFIG", "{}"),
+    help="The json of session config")
 parser.add_argument(
     "--debug",
     default=os.environ.get("STFS_DEBUG", ""),
     help="Enable debug for flask or not(eg. False)",
     type=bool)
 parser.add_argument(
-    "--log_level", default=os.environ.get("STFS_LOG_LEVEL", "info"), help="The log level(eg. info)")
+    "--log_level",
+    default=os.environ.get("STFS_LOG_LEVEL", "info"),
+    help="The log level(eg. info)")
 parser.add_argument(
     "--enable_auth",
     default=os.environ.get("STFS_ENABLE_AUTH", ""),
@@ -100,9 +117,15 @@ parser.add_argument(
     help="Enable colored log(eg. False)",
     type=bool)
 parser.add_argument(
-    "--enable_cors", default=os.environ.get("STFS_ENABLE_CORS", "True"), help="Enable cors(eg. True)", type=bool)
+    "--enable_cors",
+    default=os.environ.get("STFS_ENABLE_CORS", "True"),
+    help="Enable cors(eg. True)",
+    type=bool)
 parser.add_argument(
-        "--enable_b64_autoconvert", default=os.environ.get("STFS_B64_AUTOCONVERT", ""), help="Enable auto convert b64 string(eg. False)", type=bool)
+    "--enable_b64_autoconvert",
+    default=os.environ.get("STFS_B64_AUTOCONVERT", ""),
+    help="Enable auto convert b64 string(eg. False)",
+    type=bool)
 parser.add_argument(
     "--download_inference_images",
     default=os.environ.get("STFS_DOWNLOAD_INFERENCE_IMAGES", "True"),
@@ -176,9 +199,9 @@ def requires_auth(f):
 
     if args.enable_auth:
       if not auth or not verify_authentication(auth.username, auth.password):
-        response = Response("Need basic auth to request the resources", 401, {
-            "WWW-Authenticate": '"Basic realm="Login Required"'
-        })
+        response = Response(
+            "Need basic auth to request the resources", 401,
+            {"WWW-Authenticate": '"Basic realm="Login Required"'})
         return response
 
     return f(*decorator_args, **decorator_kwargs)
@@ -228,7 +251,8 @@ if args.model_config_file != "":
       elif model_platform == "onnx":
         inference_service = OnnxInferenceService(model_name, model_base_path)
       elif model_platform == "pytorch_onnx":
-        inference_service = PytorchOnnxInferenceService(model_name, model_base_path)
+        inference_service = PytorchOnnxInferenceService(
+            model_name, model_base_path)
       elif model_platform == "h2o":
         inference_service = H2oInferenceService(model_name, model_base_path)
       elif model_platform == "scikitlearn":
@@ -276,7 +300,6 @@ else:
                                               args.model_base_path)
 
   model_name_service_map[args.model_name] = inference_service
-
 
 # Start thread to periodically reload models or not
 if args.reload_models == "True" or args.reload_models == "true":
@@ -347,10 +370,10 @@ def do_inference(save_file_dir=None):
 
   if model_name not in model_name_service_map:
     return {
-             "error":
-               "Invalid model name: {}, available models: {}".format(
-                       model_name, model_name_service_map.keys())
-           }, 400
+        "error":
+        "Invalid model name: {}, available models: {}".format(
+            model_name, model_name_service_map.keys())
+    }, 400
 
   inferenceService = model_name_service_map[model_name]
 
@@ -498,7 +521,11 @@ def main():
   if args.enable_ssl:
     # Can pass ssl_context="adhoc" for auto-sign certification
     application.run(
-        host=args.host, port=args.port, threaded=True, debug=args.debug, ssl_context=(args.secret_pem, args.secret_key))
+        host=args.host,
+        port=args.port,
+        threaded=True,
+        debug=args.debug,
+        ssl_context=(args.secret_pem, args.secret_key))
   else:
     application.run(
         host=args.host, port=args.port, threaded=True, debug=args.debug)
