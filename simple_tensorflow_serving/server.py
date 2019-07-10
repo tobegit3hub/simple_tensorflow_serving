@@ -256,7 +256,7 @@ class WsgiApp:
     @self.app.route("/v1/models/<model_name>/gen_json", methods=["GET"])
     @self.requires_auth
     def gen_example_json(model_name):
-      inference_service = self.model_name_service_map[model_name]
+      inference_service = self.manager.model_name_service_map[model_name]
       data_json_dict = gen_client.gen_tensorflow_client(
           inference_service, "json", model_name)
       return json.dumps(data_json_dict)
@@ -325,7 +325,7 @@ class WsgiApp:
       return {
           "error":
           "Invalid model name: {}, available models: {}".format(
-              model_name, self.model_name_service_map.keys())
+              model_name, self.manager.model_name_service_map.keys())
       }, 400
 
     # 3. Use initialized manager for inference
