@@ -63,9 +63,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     if self.model_base_path == "":
       raise Exception("The model base path is empty")
-    if self.model_base_path.startswith("/") or self.model_base_path.startswith("./"):
+    if self.model_base_path.startswith("/") or self.model_base_path.startswith(
+        "./"):
       if not os.path.exists(self.model_base_path):
-        raise Exception("Local model path does not exist: {}".format(self.model_base_path))
+        raise Exception("Local model path does not exist: {}".format(
+            self.model_base_path))
 
     if custom_op_paths != "":
       self.load_custom_op(custom_op_paths)
@@ -195,10 +197,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     if tf.__version__.startswith("1"):
       meta_graph = tf.saved_model.loader.load(
-        session, [tf.saved_model.tag_constants.SERVING], model_file_path)
+          session, [tf.saved_model.tag_constants.SERVING], model_file_path)
     else:
       meta_graph = tf.compat.v1.saved_model.loader.load(
-              session, [tf.compat.v1.saved_model.tag_constants.SERVING], model_file_path)
+          session, [tf.compat.v1.saved_model.tag_constants.SERVING],
+          model_file_path)
 
     # Get preprocess and postprocess function from collection_def
     if "preprocess_function" in meta_graph.collection_def:
@@ -227,10 +230,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
     if tf.__version__.startswith("1"):
       meta_graph = tf.saved_model.loader.load(
-        sess, [tf.saved_model.tag_constants.SERVING], model_file_path)
+          sess, [tf.saved_model.tag_constants.SERVING], model_file_path)
     else:
       meta_graph = tf.compat.v1.saved_model.loader.load(
-              sess, [tf.compat.v1.saved_model.tag_constants.SERVING], model_file_path)
+          sess, [tf.compat.v1.saved_model.tag_constants.SERVING],
+          model_file_path)
 
     # Update ItemsView to list for Python 3
     signature_items = list(meta_graph.signature_def.items())

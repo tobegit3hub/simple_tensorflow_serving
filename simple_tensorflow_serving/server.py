@@ -161,12 +161,6 @@ elif args.log_level == "critical" or args.log_level == "CRITICAL":
 if args.debug == True:
   logger.setLevel(logging.DEBUG)
 
-class NumpyEncoder(json.JSONEncoder):
-  def default(self, obj):
-    if isinstance(obj, np.ndarray):
-      return obj.tolist()
-    return json.JSONEncoder.default(self, obj)
-
 
 def verify_authentication(username, password):
   """
@@ -210,8 +204,6 @@ def requires_auth(f):
   return decorated
 
 
-# TODO: Check args for model_platform and others
-
 # Initialize flask application
 application = Flask(__name__, template_folder='templates')
 
@@ -229,84 +221,89 @@ else:
 # Example: {"default": TensorFlowInferenceService}
 model_name_service_map = {}
 
-if args.model_config_file != "":
-  # Read from configuration file
-  with open(args.model_config_file) as data_file:
-    model_config_file_dict = json.load(data_file)
-    # Example: [{u'platform': u'tensorflow', u'name': u'tensorflow_template_application', u'base_path': u'/Users/tobe/code/simple_tensorflow_serving/models/tensorflow_template_application_model/'}, {u'platform': u'tensorflow', u'name': u'deep_image_model', u'base_path': u'/Users/tobe/code/simple_tensorflow_serving/models/deep_image_model/'}]
-    model_config_list = model_config_file_dict["model_config_list"]
 
-    for model_config in model_config_list:
-      # Example: {"name": "tensorflow_template_application", "base_path": "/", "platform": "tensorflow"}
-      model_name = model_config["name"]
-      model_base_path = model_config["base_path"]
-      model_platform = model_config.get("platform", "tensorflow")
-      custom_op_paths = model_config.get("custom_op_paths", "")
-      session_config = model_config.get("session_config", {})
+def init_inference_service():
 
-      if model_platform == "tensorflow":
-        inference_service = TensorFlowInferenceService(
-            model_name, model_base_path, custom_op_paths, session_config)
-      elif model_platform == "mxnet":
-        inference_service = MxnetInferenceService(model_name, model_base_path)
-      elif model_platform == "onnx":
-        inference_service = OnnxInferenceService(model_name, model_base_path)
-      elif model_platform == "pytorch_onnx":
-        inference_service = PytorchOnnxInferenceService(
-            model_name, model_base_path)
-      elif model_platform == "h2o":
-        inference_service = H2oInferenceService(model_name, model_base_path)
-      elif model_platform == "scikitlearn":
-        inference_service = ScikitlearnInferenceService(
-            model_name, model_base_path)
-      elif model_platform == "xgboost":
-        inference_service = XgboostInferenceService(model_name,
+  if args.model_config_file != "":
+    # Read from configuration file
+    with open(args.model_config_file) as data_file:
+      model_config_file_dict = json.load(data_file)
+      # Example: [{u'platform': u'tensorflow', u'name': u'tensorflow_template_application', u'base_path': u'/Users/tobe/code/simple_tensorflow_serving/models/tensorflow_template_application_model/'}, {u'platform': u'tensorflow', u'name': u'deep_image_model', u'base_path': u'/Users/tobe/code/simple_tensorflow_serving/models/deep_image_model/'}]
+      model_config_list = model_config_file_dict["model_config_list"]
+
+      for model_config in model_config_list:
+        # Example: {"name": "tensorflow_template_application", "base_path": "/", "platform": "tensorflow"}
+        model_name = model_config["name"]
+        model_base_path = model_config["base_path"]
+        model_platform = model_config.get("platform", "tensorflow")
+        custom_op_paths = model_config.get("custom_op_paths", "")
+        session_config = model_config.get("session_config", {})
+
+        if model_platform == "tensorflow":
+          inference_service = TensorFlowInferenceService(
+              model_name, model_base_path, custom_op_paths, session_config)
+        elif model_platform == "mxnet":
+          inference_service = MxnetInferenceService(model_name,
                                                     model_base_path)
-      elif model_platform == "pmml":
-        inference_service = PmmlInferenceService(model_name, model_base_path)
-      elif model_platform == "spark":
-        inference_service = SparkInferenceService(model_name, model_base_path)
+        elif model_platform == "onnx":
+          inference_service = OnnxInferenceService(model_name, model_base_path)
+        elif model_platform == "pytorch_onnx":
+          inference_service = PytorchOnnxInferenceService(
+              model_name, model_base_path)
+        elif model_platform == "h2o":
+          inference_service = H2oInferenceService(model_name, model_base_path)
+        elif model_platform == "scikitlearn":
+          inference_service = ScikitlearnInferenceService(
+              model_name, model_base_path)
+        elif model_platform == "xgboost":
+          inference_service = XgboostInferenceService(model_name,
+                                                      model_base_path)
+        elif model_platform == "pmml":
+          inference_service = PmmlInferenceService(model_name, model_base_path)
+        elif model_platform == "spark":
+          inference_service = SparkInferenceService(model_name,
+                                                    model_base_path)
 
-      model_name_service_map[model_name] = inference_service
-else:
-  # Read from command-line parameter
-  if args.model_platform == "tensorflow":
-    session_config = json.loads(args.session_config)
-    inference_service = TensorFlowInferenceService(
-        args.model_name, args.model_base_path, args.custom_op_paths,
-        session_config)
-  elif args.model_platform == "mxnet":
-    inference_service = MxnetInferenceService(args.model_name,
-                                              args.model_base_path)
-  elif args.model_platform == "h2o":
-    inference_service = H2oInferenceService(args.model_name,
-                                            args.model_base_path)
-  elif args.model_platform == "onnx":
-    inference_service = OnnxInferenceService(args.model_name,
-                                             args.model_base_path)
-  elif args.model_platform == "pytorch_onnx":
-    inference_service = PytorchOnnxInferenceService(args.model_name,
-                                                    args.model_base_path)
-  elif args.model_platform == "scikitlearn":
-    inference_service = ScikitlearnInferenceService(args.model_name,
-                                                    args.model_base_path)
-  elif args.model_platform == "xgboost":
-    inference_service = XgboostInferenceService(args.model_name,
+        model_name_service_map[model_name] = inference_service
+  else:
+    # Read from command-line parameter
+    if args.model_platform == "tensorflow":
+      session_config = json.loads(args.session_config)
+      inference_service = TensorFlowInferenceService(
+          args.model_name, args.model_base_path, args.custom_op_paths,
+          session_config)
+    elif args.model_platform == "mxnet":
+      inference_service = MxnetInferenceService(args.model_name,
                                                 args.model_base_path)
-  elif args.model_platform == "pmml":
-    inference_service = PmmlInferenceService(args.model_name,
-                                             args.model_base_path)
-  elif args.model_platform == "spark":
-    inference_service = SparkInferenceService(args.model_name,
+    elif args.model_platform == "h2o":
+      inference_service = H2oInferenceService(args.model_name,
                                               args.model_base_path)
+    elif args.model_platform == "onnx":
+      inference_service = OnnxInferenceService(args.model_name,
+                                               args.model_base_path)
+    elif args.model_platform == "pytorch_onnx":
+      inference_service = PytorchOnnxInferenceService(args.model_name,
+                                                      args.model_base_path)
+    elif args.model_platform == "scikitlearn":
+      inference_service = ScikitlearnInferenceService(args.model_name,
+                                                      args.model_base_path)
+    elif args.model_platform == "xgboost":
+      inference_service = XgboostInferenceService(args.model_name,
+                                                  args.model_base_path)
+    elif args.model_platform == "pmml":
+      inference_service = PmmlInferenceService(args.model_name,
+                                               args.model_base_path)
+    elif args.model_platform == "spark":
+      inference_service = SparkInferenceService(args.model_name,
+                                                args.model_base_path)
 
-  model_name_service_map[args.model_name] = inference_service
+    model_name_service_map[args.model_name] = inference_service
 
-# Start thread to periodically reload models or not
-if args.reload_models == "True" or args.reload_models == "true":
-  for model_name, inference_service in model_name_service_map.items():
-    if inference_service.platform == "tensorflow":
-      inference_service.dynamically_reload_models()
+  # Start thread to periodically reload models or not
+  if args.reload_models == "True" or args.reload_models == "true":
+    for model_name, inference_service in model_name_service_map.items():
+      if inference_service.platform == "tensorflow":
+        inference_service.dynamically_reload_models()
 
 
 # The API to render the dashboard page
@@ -409,7 +406,7 @@ def image_inference():
 def run_image_inference():
   predict_result = do_inference(
       save_file_dir=application.config['UPLOAD_FOLDER'])
-  json_result = json.dumps(predict_result, cls=NumpyEncoder)
+  json_result = json.dumps(predict_result)
 
   file = request.files['image']
   image_file_path = os.path.join(application.config['UPLOAD_FOLDER'],
@@ -516,7 +513,13 @@ def run_generate_clients():
   return render_template("generate_clients.html", result=result)
 
 
-def start_wsgi_application():
+if args.server_backend != "uwsgi":
+  # This will be called by main() or new process by uwsgi, only init once for uwsgi
+  init_inference_service()
+
+
+def start_flask_server():
+
   # Start the HTTP server
   # Support multi-thread for json inference and image inference in same process
   if args.enable_ssl:
@@ -544,18 +547,18 @@ def start_uwsgi_process():
       pyargv_string += "--{}={} ".format(arg, getattr(args, arg))
 
   uwsgi_conf_dict = {
-    "uwsgi": {
-      "module": "simple_tensorflow_serving.server",
-      "pyargv": pyargv_string,
-      "http": "{}:{}".format(args.host, args.port),
-      "socket": "/tmp/uwsgi.sock",
-      "close-on-exec": True,
-      "enable-threads": True,
-      "http-keepalive": 1,
-      "http-auto-chunked": 1,
-      # TODO: Log format refers to https://uwsgi-docs.readthedocs.io/en/latest/LogFormat.html
-      #"log-format": '%(ltime) "%(method) %(uri) %(proto)" %(status) %(size) "%(referer)" "%(uagent)"'
-    }
+      "uwsgi": {
+          "module": "simple_tensorflow_serving.server",
+          "pyargv": pyargv_string,
+          "http": "{}:{}".format(args.host, args.port),
+          "socket": "/tmp/uwsgi.sock",
+          "close-on-exec": True,
+          "enable-threads": True,
+          "http-keepalive": 1,
+          "http-auto-chunked": 1,
+          # TODO: Log format refers to https://uwsgi-docs.readthedocs.io/en/latest/LogFormat.html
+          #"log-format": '%(ltime) "%(method) %(uri) %(proto)" %(status) %(size) "%(referer)" "%(uagent)"'
+      }
   }
 
   uwsgi_ini_file = "/tmp/uwsgi.ini"
@@ -571,11 +574,13 @@ def start_uwsgi_process():
 
 def main():
   if args.server_backend == "flask":
-    start_wsgi_application()
+    start_flask_server()
   elif args.server_backend == "uwsgi":
     start_uwsgi_process()
   else:
-    logging.error("Unknown server backend: {}, only support uwsgi, flask".format(args.server_backend))
+    logging.error(
+        "Unknown server backend: {}, only support uwsgi, flask".format(
+            args.server_backend))
     exit(1)
 
 
