@@ -378,10 +378,9 @@ class WsgiApp:
     return decorated
 
 
-app = WsgiApp(args).app
-
-
 def main():
+  app = WsgiApp(args).app
+
   # Run with Flask HTTP server
   if args.enable_ssl:
     # Can pass ssl_context="adhoc" for auto-sign certification
@@ -392,7 +391,8 @@ def main():
         debug=args.debug,
         ssl_context=(args.secret_pem, args.secret_key))
   else:
-    app.run(host=args.host, port=args.port, threaded=True, debug=args.debug)
+    # TODO: Use single thread by default
+    app.run(host=args.host, port=args.port, threaded=False, debug=args.debug)
 
 
 if __name__ == "__main__":

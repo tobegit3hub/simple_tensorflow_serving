@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.7.2.2",
+    version="0.8.0",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
@@ -21,7 +21,9 @@ setup(
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            "simple_tensorflow_serving=simple_tensorflow_serving.command:main",
-            "stfs=simple_tensorflow_serving.command:main"
+            # TODO: Do not use wsgi by default
+            #"simple_tensorflow_serving=simple_tensorflow_serving.command:main",
+            "simple_tensorflow_serving=simple_tensorflow_serving.server:main",
+            "stfs=simple_tensorflow_serving.server:main"
         ],
     })
