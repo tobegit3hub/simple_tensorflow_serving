@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="simple_tensorflow_serving",
-    version="0.8.0",
+    version="0.8.1.1",
     author="tobe",
     author_email="tobeg3oogle@gmail.com",
     url="https://github.com/tobegit3hub/simple_tensorflow_serving",
@@ -15,7 +15,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         'configparser', 'pandas', 'protobuf', 'flask', 'jinja2', 'flask-cors',
-        'requests', 'pillow', 'uwsgi', 'tensorflow'
+        'requests', 'pillow', 'uwsgi'
     ],
     include_package_data=True,
     zip_safe=False,
