@@ -230,6 +230,83 @@ Then request with the raw image file which has the same shape of your model.
 curl -X POST -F 'image=@./images/mew.jpg' -F "model_version=1" 127.0.0.1:8500
 ```
 
+## TensorFlow Estimator Model
+
+If we use the TensorFlow Estimator API to export the model, the model signature should look like this.
+
+```
+inputs {
+  key: "inputs"
+  value {
+    name: "input_example_tensor:0"
+    dtype: DT_STRING
+    tensor_shape {
+      dim {
+        size: -1
+      }
+    }
+  }
+}
+outputs {
+  key: "classes"
+  value {
+    name: "linear/binary_logistic_head/_classification_output_alternatives/classes_tensor:0"
+    dtype: DT_STRING
+    tensor_shape {
+      dim {
+        size: -1
+      }
+      dim {
+        size: -1
+      }
+    }
+  }
+}
+outputs {
+  key: "scores"
+  value {
+    name: "linear/binary_logistic_head/predictions/probabilities:0"
+    dtype: DT_FLOAT
+    tensor_shape {
+      dim {
+        size: -1
+      }
+      dim {
+        size: 2
+      }
+    }
+  }
+}
+method_name: "tensorflow/serving/classify"
+```
+
+We need to construct the string tensor for inference and use base64 to encode the string for HTTP. Here is the example Python code.
+
+```python
+def _float_feature(value):
+  return tf.train.Feature(float_list=tf.train.FloatList(value=[value]))
+
+def _bytes_feature(value):
+  return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+def main():
+  # Raw input data
+  feature_dict = {"a": _bytes_feature("10"), "b": _float_feature(10)}
+
+  # Create Example as base64 string
+  example_proto = tf.train.Example(features=tf.train.Features(feature=feature_dict))
+  tensor_proto = tf.contrib.util.make_tensor_proto(example_proto.SerializeToString(), dtype=tf.string)
+  tensor_string = tensor_proto.string_val.pop()
+  base64_tensor_string = base64.urlsafe_b64encode(tensor_string)
+
+  # Request server
+  endpoint = "http://127.0.0.1:8500"
+  #json_data = {"model_name": "default", "base64_decode": True, "data": {"inputs": [base64_tensor_string]} }
+  json_data = {"model_name": "default", "base64_decode": False, "data": {"inputs": [base64_tensor_string]} }
+  result = requests.post(endpoint, json=json_data)
+  print(result.json())
+```
+
 ### Custom Op
 
 If your models rely on new TensorFlow [custom op](https://www.tensorflow.org/extend/adding_an_op), you can run the server while loading the so files.
