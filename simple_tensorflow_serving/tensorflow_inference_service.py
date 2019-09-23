@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import base64
 import logging
 import os
 import signal
@@ -168,10 +169,12 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
   def load_saved_model_version(self, model_version):
 
+    gpu_options = tf.GPUOptions(allow_growth=True)
+
     if tf.__version__.startswith("1"):
-      config = tf.ConfigProto()
+      config = tf.ConfigProto(gpu_options=gpu_options)
     else:
-      config = tf.compat.v1.ConfigProto()
+      config = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
     if "log_device_placement" in self.session_config:
       config.log_device_placement = self.session_config["log_device_placement"]
@@ -390,10 +393,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
         result_ndarrays, result_profile = self.run_with_profiler(
             sess, str(model_version), output_tensor_names, feed_dict_map)
     else:
-      """
-      # TODO: Update input data by decoding base64 string for esitmator model
-      should_decode_base64 = False
-      # Should not use have_key for Python 3
+      # Update input data by decoding base64 string for esitmator model
+      should_decode_base64 = json_data.get("base64_decode", False)
       if should_decode_base64 and "input_example_tensor:0" in feed_dict_map:
         final_example_strings = []
         base64_example_strings = feed_dict_map["input_example_tensor:0"]
@@ -402,7 +403,6 @@ class TensorFlowInferenceService(AbstractInferenceService):
               base64_example_string.encode("utf-8"))
           final_example_strings.append(final_example_string)
         feed_dict_map["input_example_tensor:0"] = final_example_strings
-      """
 
       try:
         start_time = time.time()
