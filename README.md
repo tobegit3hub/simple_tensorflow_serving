@@ -301,8 +301,7 @@ def main():
 
   # Request server
   endpoint = "http://127.0.0.1:8500"
-  #json_data = {"model_name": "default", "base64_decode": True, "data": {"inputs": [base64_tensor_string]} }
-  json_data = {"model_name": "default", "base64_decode": False, "data": {"inputs": [base64_tensor_string]} }
+  json_data = {"model_name": "default", "base64_decode": True, "data": {"inputs": [base64_tensor_string]}}
   result = requests.post(endpoint, json=json_data)
   print(result.json())
 ```
