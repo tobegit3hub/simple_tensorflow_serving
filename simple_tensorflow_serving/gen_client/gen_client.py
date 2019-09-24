@@ -72,16 +72,30 @@ def gen_tensorflow_client(tensorflow_inference_service, language, model_name):
         # Fill with default values by the types, refer to https://www.tensorflow.org/api_docs/python/tf/DType
         default_value = 1.0
         dtype = input_opname_dtype_map[opname]
+
+
+        # TODO: TensorFlow 1.14+ does not support converting to int number
+        """
         if dtype == int(tf.int8) or dtype == int(tf.uint8) or dtype == int(
             tf.int16) or dtype == int(tf.uint16) or dtype == int(
                 tf.int32) or dtype == int(tf.uint32):
           default_value = 1
         elif dtype == int(tf.int64) or dtype == int(tf.uint64):
           default_value = 1
-        elif dtype == int(tf.int32):
+        elif dtype == int(tf.bool):
           default_value = True
         elif dtype == int(tf.string):
           default_value = ""
+        """
+
+        if dtype in [6, 4, 5, 17, 3, 22, 9, 23]:
+          default_value = 1
+        elif dtype == 10:
+          default_value = True
+        elif dtype == 7:
+          default_value = ""
+        else:
+          default_value = 1
 
         internal_array = [default_value for i in range(dim)]
 
