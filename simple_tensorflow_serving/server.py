@@ -142,7 +142,7 @@ class WsgiApp:
 
   def __init__(self, args):
     self.args = args
-    self.app = Flask("simple_tensorlow_serving", template_folder='templates')
+    self.app = Flask("simple_tensorflow_serving", template_folder='templates')
     self.manager = InferenceServiceManager(args)
 
     # Initialize Flask app with parameters
