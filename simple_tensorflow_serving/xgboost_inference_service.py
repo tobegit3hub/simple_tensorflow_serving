@@ -55,7 +55,7 @@ class XgboostInferenceService(AbstractInferenceService):
       self.bst = joblib.load(self.model_base_path)
     elif self.model_base_path.endswith(
         ".pkl") or self.model_base_path.endswith(".pickle"):
-      with open(self.model_base_path, 'r') as f:
+      with open(self.model_base_path, 'rb') as f:
         self.bst = pickle.load(f)
     elif self.model_base_path.endswith(
         ".bst") or self.model_base_path.endswith(".bin"):
