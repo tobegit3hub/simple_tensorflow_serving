@@ -9,6 +9,7 @@ import logging
 import os
 import signal
 import threading
+
 import time
 import tensorflow as tf
 import marshal
@@ -249,7 +250,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
       self.name_signature_map[signature_name] = item[1]
 
       # tf.python.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-      if signature_name == "serving_default":
+      #if signature_name == "serving_default":
+      if signature_name == "serving_default" or signature_name == "predict":
         self.model_graph_signature = item[1]
         self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
             self.model_graph_signature)
