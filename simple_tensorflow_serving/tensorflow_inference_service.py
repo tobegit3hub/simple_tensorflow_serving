@@ -170,11 +170,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
   def load_saved_model_version(self, model_version):
 
-    gpu_options = tf.GPUOptions(allow_growth=True)
-
     if tf.__version__.startswith("1"):
+      gpu_options = tf.GPUOptions(allow_growth=True)
       config = tf.ConfigProto(gpu_options=gpu_options)
     else:
+      gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
       config = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
     if "log_device_placement" in self.session_config:
