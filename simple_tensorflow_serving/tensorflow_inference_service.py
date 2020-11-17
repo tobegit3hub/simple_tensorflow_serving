@@ -9,6 +9,7 @@ import logging
 import os
 import signal
 import threading
+
 import time
 import tensorflow as tf
 import marshal
@@ -169,11 +170,11 @@ class TensorFlowInferenceService(AbstractInferenceService):
 
   def load_saved_model_version(self, model_version):
 
-    gpu_options = tf.GPUOptions(allow_growth=True)
-
     if tf.__version__.startswith("1"):
+      gpu_options = tf.GPUOptions(allow_growth=True)
       config = tf.ConfigProto(gpu_options=gpu_options)
     else:
+      gpu_options = tf.compat.v1.GPUOptions(allow_growth=True)
       config = tf.compat.v1.ConfigProto(gpu_options=gpu_options)
 
     if "log_device_placement" in self.session_config:
@@ -249,7 +250,8 @@ class TensorFlowInferenceService(AbstractInferenceService):
       self.name_signature_map[signature_name] = item[1]
 
       # tf.python.saved_model.signature_constants.DEFAULT_SERVING_SIGNATURE_DEF_KEY:
-      if signature_name == "serving_default":
+      #if signature_name == "serving_default":
+      if signature_name == "serving_default" or signature_name == "predict":
         self.model_graph_signature = item[1]
         self.model_graph_signature_dict = tensorflow_model_graph_to_dict(
             self.model_graph_signature)

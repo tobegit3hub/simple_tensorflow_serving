@@ -31,7 +31,7 @@ def download_hdfs_moels(model_base_path):
     if tf.__version__.startswith("1"):
       tf.gfile.Copy(libhdfs_model_base_path, new_model_base_path, overwrite=True)
     else:
-      tf.io.gfile.Copy(libhdfs_model_base_path, new_model_base_path, overwrite=True)
+      tf.io.gfile.copy(libhdfs_model_base_path, new_model_base_path, overwrite=True)
 
     return new_model_base_path
 
@@ -90,7 +90,12 @@ def down_mxnet_model_from_hdfs(model_base_path):
     new_model_base_path = os.path.join(new_parent_model_base_path,
                                        model_prefix)
 
-    for file_name in tf.gfile.ListDirectory(parent_model_base_path):
+    if tf.__version__.startswith("1"):
+      dir_files = tf.gfile.ListDirectory(parent_model_base_path)
+    else:
+      dir_files = tf.io.gfile.listdir(parent_model_base_path)
+
+    for file_name in dir_files:
       if file_name.startswith(model_prefix):
         old_file_path = parent_model_base_path + "/" + file_name
         new_file_path = os.path.join(new_parent_model_base_path, file_name)

@@ -53,7 +53,7 @@ class ScikitlearnInferenceService(AbstractInferenceService):
       self.pipeline = joblib.load(self.model_base_path)
     elif self.model_base_path.endswith(
         ".pkl") or self.model_base_path.endswith(".pickle"):
-      with open(self.model_base_path, 'r') as f:
+      with open(self.model_base_path, 'rb') as f:
         self.pipeline = pickle.load(f)
     else:
       logger.error(
