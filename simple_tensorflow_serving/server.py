@@ -142,8 +142,8 @@ class WsgiApp:
 
   def __init__(self, args):
     self.args = args
-    #self.app = Flask("simple_tensorlow_serving")
-    self.app = Flask("simple_tensorlow_serving", template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates"), static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "static"))
+    #self.app = Flask("simple_tensorflow_serving")
+    self.app = Flask("simple_tensorflow_serving", template_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "templates"), static_folder=os.path.join(os.path.dirname(os.path.abspath(__file__)), "static"))
     #self.app.config["EXPLAIN_TEMPLATE_LOADING"] = True
     self.manager = InferenceServiceManager(args)
 
