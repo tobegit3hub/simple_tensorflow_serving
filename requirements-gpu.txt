@@ -8,4 +8,4 @@ tensorflow-gpu>=1.0.0
 scikit-learn
 xgboost
 mxnet
-h2o==3.18.0.8
+h2o==3.46.0.6
